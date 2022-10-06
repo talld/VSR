@@ -11,4 +11,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${VULKAN_INCLUDE_DIRS})
 
 find_package(SDL2 REQUIRED FATAL_ERROR)
 target_link_libraries(${PROJECT_NAME} SDL2::SDL2)
-target_include_directories(${PROJECT_NAME} PRIVATE ${VULKAN_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL_INCLUDE_DIRS})
