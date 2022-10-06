@@ -13,7 +13,7 @@ UVs are bound optionally and like vertices are in a u v ground, 1 uv is required
 
 # Samplers
 ```c
-int VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
+VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
 ```
 create a image sampler for the corresponding image to be used during a model render when a model with appropriate UVs is drawn
 
@@ -24,7 +24,7 @@ VSR_Transform* VSR_CreateTransforms(size_t count);
 transforms are created
 
 ```c
-VSR_Transform* VSR_FreeTransforms(size_t count);
+void VSR_FreeTransforms(size_t count);
 ```
 transforms are freed
 
