@@ -24,18 +24,21 @@ VSR_Transform* VSR_CreateTransforms(size_t count);
 transforms are created
 
 ```c
-void VSR_FreeTransforms(size_t count);
+void VSR_FreeTransforms(VSR_Transform* transforms, size_t count);
 ```
 transforms are freed
 
 ```c
-VSR_Transform VSR_SetTransformsPosition(VSR_Transform transform, float x, float y, float z);
+VSR_Transform* VSR_SetTransformsPosition(VSR_Transform* transform, float x, 
+float y, float z);
 ```
 ```c
-VSR_Transform VSR_SetTransformsRotation(VSR_Transform transform, float xRot, float yRot, float zRot);
+VSR_Transform* VSR_SetTransformsRotation(VSR_Transform* transform, float xRot,
+ float yRot, float zRot);
 ```
 ```c
-VSR_Transform VSR_SetTransformsScale(VSR_Transform transform, float xScale, float yScale, float zScale);
+VSR_Transform* VSR_SetTransformsScale(VSR_Transform* transform, float xScale, 
+float yScale, float zScale);
 ```
 used to set attributes of a transform
 
@@ -50,7 +53,7 @@ for example triangle winding can be set with
 	VSR_RendererCreateInfo* cInfo = VSR_RendererGenerateCreateInfo(NULL);
 	cInfo->polygonInfo->winding = VSR_CREATE_INFO_CLOCKWISE_WINDING
 ```
-once your create info has been configured you can create the renderer with:
+once your createInfo has been configured you can create the renderer with:
  ```c
 VSR_Renderer* VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo);
 ```
