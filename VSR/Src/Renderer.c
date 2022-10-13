@@ -344,7 +344,7 @@ VSR_CreateInstance(VSR_Renderer* renderer,
 	for(size_t i = 0; i < layerCount; i++)
 	{
 		VSR_LOG("FOUND_LAYER: %s",availableLayers[i].layerName);
-		for(size_t j = 0; j < requiredExtensions; j++)
+		for(size_t j = 0; j < requiredLayers; j++)
 		{
 			if( strcmp(availableLayers[i].layerName,
 			           instanceCreateInfo->ppEnabledLayerNames[j]) == 0 )
@@ -357,7 +357,7 @@ VSR_CreateInstance(VSR_Renderer* renderer,
 		}
 	}
 	// list of availableProperties no longer required
-	free((void*)availableProperties);
+	free((void*)availableLayers);
 	
 	VSR_LOG("REQUIRED LAYERS: %lu, FOUND %lu", requiredLayers, foundLayers);
 	if(foundLayers != requiredLayers)
@@ -481,7 +481,7 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 		deviceProperties.pNext         = &deviceVulkan11Properties;
 		deviceVulkan11Properties.pNext = &deviceVulkan12Properties;
 		deviceVulkan12Properties.pNext = &deviceVulkan13Properties;
-		
+		deviceVulkan13Properties.pNext = NULL;
 		///////////////////////
 		/// Test the device ///
 		///////////////////////
