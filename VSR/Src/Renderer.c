@@ -29,7 +29,7 @@ struct VSR_RendererCreateInfoVkStructs
 	size_t                       computeQueueCreateInfoIndex;
 
 	VkDeviceCreateInfo           deviceCreateInfo;
-	
+
 	VkSwapchainCreateInfoKHR     swapchainCreateInfo;
 	
 	VkPipelineLayoutCreateInfo   graphicsPipelineLayoutCreateInfo;
@@ -431,8 +431,6 @@ struct VSR_RendererVkStructs
 	VkPhysicalDeviceVulkan11Properties    physicalDeviceVulkan11Properties;
 	VkPhysicalDeviceVulkan12Properties    physicalDeviceVulkan12Properties;
 	VkPhysicalDeviceVulkan13Properties    physicalDeviceVulkan13Properties;
-	
-	VkSurfaceKHR surface;
 
 	uint32_t   transferQueueIndex;
 	uint32_t   graphicsQueueIndex;
@@ -635,9 +633,7 @@ VSR_CreateInstance(
 		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
-	
-	renderer->vkStructs->surface = surfaceKhr;
-	
+
 	SUCCESS:
 	{
 		return SDL_TRUE;
@@ -983,9 +979,6 @@ VSR_SelectPhysicalDeviceQueues(
 		return SDL_FALSE;
 	}
 }
-
-
-
 
 
 //==============================================================================
