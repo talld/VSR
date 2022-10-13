@@ -135,6 +135,9 @@ const char* VSR_VkErrorToString(VkResult result)
 		case VK_RESULT_MAX_ENUM:
 			errStr = "VK_RESULT_MAX_ENUM";
 			break;
+		case VK_ERROR_COMPRESSION_EXHAUSTED_EXT:
+			errStr = "VK_ERROR_COMPRESSION_EXHAUSTED_EXT";
+			break;
 	}
 	
 	return errStr;
