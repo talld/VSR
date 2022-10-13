@@ -5,17 +5,19 @@ VSR_Model* VSR_CreateModel(VSR_Renderer* renderer, int32_t* vertices, size_t ver
 ```
 models are created as a list of vertices and indices points
 vertices having a stride of 3, being: x y z points with verticesCount being a multiple of 3 and the number of these xyz groups.
-Ensure that your vertices are in the correct order as your triangle winding ( default is counter clockwise )
+Ensure that your vertices are in the correct order as your triangle winding ( default is counterclockwise )
 ```c
 int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, int32_t* UVs);
 ```
-UVs are bound optionally and like vertices are in a u v ground, 1 uv is required per vertex so UVCount === vertexCount at all times, as a result this function does not take a UVCount instead vertexCount will be attempted to be read from the UVs pointer
+UVs are bound optionally and like vertices are in an u v group, 1 uv is 
+required per vertex so UVCount === vertexCount at all times, as a result this function does not take a UVCount instead vertexCount will be attempted to be read from the UVs pointer
 
 # Samplers
 ```c
 VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
 ```
-create a image sampler for the corresponding image to be used during a model render when a model with appropriate UVs is drawn
+create an image sampler for the corresponding image to be used during a 
+model render when a model with appropriate UVs is drawn
 
 # Transforms
 ```c
@@ -59,10 +61,15 @@ VSR_Renderer* VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo);
 ```
 Creates a VSR Render which holds all the state and vulkan settings
 ```c
+void VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo);
+```
+once you're done with it your crete info should be freed
+```c
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 ```
 Set the sample stage that appropriate model UVs will sample when rendered
 ```c
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
 ```
-sends a list of models and transforms to the renderer of count batchCount allowing models to easily batched for efficient draw-calls in multi-model scenes
+sends a list of models and transforms to the renderer of count batchCount 
+allowing models to easily batched for efficient draw-calls in multi-model scenes
