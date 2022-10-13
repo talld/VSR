@@ -24,15 +24,20 @@ struct VSR_RendererCreateInfoVkStructs
 	VkPhysicalDeviceFeatures2    physicalDeviceFeatures2;
 	
 	VkDeviceQueueCreateInfo      queueCreateInfoList[3];
-	const size_t                 transferQueueCreateInfoIndex;
-	const size_t                 graphicsQueueCreateInfoIndex;
-	const size_t                 computeQueueCreateInfoIndex;
+	size_t                       transferQueueCreateInfoIndex;
+	size_t                       graphicsQueueCreateInfoIndex;
+	size_t                       computeQueueCreateInfoIndex;
+	
 	
 	VkDeviceCreateInfo           deviceCreateInfo;
 	
-	VkComputePipelineCreateInfo  computePipelineCreateInfo;
+	VkSwapchainCreateInfoKHR     swapchainCreateInfo;
 	
+	VkPipelineLayoutCreateInfo   graphicsPipelineLayoutCreateInfo;
 	VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo;
+	
+	VkPipelineLayoutCreateInfo   computePipelineLayoutCreateInfo;
+	VkComputePipelineCreateInfo  computePipelineCreateInfo;
 	
 };
 
@@ -60,8 +65,9 @@ struct VSR_RendererCreateInfo
 // VSR_PopulateInstanceCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_PopulateInstanceCreateInfo(VSR_RendererCreateInfo* createInfo,
-							   VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_PopulateInstanceCreateInfo(
+	VSR_RendererCreateInfo* createInfo,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
 {
 	VkApplicationInfo* applicationInfo = &vkStructs->applicationInfo;
 	VkInstanceCreateInfo* instanceCreateInfo = &vkStructs->instanceCreateInfo;
@@ -93,12 +99,17 @@ VSR_PopulateInstanceCreateInfo(VSR_RendererCreateInfo* createInfo,
 	}
 }
 
-// managing queuePriority individually may be to complex, fix it for now
-static const float globalQueuePriority[3] = {1.0f,1.0f,1.0f};
 
+
+
+
+//==============================================================================
+// VSR_RendererGenerateCreateInfo
+//------------------------------------------------------------------------------
 SDL_bool
-VSR_RendererPopulateLogicalDeviceCreateInfo(VSR_RendererCreateInfo* createInfo,
-											VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_RendererPopulateLogicalDeviceCreateInfo(
+	VSR_RendererCreateInfo* createInfo,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
 {
 	VkDeviceCreateInfo* deviceCreateInfo = &vkStructs->deviceCreateInfo;
 	
@@ -128,6 +139,9 @@ VSR_RendererPopulateLogicalDeviceCreateInfo(VSR_RendererCreateInfo* createInfo,
 	// 1 transfer queue
 	// 2 graphics queue
 	// 3 compute queue (optional)
+	// managing queuePriority individually may be to complex, fix it for now
+	static const float globalQueuePriority[3] = {1.0f,1.0f,1.0f};
+	
 	
 	VkDeviceQueueCreateInfo* graphicsQueueCreateInfo =
 		&vkStructs->queueCreateInfoList[vkStructs->graphicsQueueCreateInfoIndex];
@@ -206,11 +220,90 @@ VSR_RendererPopulateLogicalDeviceCreateInfo(VSR_RendererCreateInfo* createInfo,
 
 
 
+
+
+//==============================================================================
+// VSR_RendererPopulateGraphicsPipelineCreateInfo
+//------------------------------------------------------------------------------
+SDL_bool
+VSR_RendererPopulateSwapchainCreateInfo(
+	VSR_RendererCreateInfo* createInfo,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
+{
+	
+	VkSwapchainCreateInfoKHR* swapchainCreateInfo  =
+		&vkStructs->swapchainCreateInfo;
+	
+	
+	swapchainCreateInfo->sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapchainCreateInfo->pNext = NULL;
+	swapchainCreateInfo->flags = 0;
+	
+	
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+	
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
+
+
+
+
+
+//==============================================================================
+// VSR_RendererPopulateGraphicsPipelineCreateInfo
+//------------------------------------------------------------------------------
+SDL_bool
+VSR_RendererPopulateGraphicsPipelineCreateInfo(
+	VSR_RendererCreateInfo* createInfo,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
+{
+	//////////////////////////
+	/// Layout Create Info ///
+	//////////////////////////
+	VkPipelineLayoutCreateInfo layoutCreateInfo =
+		vkStructs->graphicsPipelineLayoutCreateInfo;
+	
+	layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	layoutCreateInfo.pNext = NULL;
+	layoutCreateInfo.flags = 0;
+	
+	
+	////////////////////////////
+	/// Pipeline Create Info ///
+	////////////////////////////
+	VkGraphicsPipelineCreateInfo* pipelineCreateInfo =
+		&vkStructs->graphicsPipelineCreateInfo;
+	
+	pipelineCreateInfo->sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineCreateInfo->pNext = NULL;
+	pipelineCreateInfo->flags = 0;
+	
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+	
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
+
+
+
 //==============================================================================
 // VSR_RendererGenerateCreateInfo
 //------------------------------------------------------------------------------
 VSR_RendererCreateInfo*
-VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags)
+VSR_RendererGenerateCreateInfo(
+	SDL_Window* window,
+	VSR_CreateInfoFlags flags)
 {
 	// TODO: at a later stage function call for vulkan should be gotten by
 	// pulling functions pointers from these functions
@@ -233,9 +326,9 @@ VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags)
 	// assign constants
 	
 	// remove const to write these values outside of initiation
-	*(size_t*)&createInfo->vkStructs->graphicsQueueCreateInfoIndex = 0;
-	*(size_t*)&createInfo->vkStructs->transferQueueCreateInfoIndex = 1;
-	*(size_t*)&createInfo->vkStructs->computeQueueCreateInfoIndex  = 2;
+	createInfo->vkStructs->graphicsQueueCreateInfoIndex = 0;
+	createInfo->vkStructs->transferQueueCreateInfoIndex = 1;
+	createInfo->vkStructs->computeQueueCreateInfoIndex  = 2;
 	
 	VSR_RendererCreateInfoVkStructs* vkStructs = createInfo->vkStructs;
 	
@@ -313,7 +406,8 @@ VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags)
 // VSR_RendererFreeCreateInfo
 //------------------------------------------------------------------------------
 void
-VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo)
+VSR_RendererFreeCreateInfo(
+	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 	VSR_RendererCreateInfoVkStructs* vkStructs = rendererCreateInfo->vkStructs;
 	
@@ -353,12 +447,19 @@ struct VSR_RendererVkStructs
 	VkPhysicalDeviceVulkan12Properties    physicalDeviceVulkan12Properties;
 	VkPhysicalDeviceVulkan13Properties    physicalDeviceVulkan13Properties;
 	
-	VkDevice           logicalDevice;
+	VkSurfaceKHR surface;
+	
+	VkQueue    graphicsQueue;
+	VkQueue    transferQueue;
+	VkQueue    computeQueue;
+	
+	VkDevice   logicalDevice;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;
 struct VSR_Renderer
 {
+	SDL_Window* SDLWindow;
 	VSR_RendererVkStructs* vkStructs;
 };
 
@@ -370,8 +471,9 @@ struct VSR_Renderer
 // VSR_CreateInstance
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_CreateInstance(VSR_Renderer* renderer,
-                   VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_CreateInstance(
+	VSR_Renderer* renderer,
+    VSR_RendererCreateInfoVkStructs* vkStructs)
 {
 	VkResult err;
 	VkInstanceCreateInfo* instanceCreateInfo = &vkStructs->instanceCreateInfo;
@@ -521,6 +623,24 @@ VSR_CreateInstance(VSR_Renderer* renderer,
 	
 	renderer->vkStructs->instance = instance;
 	
+	VkSurfaceKHR surfaceKhr;
+	SDL_bool SDLErr;
+	SDLErr = SDL_Vulkan_CreateSurface(renderer->SDLWindow,
+									  instance,
+									  &surfaceKhr);
+	
+	if(SDLErr != SDL_TRUE)
+	{
+		char errMsg[255];
+		sprintf(errMsg, "Failed to create window surface: %s",
+		        SDL_GetError());
+		
+		VSR_SetErr(errMsg);
+		goto FAIL;
+	}
+	
+	renderer->vkStructs->surface = surfaceKhr;
+	
 	SUCCESS:
 	{
 		return SDL_TRUE;
@@ -540,8 +660,9 @@ VSR_CreateInstance(VSR_Renderer* renderer,
 // VSR_SelectPhysicalDevice
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
-						 VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_SelectPhysicalDevice(
+	VSR_Renderer* renderer,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
 {
 	VkResult err;
 	///////////////////////////////////////
@@ -700,9 +821,15 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 // VSR_SelectPhysicalDevice
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_SelectPhysicalDeviceQueues(VSR_Renderer* renderer,
-							   VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_SelectPhysicalDeviceQueues(
+	VSR_Renderer* renderer,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
 {
+	// TODO: this function should be used to check if a given device supports
+	// a particular surface and has a given queue
+	
+	// FIXME: refactor this function to act as a getQueues for ANY device
+	
 	/////////////////////////////
 	/// easier to use aliases ///
 	/////////////////////////////
@@ -874,8 +1001,9 @@ VSR_SelectPhysicalDeviceQueues(VSR_Renderer* renderer,
 // VSR_SelectPhysicalDevice
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_CreateLogicalDevice(VSR_Renderer* renderer,
-							VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_CreateLogicalDevice(
+	VSR_Renderer* renderer,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
 {
 	VkResult err;
 	VkDevice logicalDevice;
@@ -884,7 +1012,6 @@ VSR_CreateLogicalDevice(VSR_Renderer* renderer,
 				   &vkStructs->deviceCreateInfo,
 				   VSR_GetAllocator(),
 				   &logicalDevice);
-	
 	
 	if(err != VK_SUCCESS)
 	{
@@ -898,6 +1025,8 @@ VSR_CreateLogicalDevice(VSR_Renderer* renderer,
 	
 	renderer->vkStructs->logicalDevice = logicalDevice;
 	
+	vkGetDeviceQueue()
+	
 	SUCCESS:
 	{
 		return SDL_TRUE;
@@ -909,29 +1038,65 @@ VSR_CreateLogicalDevice(VSR_Renderer* renderer,
 	}
 }
 
+//==============================================================================
+// VSR_CreateGraphicsPipeline
+//------------------------------------------------------------------------------
+SDL_bool
+VSR_CreateGraphicsPipeline(
+	VSR_Renderer* renderer,
+	VSR_RendererCreateInfoVkStructs* vkStructs)
+{
+	
+	
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+	
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
 
 VSR_Renderer*
-VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo)
+VSR_CreateRenderer(
+	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 	VSR_Renderer* renderer = SDL_calloc(1, sizeof(VSR_Renderer));
 	renderer->vkStructs = SDL_calloc(1, sizeof(VSR_RendererVkStructs));
+	
+	//////////////////////////////////
+	/// pass info to new structure ///
+	//////////////////////////////////
+	renderer->SDLWindow = rendererCreateInfo->SDLWindow;
 	
 	VSR_CreateInstance(renderer, rendererCreateInfo->vkStructs);
 	VSR_SelectPhysicalDevice(renderer, rendererCreateInfo->vkStructs);
 	VSR_SelectPhysicalDeviceQueues(renderer, rendererCreateInfo->vkStructs);
 	VSR_CreateLogicalDevice(renderer, rendererCreateInfo->vkStructs);
+	VSR_CreateGraphicsPipeline(renderer, rendererCreateInfo->vkStructs);
 	
 	return renderer;
 }
 
 void
-VSR_FreeRenderer(VSR_Renderer* renderer)
+VSR_FreeRenderer(
+	VSR_Renderer* renderer)
 {
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
-	vkDestroyDevice(renderer->vkStructs->logicalDevice, VSR_GetAllocator());
-	vkDestroyInstance(renderer->vkStructs->instance, VSR_GetAllocator());
+	
+	vkDestroyDevice(renderer->vkStructs->logicalDevice,
+					VSR_GetAllocator());
+	
+	vkDestroySurfaceKHR(renderer->vkStructs->instance,
+							renderer->vkStructs->surface,
+							VSR_GetAllocator());
+	
+	vkDestroyInstance(renderer->vkStructs->instance,
+					  VSR_GetAllocator());
 	
 	/////////////////////////////////
 	/// Free renderer's VKStructs ///
