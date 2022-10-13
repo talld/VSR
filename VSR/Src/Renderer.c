@@ -196,7 +196,12 @@ VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo)
 	// this can be removed when the malloc is
 	free((void*) vkStructs->instanceCreateInfo.ppEnabledExtensionNames);
 	
-	free(vkStructs);
+	free((void*)vkStructs);
+	
+	///////////////////////////////////
+	/// free the rendererCreateInfo ///
+	///////////////////////////////////
+	free((void*)rendererCreateInfo);
 }
 
 
@@ -592,4 +597,24 @@ VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo)
 	VSR_CreateLogicalDevice(renderer, rendererCreateInfo->vkStructs);
 	
 	return renderer;
+}
+
+void
+VSR_FreeRenderer(VSR_Renderer* renderer)
+{
+	////////////////////////////////////////
+	/// Destroy VkStructs Vulkan objects ///
+	////////////////////////////////////////
+	vkDestroyDevice(renderer->vkStructs->logicalDevice, VSR_GetAllocator());
+	vkDestroyInstance(renderer->vkStructs->instance, VSR_GetAllocator());
+	
+	/////////////////////////////////
+	/// Free renderer's VKStructs ///
+	/////////////////////////////////
+	free((void*)renderer->vkStructs);
+	
+	/////////////////////
+	/// Free renderer ///
+	/////////////////////
+	free((void*)renderer);
 }

@@ -60,7 +60,11 @@ const char* VSR_getErr();
 // Renderer
 VSR_RendererCreateInfo* VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags);
 
+void VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo);
+
 VSR_Renderer* VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo);
+
+void VSR_FreeRenderer(VSR_Renderer* renderer);
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
 
