@@ -7,6 +7,10 @@ int main(int argc, char* argv[])
 								   SDL_WINDOW_VULKAN);
 	
 	VSR_RendererCreateInfo* createInfo = VSR_RendererGenerateCreateInfo(window,0L);
-	VSR_CreateRenderer(createInfo);
+	VSR_Renderer* renderer = VSR_CreateRenderer(createInfo);
+	
+	VSR_RendererFreeCreateInfo(createInfo);
+	VSR_FreeRenderer(renderer);
+	
 	return 0;
 }
