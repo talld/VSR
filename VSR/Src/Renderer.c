@@ -21,6 +21,13 @@ struct VSR_RendererCreateInfoVkStructs
 	VkApplicationInfo            applicationInfo;
 	VkInstanceCreateInfo         instanceCreateInfo;
 	
+	VkPhysicalDeviceFeatures2    physicalDeviceFeatures2;
+	
+	VkDeviceQueueCreateInfo      queueCreateInfoList[3];
+	const size_t                 transferQueueCreateInfoIndex;
+	const size_t                 graphicsQueueCreateInfoIndex;
+	const size_t                 computeQueueCreateInfoIndex;
+	
 	VkDeviceCreateInfo           deviceCreateInfo;
 	
 	VkComputePipelineCreateInfo  computePipelineCreateInfo;
@@ -36,7 +43,13 @@ struct VSR_RendererCreateInfoVkStructs
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo
 {
-	VSR_RendererCreateInfoVkStructs* vkStructs;
+	SDL_Window*   SDLWindow;
+	
+	SDL_bool   geometryShaderRequested;
+	SDL_bool   tessellationShaderRequested;
+	SDL_bool   computeShaderRequested;
+	
+	VSR_RendererCreateInfoVkStructs*   vkStructs;
 };
 
 
@@ -47,7 +60,8 @@ struct VSR_RendererCreateInfo
 // VSR_PopulateInstanceCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_PopulateInstanceCreateInfo(VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_PopulateInstanceCreateInfo(VSR_RendererCreateInfo* createInfo,
+							   VSR_RendererCreateInfoVkStructs* vkStructs)
 {
 	VkApplicationInfo* applicationInfo = &vkStructs->applicationInfo;
 	VkInstanceCreateInfo* instanceCreateInfo = &vkStructs->instanceCreateInfo;
@@ -56,9 +70,6 @@ VSR_PopulateInstanceCreateInfo(VSR_RendererCreateInfoVkStructs* vkStructs)
 	applicationInfo->apiVersion = VK_API_VERSION_1_3;
 	applicationInfo->engineVersion = 0;
 	applicationInfo->pEngineName = "VSR";
-
-	
-
 	
 	instanceCreateInfo->sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	instanceCreateInfo->pApplicationInfo = applicationInfo;
@@ -82,12 +93,105 @@ VSR_PopulateInstanceCreateInfo(VSR_RendererCreateInfoVkStructs* vkStructs)
 	}
 }
 
+// managing queuePriority individually may be to complex, fix it for now
+static const float globalQueuePriority[3] = {1.0f,1.0f,1.0f};
 
 SDL_bool
-VSR_RendererPopulateLogicalDeviceCreateInfo(VSR_RendererCreateInfoVkStructs* vkStructs)
+VSR_RendererPopulateLogicalDeviceCreateInfo(VSR_RendererCreateInfo* createInfo,
+											VSR_RendererCreateInfoVkStructs* vkStructs)
 {
+	VkDeviceCreateInfo* deviceCreateInfo = &vkStructs->deviceCreateInfo;
+	
+	//////////////////////////////////////////////////////////
+	/// Fill the features list with any features requested ///
+	//////////////////////////////////////////////////////////
+	
+	if(createInfo->geometryShaderRequested)
+	{
+		vkStructs->physicalDeviceFeatures2.features.geometryShader = VK_TRUE;
+	}
+	
+	if(createInfo->tessellationShaderRequested)
+	{
+		vkStructs->physicalDeviceFeatures2.features.tessellationShader = VK_TRUE;
+	}
+	
+	////////////////////////////////////////////////////////////
+	/// Fill deviceCreateInfo with what we can at this stage ///
+	////////////////////////////////////////////////////////////
+	
+	/////////////////////
+	/// Setup queues  ///
+	/////////////////////
+	
+	// we're only going to use 3 queues to make things simple
+	// 1 transfer queue
+	// 2 graphics queue
+	// 3 compute queue (optional)
+	
+	VkDeviceQueueCreateInfo* graphicsQueueCreateInfo =
+		&vkStructs->queueCreateInfoList[vkStructs->graphicsQueueCreateInfoIndex];
+	
+	graphicsQueueCreateInfo->sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	graphicsQueueCreateInfo->pNext = NULL;
+	graphicsQueueCreateInfo->flags = 0;
+	graphicsQueueCreateInfo->pQueuePriorities = globalQueuePriority;
+	graphicsQueueCreateInfo->queueCount = 1;
+	graphicsQueueCreateInfo->queueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	
 	
+	// even though we may not have a compute queue created
+	// populate the struct anyway
+	VkDeviceQueueCreateInfo* computeQueueCreateInfo =
+		&vkStructs->queueCreateInfoList[vkStructs->computeQueueCreateInfoIndex];
+	
+	computeQueueCreateInfo->sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	computeQueueCreateInfo->pNext = NULL;
+	computeQueueCreateInfo->flags = 0;
+	computeQueueCreateInfo->pQueuePriorities = globalQueuePriority;
+	computeQueueCreateInfo->queueCount = 1;
+	computeQueueCreateInfo->queueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	
+	
+	VkDeviceQueueCreateInfo* transferQueueCreateInfo =
+		&vkStructs->queueCreateInfoList[vkStructs->transferQueueCreateInfoIndex];
+	
+	transferQueueCreateInfo->sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	transferQueueCreateInfo->pNext = NULL;
+	transferQueueCreateInfo->flags = 0;
+	transferQueueCreateInfo->pQueuePriorities = globalQueuePriority;
+	transferQueueCreateInfo->queueCount = 1;
+	transferQueueCreateInfo->queueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	
+	
+	///////////////////////////////////////////
+	/// Load queues into device create info ///
+	///////////////////////////////////////////
+	
+	deviceCreateInfo->sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceCreateInfo->flags = 0;
+	deviceCreateInfo->pNext = NULL;
+	
+	deviceCreateInfo->pEnabledFeatures =
+		&vkStructs->physicalDeviceFeatures2.features;
+	
+	deviceCreateInfo->ppEnabledExtensionNames = NULL;
+	deviceCreateInfo->enabledExtensionCount = 0;
+	deviceCreateInfo->enabledLayerCount = 0;
+	deviceCreateInfo->ppEnabledLayerNames = NULL;
+	
+	// load the whole queue list
+	deviceCreateInfo->pQueueCreateInfos = vkStructs->queueCreateInfoList;
+	
+	// but only let it read the entries it needs
+	if(createInfo->computeShaderRequested)
+	{
+		deviceCreateInfo->queueCreateInfoCount = 3;
+	}
+	else
+	{
+		deviceCreateInfo->queueCreateInfoCount = 2;
+	}
 	
 	SUCCESS:
 	{
@@ -126,7 +230,32 @@ VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags)
 	size_t vkStructSize = sizeof(VSR_RendererCreateInfoVkStructs);
 	createInfo->vkStructs = calloc(1, vkStructSize);
 	
+	// assign constants
+	
+	// remove const to write these values outside of initiation
+	*(size_t*)&createInfo->vkStructs->graphicsQueueCreateInfoIndex = 0;
+	*(size_t*)&createInfo->vkStructs->transferQueueCreateInfoIndex = 1;
+	*(size_t*)&createInfo->vkStructs->computeQueueCreateInfoIndex  = 2;
+	
 	VSR_RendererCreateInfoVkStructs* vkStructs = createInfo->vkStructs;
+	
+	////////////////////////////
+	/// Process passed flags ///
+	////////////////////////////
+	if(flags & VSR_CREATE_INFO_GEOMETRY_SHADER)
+	{
+		createInfo->geometryShaderRequested = SDL_TRUE;
+	}
+	
+	if(flags & VSR_CREATE_INFO_TESSELATION_SHADER)
+	{
+		createInfo->tessellationShaderRequested = SDL_TRUE;
+	}
+	
+	if(flags & VSR_CREATE_INFO_COMPUTE_SHADER)
+	{
+		createInfo->computeShaderRequested = SDL_TRUE;
+	}
 	
 	////////////////////////////////////////////////
 	/// query SDL for the extensions it requires ///
@@ -157,11 +286,13 @@ VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags)
 	// keep track of info in vkStructs, we could always add to it later;
 	vkStructs->instanceCreateInfo.enabledExtensionCount = SDLExtCount;
 	vkStructs->instanceCreateInfo.ppEnabledExtensionNames = ppSDLExtNames;
+	createInfo->SDLWindow = window;
 	
 	////////////////////////////////////////////////////////////////////////////
 	/// populate vk create info structs as much as can be done at the moment ///
 	////////////////////////////////////////////////////////////////////////////
-	VSR_PopulateInstanceCreateInfo(vkStructs);
+	VSR_PopulateInstanceCreateInfo(createInfo, vkStructs);
+	VSR_RendererPopulateLogicalDeviceCreateInfo(createInfo, vkStructs);
 	
 	SUCCESS:
 	{
@@ -495,6 +626,8 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 		// this can't fail?
 		vkGetPhysicalDeviceProperties2(testedDevice, &deviceProperties);
 		
+		VSR_LOG("Found device: %s", deviceProperties.properties.deviceName);
+		
 		size_t deviceScore = 0;
 		
 		// measure card by its max SINGLE alloc
@@ -505,6 +638,14 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 		if(deviceProperties.properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
 		{ // so if vRam is shared due to it being an integrated gpu
 			deviceScore = deviceScore / 3; // assume 2/3s is going to be in use
+		}
+		
+		VkBool32 canVertex  =deviceVulkan11Properties.subgroupSupportedStages
+		                     & VK_SHADER_STAGE_FRAGMENT_BIT;
+		
+		if(!canVertex) // if we can't actually draw vertexes the device
+		{
+			deviceScore = 0; // don't use it
 		}
 		
 		if(deviceScore > chosenDeviceScore)
@@ -533,8 +674,186 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 		chosenDeviceVulkan13Properties;
 	
 	renderer->vkStructs->physicalDevice = chosenDevice;
+	
+	VSR_LOG("Selected device: %s",
+			chosenDeviceProperties.properties.deviceName);
+	
 	free((void*)physicalDeviceList);
 	
+	
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+	
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
+
+
+
+
+
+//==============================================================================
+// VSR_SelectPhysicalDevice
+//------------------------------------------------------------------------------
+SDL_bool
+VSR_SelectPhysicalDeviceQueues(VSR_Renderer* renderer,
+							   VSR_RendererCreateInfoVkStructs* vkStructs)
+{
+	/////////////////////////////
+	/// easier to use aliases ///
+	/////////////////////////////
+	VkPhysicalDevice* physicalDevice = &renderer->vkStructs->physicalDevice;
+	
+	VkDeviceQueueCreateInfo* graphicsQueueCreateInfo =
+		&vkStructs->
+			queueCreateInfoList[vkStructs->graphicsQueueCreateInfoIndex];
+	
+	VkDeviceQueueCreateInfo* computeQueueCreateInfo =
+		&vkStructs->
+			queueCreateInfoList[vkStructs->computeQueueCreateInfoIndex];
+	
+	VkDeviceQueueCreateInfo* transferQueueCreateInfo =
+		&vkStructs->
+			queueCreateInfoList[vkStructs->transferQueueCreateInfoIndex];
+	
+	uint32_t* pGraphicsQIndex  = &graphicsQueueCreateInfo->queueFamilyIndex;
+	uint32_t* pComputeQIndex   = &computeQueueCreateInfo->queueFamilyIndex;
+	uint32_t* pTransferQIndex  = &transferQueueCreateInfo->queueFamilyIndex;
+	
+	///////////////////////////////////
+	/// Get queue family properties ///
+	///////////////////////////////////
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties2(*physicalDevice,
+											  &queueFamilyCount,
+											  NULL);
+	
+	VkQueueFamilyProperties2* queueFamilyProperties2List = SDL_malloc(
+		queueFamilyCount * sizeof(VkQueueFamilyProperties2) );
+	
+	for(size_t i = 0; i < queueFamilyCount; i++)
+	{
+		VkQueueFamilyProperties2* qFamily = &queueFamilyProperties2List[i];
+		
+		qFamily->sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+		qFamily->pNext = NULL;
+	}
+	
+	vkGetPhysicalDeviceQueueFamilyProperties2(*physicalDevice,
+	                                          &queueFamilyCount,
+	                                          queueFamilyProperties2List);
+	
+	//////////////////////////////////
+	/// Select best queue families ///
+	//////////////////////////////////
+	VkBool32 hasGraphicsQ = VK_FALSE;
+	VkBool32 hasComputeQ  = VK_FALSE;
+	VkBool32 hasTransferQ = VK_FALSE;
+	
+	// TODO: test present support
+	// VkBool32 graphicsCanPresent  = VK_FALSE;
+	// VkBool32 computeCanPresent   = VK_FALSE;
+	
+	for( size_t i = 0; i < queueFamilyCount; i++)
+	{
+		VkQueueFamilyProperties properties =
+			queueFamilyProperties2List[i].queueFamilyProperties;
+		
+		if(properties.queueCount == 0)
+		{
+			continue; // can't use this queue
+		}
+		
+		if(!hasGraphicsQ && properties.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			*pGraphicsQIndex = i;
+			hasGraphicsQ = VK_TRUE;
+		}
+		
+		if(!hasComputeQ && properties.queueFlags & VK_QUEUE_COMPUTE_BIT)
+		{
+			*pComputeQIndex = i;
+			hasComputeQ = VK_TRUE;
+		}
+		
+		if(!hasTransferQ && properties.queueFlags & VK_QUEUE_TRANSFER_BIT)
+		{
+			*pTransferQIndex = i;
+			hasTransferQ = VK_TRUE;
+		}
+	}
+	
+	/////////////////////////////////////////////
+	/// Merge queue create infos if required ///
+	/////////////////////////////////////////////
+	
+	// TODO: FIX THIS
+	// FIXME: wont work if compute isn't merged but transfer is
+	
+	if(vkStructs->deviceCreateInfo.queueCreateInfoCount == 3) // we want compute
+	{ // check if compute needs to be merged
+		VkBool32  computeWasMerged = VK_FALSE;
+		
+		if( *pComputeQIndex == *pTransferQIndex)
+		{
+			transferQueueCreateInfo->queueCount +=
+				computeQueueCreateInfo->queueCount;
+			
+			computeWasMerged = VK_TRUE;
+		}
+		
+		if(!computeWasMerged && *pComputeQIndex == *pGraphicsQIndex)
+		{
+			graphicsQueueCreateInfo->queueCount +=
+				computeQueueCreateInfo->queueCount;
+			
+			computeWasMerged = VK_TRUE;
+		}
+		
+		if(computeWasMerged)
+		{
+			vkStructs->deviceCreateInfo.queueCreateInfoCount--;
+		}
+	}
+	
+	if( *pTransferQIndex == *pGraphicsQIndex)
+	{
+		graphicsQueueCreateInfo->queueCount +=
+			transferQueueCreateInfo->queueCount;
+		
+		vkStructs->deviceCreateInfo.queueCreateInfoCount--;
+	}
+	
+	///////////////////////////////////////////////////////////////////
+	/// Floor queue counts if they overrun the limits of the family ///
+	///////////////////////////////////////////////////////////////////
+	if(queueFamilyProperties2List[*pGraphicsQIndex]
+	.queueFamilyProperties.queueCount < graphicsQueueCreateInfo->queueCount)
+	{
+		graphicsQueueCreateInfo->queueCount = queueFamilyProperties2List[*pGraphicsQIndex]
+			.queueFamilyProperties.queueCount;
+	}
+	
+	if(queueFamilyProperties2List[*pTransferQIndex]
+		   .queueFamilyProperties.queueCount < transferQueueCreateInfo->queueCount)
+	{
+		transferQueueCreateInfo->queueCount = queueFamilyProperties2List[*pTransferQIndex]
+			.queueFamilyProperties.queueCount;
+	}
+	
+	if(queueFamilyProperties2List[*pComputeQIndex]
+		   .queueFamilyProperties.queueCount < computeQueueCreateInfo->queueCount)
+	{
+		computeQueueCreateInfo->queueCount = queueFamilyProperties2List[*pComputeQIndex]
+			.queueFamilyProperties.queueCount;
+	}
+	
+	// done with this now
+	free((void*)queueFamilyProperties2List);
 	
 	SUCCESS:
 	{
@@ -558,12 +877,14 @@ SDL_bool
 VSR_CreateLogicalDevice(VSR_Renderer* renderer,
 							VSR_RendererCreateInfoVkStructs* vkStructs)
 {
-	VkResult  err;
+	VkResult err;
+	VkDevice logicalDevice;
 	
 	err = vkCreateDevice(renderer->vkStructs->physicalDevice,
 				   &vkStructs->deviceCreateInfo,
 				   VSR_GetAllocator(),
-				   &renderer->vkStructs->logicalDevice);
+				   &logicalDevice);
+	
 	
 	if(err != VK_SUCCESS)
 	{
@@ -574,6 +895,8 @@ VSR_CreateLogicalDevice(VSR_Renderer* renderer,
 		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
+	
+	renderer->vkStructs->logicalDevice = logicalDevice;
 	
 	SUCCESS:
 	{
@@ -595,6 +918,7 @@ VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo)
 	
 	VSR_CreateInstance(renderer, rendererCreateInfo->vkStructs);
 	VSR_SelectPhysicalDevice(renderer, rendererCreateInfo->vkStructs);
+	VSR_SelectPhysicalDeviceQueues(renderer, rendererCreateInfo->vkStructs);
 	VSR_CreateLogicalDevice(renderer, rendererCreateInfo->vkStructs);
 	
 	return renderer;
