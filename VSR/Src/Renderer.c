@@ -533,6 +533,7 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 		chosenDeviceVulkan13Properties;
 	
 	renderer->vkStructs->physicalDevice = chosenDevice;
+	free((void*)physicalDeviceList);
 	
 	
 	SUCCESS:
