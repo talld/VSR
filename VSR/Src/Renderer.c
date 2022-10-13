@@ -641,7 +641,7 @@ VSR_SelectPhysicalDevice(VSR_Renderer* renderer,
 		}
 		
 		VkBool32 canVertex  =deviceVulkan11Properties.subgroupSupportedStages
-		                     & VK_SHADER_STAGE_FRAGMENT_BIT;
+		                     & VK_SHADER_STAGE_VERTEX_BIT;
 		
 		if(!canVertex) // if we can't actually draw vertexes the device
 		{
