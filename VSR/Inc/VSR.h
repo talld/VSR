@@ -17,6 +17,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Struct pre-declarations                                                  ///
 ////////////////////////////////////////////////////////////////////////////////
+typedef struct VSR_RendererCreateInfoSubStructs VSR_RendererCreateInfoSubStructs;
+struct VSR_RendererCreateInfoSubStructs;
+
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo;
 
