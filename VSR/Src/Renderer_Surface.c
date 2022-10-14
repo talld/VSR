@@ -82,7 +82,7 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 		}
 	}
 
-	free((void*) formatList);
+	SDL_free((void*) formatList);
 
 	////////////////////
 	/// Present mode ///
@@ -116,7 +116,17 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 		}
 	}
 
-	free((void*) presentModeList);
+	SDL_free((void*) presentModeList);
+
+	//////////////////
+	/// Resolution ///
+	//////////////////
+	int w;
+	int h;
+	SDL_Vulkan_GetDrawableSize(renderer->SDLWindow, &w, &h);
+
+	surface.surfaceWidth  = w;
+	surface.surfaceHeight = h;
 
 	return surface;
 }

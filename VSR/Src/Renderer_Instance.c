@@ -49,7 +49,7 @@ VSR_InstancePopulateCreateInfo(
 	}
 
 	// TODO: not malloc this
-	const char** ppSDLExtNames = malloc( SDLExtCount * sizeof(char*) );
+	const char** ppSDLExtNames = SDL_malloc( SDLExtCount * sizeof(char*) );
 
 	result = SDL_Vulkan_GetInstanceExtensions(createInfo->SDLWindow,
 											  &SDLExtCount,
@@ -159,7 +159,7 @@ VSR_InstanceCreate(
 		}
 	}
 	// list of availableProperties no longer required
-	free((void*)availableProperties);
+	SDL_free((void*)availableProperties);
 
 	VSR_LOG("REQUIRED EXTENSIONS: %lu, FOUND %lu", requiredExtensions, foundExtensions);
 	if(foundExtensions != requiredExtensions)
@@ -220,7 +220,7 @@ VSR_InstanceCreate(
 		}
 	}
 	// list of availableProperties no longer required
-	free((void*)availableLayers);
+	SDL_free((void*)availableLayers);
 
 	VSR_LOG("REQUIRED LAYERS: %lu, FOUND %lu", requiredLayers, foundLayers);
 	if(foundLayers != requiredLayers)
@@ -246,6 +246,7 @@ VSR_InstanceCreate(
 	}
 
 	renderer->subStructs->instance.instance = instance;
+	SDL_free((void*) createInfo->ppEnabledExtensionNames);
 
 	SUCCESS:
 	{

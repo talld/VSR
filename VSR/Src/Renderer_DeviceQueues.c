@@ -176,7 +176,7 @@ VSR_DeviceQueuesSelectFromDevice(
 	}
 
 	// done with this now
-	free((void*)queueFamilyProperties2List);
+	SDL_free((void*)queueFamilyProperties2List);
 
 	return queues;
 }

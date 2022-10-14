@@ -27,10 +27,10 @@ VSR_RendererGenerateCreateInfo(
 	/// allocate structs ///
 	////////////////////////
 	size_t createInfoSize = sizeof(VSR_RendererCreateInfo);
-	VSR_RendererCreateInfo* createInfo =  calloc(1, createInfoSize);
+	VSR_RendererCreateInfo* createInfo =  SDL_calloc(1, createInfoSize);
 	
 	size_t subStructsSize = sizeof(VSR_RendererCreateInfoSubStructs);
-	createInfo->subStructs = calloc(1, subStructsSize);
+	createInfo->subStructs = SDL_calloc(1, subStructsSize);
 
 	createInfo->SDLWindow = window;
 
@@ -88,12 +88,12 @@ VSR_RendererFreeCreateInfo(
 	///////////////////////////////////////////
 	/// Free vkStructs create info pointers ///
 	///////////////////////////////////////////
-	free((void*)subStructs);
+	SDL_free((void*)subStructs);
 	
 	///////////////////////////////////
 	/// free the rendererCreateInfo ///
 	///////////////////////////////////
-	free((void*)rendererCreateInfo);
+	SDL_free((void*)rendererCreateInfo);
 }
 
 
@@ -178,10 +178,10 @@ VSR_FreeRenderer(
 	/////////////////////////////////
 	/// Free renderer's VKStructs ///
 	/////////////////////////////////
-	free((void*)renderer->subStructs);
+	SDL_free((void*)renderer->subStructs);
 	
 	/////////////////////
 	/// Free renderer ///
 	/////////////////////
-	free((void*)renderer);
+	SDL_free((void*)renderer);
 }

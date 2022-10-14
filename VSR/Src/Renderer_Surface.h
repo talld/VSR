@@ -19,6 +19,8 @@ struct VSR_Surface
 	VkFormat                   surfaceFormat;
 	VkColorSpaceKHR            surfaceColourSpace;
 	VkPresentModeKHR           surfacePresentMode;
+	int                        surfaceWidth;
+	int                        surfaceHeight;
 };
 
 SDL_bool

@@ -177,7 +177,7 @@ VSR_PhysicalDeviceSelect(
 	VSR_LOG("Selected device: %s",
 			chosenDeviceProperties.properties.deviceName);
 
-	free((void*)physicalDeviceList);
+	SDL_free((void*)physicalDeviceList);
 
 	SUCCESS:
 	{
