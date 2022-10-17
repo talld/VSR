@@ -165,15 +165,7 @@ VSR_FreeRenderer(
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
 	
-	vkDestroyDevice(renderer->subStructs->logicalDevice.device,
-					VSR_GetAllocator());
-	
-	vkDestroySurfaceKHR(renderer->subStructs->instance.instance,
-							renderer->subStructs->surface.surface,
-							VSR_GetAllocator());
-	
-	vkDestroyInstance(renderer->subStructs->instance.instance,
-					  VSR_GetAllocator());
+
 	
 	/////////////////////////////////
 	/// Free renderer's VKStructs ///

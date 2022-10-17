@@ -87,6 +87,10 @@ VSR_InstancePopulateCreateInfo(
 	}
 }
 
+
+
+
+
 //==============================================================================
 // VSR_CreateInstance
 //------------------------------------------------------------------------------
@@ -257,4 +261,19 @@ VSR_InstanceCreate(
 	{
 		return SDL_FALSE;
 	}
+}
+
+
+
+
+
+//==============================================================================
+// VSR_CreateInstance
+//------------------------------------------------------------------------------
+void
+VSR_InstanceDestroy(
+	VSR_Renderer* renderer)
+{
+	vkDestroyInstance(renderer->subStructs->instance.instance,
+	                  VSR_GetAllocator());
 }

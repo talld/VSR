@@ -79,6 +79,9 @@ VSR_LogicalDevicePopulateCreateInfo(
 }
 
 
+
+
+
 //==============================================================================
 // VSR_SelectPhysicalDevice
 //------------------------------------------------------------------------------
@@ -143,4 +146,19 @@ VSR_LogicalDeviceCreate(
 	{
 		return SDL_FALSE;
 	}
+}
+
+
+
+
+
+//==============================================================================
+// VSR_RendererGenerateCreateInfo
+//------------------------------------------------------------------------------
+void
+VSR_LogicalDeviceDestroy(
+	VSR_Renderer* renderer)
+{
+	vkDestroyDevice(renderer->subStructs->logicalDevice.device,
+	                VSR_GetAllocator());
 }

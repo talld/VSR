@@ -4,6 +4,7 @@
 
 #include "Renderer.h"
 #include "VSR_error.h"
+
 //==============================================================================
 // VSR_CreateInstance
 //------------------------------------------------------------------------------
@@ -129,4 +130,20 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 	surface.surfaceHeight = h;
 
 	return surface;
+}
+
+
+
+
+
+//==============================================================================
+// VSR_SurfaceDestroy
+//------------------------------------------------------------------------------
+void
+VSR_SurfaceDestroy(
+	VSR_Renderer* renderer)
+{
+	vkDestroySurfaceKHR(renderer->subStructs->instance.instance,
+	                    renderer->subStructs->surface.surface,
+	                    VSR_GetAllocator());
 }
