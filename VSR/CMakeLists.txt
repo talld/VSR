@@ -11,7 +11,17 @@ set(VSR_PCH
 set(VSR_SRC
         ${VSR_PCH}
         Src/VSR_error.c
-        Src/Renderer.c)
+
+        # Rendering
+        Src/Renderer.c
+        Src/Renderer_Instance.c
+        Src/Renderer_PhysicalDevice.c
+        Src/Renderer_LogicalDevice.c
+        Src/Renderer_DeviceQueues.c
+        Src/Renderer_Surface.c
+        Src/Renderer_Swapchain.c
+        Src/Renderer_GraphicsPipeline.c
+        Src/ComputePipeline.c Src/Renderer_ImageView.c Src/Renderer_ImageView.h)
 
 add_library(${PROJECT_NAME} ${VSR_SRC})
 
@@ -38,5 +48,5 @@ target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
 target_include_directories(${PROJECT_NAME} PRIVATE ${VULKAN_INCLUDE_DIRS})
 
 find_package(SDL2 REQUIRED FATAL_ERROR)
-target_link_libraries(${PROJECT_NAME} SDL2::SDL2)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})

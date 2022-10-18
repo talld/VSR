@@ -44,6 +44,7 @@ struct VSR_RendererSubStructs
 	VSR_PhysicalDevice   physicalDevice;
 	VSR_DeviceQueues     deviceQueues;
 	VSR_LogicalDevice    logicalDevice;
+	VSR_Swapchain        swapchain;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;
