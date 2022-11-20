@@ -134,8 +134,12 @@ VSR_PhysicalDeviceSelect(
 		VkBool32 canPresent =
 			(deviceQueues.computeCanPresent || deviceQueues.graphicsCanPresent);
 
-		if(!canVertex // if we can't actually draw vertexes the device
-			|| !canPresent ) // or we can't find a way to present to the screen
+		VkBool32 canSwapchain = deviceSurface.surfaceFormat !=
+			VK_FORMAT_UNDEFINED;
+
+		if(!canVertex // if we can't actually draw vertexes on the device
+			|| !canPresent  // or we can't find a way to present to the screen
+			|| !canSwapchain ) // or we can't find a format for our surface
 		{
 			deviceScore = 0; // don't use it
 		}
