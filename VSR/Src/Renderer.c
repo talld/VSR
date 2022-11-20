@@ -101,30 +101,6 @@ VSR_RendererFreeCreateInfo(
 
 
 //==============================================================================
-// VSR_CreateGraphicsPipeline
-//------------------------------------------------------------------------------
-SDL_bool
-VSR_CreateGraphicsPipeline(
-	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* vkStructs)
-{
-	
-	
-	SUCCESS:
-	{
-		return SDL_TRUE;
-	}
-	
-	FAIL:
-	{
-		return SDL_FALSE;
-	}
-}
-
-
-
-
-//==============================================================================
 // VSR_CreateRenderer
 //------------------------------------------------------------------------------
 VSR_Renderer*
@@ -164,9 +140,11 @@ VSR_FreeRenderer(
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
-	
+	VSR_SwapchainDestroy(renderer);
+	VSR_LogicalDeviceDestroy(renderer);
+	VSR_SurfaceDestroy(renderer);
+	VSR_InstanceDestroy(renderer);
 
-	
 	/////////////////////////////////
 	/// Free renderer's VKStructs ///
 	/////////////////////////////////
