@@ -10,6 +10,7 @@
 #include "Renderer_DeviceQueues.h"
 #include "Renderer_Swapchain.h"
 #include "Renderer_GraphicsPipeline.h"
+#include "VSR_Shader.h"
 
 
 typedef struct VSR_RendererCreateInfoSubStructs VSR_RendererCreateInfoSubStructs;
@@ -45,6 +46,8 @@ struct VSR_RendererSubStructs
 	VSR_DeviceQueues     deviceQueues;
 	VSR_LogicalDevice    logicalDevice;
 	VSR_Swapchain        swapchain;
+	VSR_Shader           vertexShader;
+	VSR_Shader           fragmentShader;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;

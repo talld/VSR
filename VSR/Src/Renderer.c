@@ -3,6 +3,9 @@
 #include "Renderer.h"
 #include "VSR_error.h"
 
+#include "vert.h"
+#include "frag.h"
+
 
 
 
@@ -55,6 +58,7 @@ VSR_RendererGenerateCreateInfo(
 	VSR_DeviceQueuesPopulateCreateInfo(createInfo, createInfo->subStructs);
     VSR_LogicalDevicePopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_SwapchainPopulateCreateInfo(createInfo, createInfo->subStructs);
+	VSR_RendererPopulateGraphicsPipelineCreateInfo(createInfo, createInfo->subStructs);
 
 	SUCCESS:
 	{
@@ -120,7 +124,16 @@ VSR_CreateRenderer(
 	VSR_PhysicalDeviceSelect(renderer, rendererCreateInfo->subStructs);
 	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo->subStructs);
+
+	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
+
+	renderer->subStructs->vertexShader =
+		VSR_ShaderCreate(renderer, kVertexShaderBytesSize, vertexShaderBytes);
+
+	renderer->subStructs->fragmentShader =
+		VSR_ShaderCreate(renderer, kVertexShaderBytesSize, vertexShaderBytes);
+
 	VSR_CreateGraphicsPipeline(renderer, rendererCreateInfo->subStructs);
 	
 	return renderer;

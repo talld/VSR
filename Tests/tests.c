@@ -1,4 +1,6 @@
 #include <VSR.h>
+#include "stdio.h"
+
 
 int main(int argc, char* argv[])
 {
@@ -11,6 +13,7 @@ int main(int argc, char* argv[])
 	
 	VSR_RendererFreeCreateInfo(createInfo);
 	VSR_FreeRenderer(renderer);
-	
+
+	printf("exit successful");
 	return 0;
 }

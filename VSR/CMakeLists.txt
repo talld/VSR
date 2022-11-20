@@ -20,8 +20,11 @@ set(VSR_SRC
         Src/Renderer_DeviceQueues.c
         Src/Renderer_Surface.c
         Src/Renderer_Swapchain.c
+        Src/Renderer_ImageView.c
         Src/Renderer_GraphicsPipeline.c
-        Src/ComputePipeline.c Src/Renderer_ImageView.c Src/Renderer_ImageView.h)
+        Src/VSR_Shader.c
+        Src/ComputePipeline.c
+        )
 
 add_library(${PROJECT_NAME} ${VSR_SRC})
 
