@@ -54,13 +54,17 @@ VSR_LogicalDevicePopulateCreateInfo(
 	deviceCreateInfo->pEnabledFeatures =
 		&physicalDeviceCreateInfo->physicalDeviceFeatures2.features;
 
-	deviceCreateInfo->ppEnabledExtensionNames = NULL;
-	deviceCreateInfo->enabledExtensionCount = 0;
+	static const char* deviceExtensions[1] = {
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	};
+
+	deviceCreateInfo->enabledExtensionCount = 1;
+	deviceCreateInfo->ppEnabledExtensionNames = deviceExtensions;
 	deviceCreateInfo->enabledLayerCount = 0;
 	deviceCreateInfo->ppEnabledLayerNames = NULL;
 
 	// load the queue list
-	deviceCreateInfo->queueCreateInfoCount = 3;
+	deviceCreateInfo->queueCreateInfoCount = 3; // number MAY change in creation
 
 	deviceCreateInfo->pQueueCreateInfos =
 		deviceQueuesCreateInfo->queueCreateInfoList;
