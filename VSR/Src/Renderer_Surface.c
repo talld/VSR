@@ -51,6 +51,13 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 	VSR_Surface surface;
 	surface.surface = renderer->subStructs->surface.surface;
 
+	///////////////////////////
+	/// surfaceCapabilities ///
+	///////////////////////////
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device,
+											  surface.surface,
+											  &surface.surfaceCapabilities);
+
 	//////////////
 	/// Format ///
 	//////////////

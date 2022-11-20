@@ -15,7 +15,7 @@ typedef struct VSR_Surface VSR_Surface;
 struct VSR_Surface
 {
 	VkSurfaceKHR               surface;
-	VkSurfaceCapabilitiesKHR   surfaceCapabilities2;
+	VkSurfaceCapabilitiesKHR   surfaceCapabilities;
 	VkFormat                   surfaceFormat;
 	VkColorSpaceKHR            surfaceColourSpace;
 	VkPresentModeKHR           surfacePresentMode;
@@ -32,5 +32,9 @@ VSR_Surface
 VSR_SurfaceGetSurfaceFormatFromDevice(
 	VSR_Renderer* renderer,
 	VkPhysicalDevice device);
+
+void
+VSR_SurfaceDestroy(
+	VSR_Renderer* renderer);
 
 #endif //VSR_SUITE_RENDERER_SURFACE_H
