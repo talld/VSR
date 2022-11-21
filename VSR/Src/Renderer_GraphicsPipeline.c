@@ -102,7 +102,9 @@ VSR_CreateGraphicsPipeline(
 	////////////////////
 
 	// TODO : implement vertex desc
-	VkPipelineVertexInputStateCreateInfo vertInfo;
+	VkPipelineVertexInputStateCreateInfo vertInfo =
+		(VkPipelineVertexInputStateCreateInfo){0};
+
 	vertInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertInfo.pNext = NULL;
 	vertInfo.flags = 0L;
@@ -115,7 +117,9 @@ VSR_CreateGraphicsPipeline(
 	/// Input Assembly ///
 	//////////////////////
 
-	VkPipelineInputAssemblyStateCreateInfo inputInfo;
+	VkPipelineInputAssemblyStateCreateInfo inputInfo =
+		(VkPipelineInputAssemblyStateCreateInfo) {0};
+
 	inputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 	inputInfo.pNext = NULL;
 	inputInfo.flags = 0L;
@@ -126,7 +130,7 @@ VSR_CreateGraphicsPipeline(
 	/// View-Port ///
 	/////////////////
 
-	VkViewport viewport;
+	VkViewport viewport = (VkViewport){0};
 	viewport.x = 0;
 	viewport.y = 0;
 	viewport.width = renderer->subStructs->surface.surfaceWidth;
@@ -134,13 +138,15 @@ VSR_CreateGraphicsPipeline(
 	viewport.minDepth = 0.f;
 	viewport.maxDepth = 1.f;
 
-	VkRect2D scissor;
+	VkRect2D scissor = (VkRect2D){0};
 	scissor.offset.x = 0;
 	scissor.offset.y = 0;
 	scissor.extent.width = renderer->subStructs->surface.surfaceWidth;
 	scissor.extent.height = renderer->subStructs->surface.surfaceHeight;
 
-	VkPipelineViewportStateCreateInfo viewInfo;
+	VkPipelineViewportStateCreateInfo viewInfo =
+		(VkPipelineViewportStateCreateInfo){0};
+
 	viewInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
 	viewInfo.pNext = NULL;
 	viewInfo.flags = 0L;
@@ -153,7 +159,9 @@ VSR_CreateGraphicsPipeline(
 	/// Raster states ///
 	/////////////////////
 
-	VkPipelineRasterizationStateCreateInfo rasterInfo;
+	VkPipelineRasterizationStateCreateInfo rasterInfo =
+		(VkPipelineRasterizationStateCreateInfo){0};
+
 	rasterInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	rasterInfo.pNext = NULL;
 	rasterInfo.flags = 0L;
@@ -169,7 +177,9 @@ VSR_CreateGraphicsPipeline(
 	/// Multi-Sampling ///
 	//////////////////////
 
-	VkPipelineMultisampleStateCreateInfo sampleInfo;
+	VkPipelineMultisampleStateCreateInfo sampleInfo =
+		(VkPipelineMultisampleStateCreateInfo){0};
+
 	sampleInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 	sampleInfo.pNext = NULL;
 	sampleInfo.flags = 0L;
@@ -182,7 +192,9 @@ VSR_CreateGraphicsPipeline(
 	/// blending ///
 	////////////////
 
-	VkPipelineColorBlendAttachmentState colourInfo;
+	VkPipelineColorBlendAttachmentState colourInfo =
+		(VkPipelineColorBlendAttachmentState){0};
+
 	colourInfo.colorWriteMask =
 		VK_COLOR_COMPONENT_R_BIT |
 		VK_COLOR_COMPONENT_G_BIT |
@@ -197,7 +209,9 @@ VSR_CreateGraphicsPipeline(
 	colourInfo.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 	colourInfo.colorBlendOp = VK_BLEND_OP_ADD;
 
-	VkPipelineColorBlendStateCreateInfo blendInfo;
+	VkPipelineColorBlendStateCreateInfo blendInfo =
+		(VkPipelineColorBlendStateCreateInfo){0};
+
 	blendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	blendInfo.pNext = NULL;
 	blendInfo.flags = 0L;
@@ -208,7 +222,9 @@ VSR_CreateGraphicsPipeline(
 	/// Dynamic sates ///
 	/////////////////////
 
-	VkPipelineDynamicStateCreateInfo dynamicInfo;
+	VkPipelineDynamicStateCreateInfo dynamicInfo =
+		(VkPipelineDynamicStateCreateInfo){0};
+
 	dynamicInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 	dynamicInfo.pNext = NULL;
 	dynamicInfo.flags = 0L;
@@ -259,7 +275,6 @@ VSR_CreateGraphicsPipeline(
 	pipelineCreateInfo->basePipelineIndex = 0;
 	pipelineCreateInfo->basePipelineHandle = NULL;
 	pipelineCreateInfo->layout = pipeline.pipelineLayout;
-	pipelineCreateInfo->renderPass = NULL;
 
 	vkCreateGraphicsPipelines(renderer->subStructs->logicalDevice.device,
 							  NULL,
