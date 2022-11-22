@@ -23,6 +23,7 @@ struct VSR_RendererCreateInfoSubStructs
 	VSR_LogicalDeviceCreateInfo     logicalDeviceCreateInfo;
 	VSR_DeviceQueuesCreateInfo      deviceQueuesCreateInfo;
 	VSR_SwapchainCreateInfo         swapchainCreateInfo;
+	VSR_RenderPassCreateInfo        renderPassCreateInfo;
 	VSR_GraphicPipelineCreateInfo   graphicsPipelineCreateInfo;
 };
 
