@@ -16,7 +16,7 @@ struct VSR_RenderPass
 };
 
 SDL_bool
-VSR_RendererPassPopulateRenderPassCreateInfo(
+VSR_RenderPassPopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
 	VSR_RendererCreateInfoSubStructs* subStructs);
 

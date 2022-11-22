@@ -28,13 +28,13 @@ struct VSR_GraphicPipeline
 
 
 SDL_bool
-VSR_RendererPopulateGraphicsPipelineCreateInfo(
+VSR_GraphicsPipelinePopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
 	VSR_RendererCreateInfoSubStructs* subStructs);
 
 
 SDL_bool
-VSR_CreateGraphicsPipeline(
+VSR_GraphicsPipelineCreate(
 	VSR_Renderer* renderer,
 	VSR_RendererCreateInfoSubStructs* subStructs);
 

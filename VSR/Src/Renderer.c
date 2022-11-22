@@ -57,8 +57,8 @@ VSR_RendererGenerateCreateInfo(
 	VSR_DeviceQueuesPopulateCreateInfo(createInfo, createInfo->subStructs);
     VSR_LogicalDevicePopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_SwapchainPopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_RendererPopulateRenderPassCreateInfo(createInfo, createInfo->subStructs);
-	VSR_RendererPopulateGraphicsPipelineCreateInfo(createInfo, createInfo->subStructs);
+	VSR_RenderPassPopulateCreateInfo(createInfo, createInfo->subStructs);
+	VSR_GraphicsPipelinePopulateCreateInfo(createInfo, createInfo->subStructs);
 
 	SUCCESS:
 	{
@@ -134,8 +134,8 @@ VSR_CreateRenderer(
 	renderer->subStructs->fragmentShader =
 		VSR_ShaderCreate(renderer, kFragmentShaderBytesSize, fragmentShaderBytes);
 
-	VSR_CreateRenderPass(renderer, rendererCreateInfo->subStructs);
-	VSR_CreateGraphicsPipeline(renderer, rendererCreateInfo->subStructs);
+	VSR_RenderPassCreate(renderer, rendererCreateInfo->subStructs);
+	VSR_GraphicsPipelineCreate(renderer, rendererCreateInfo->subStructs);
 
 	return renderer;
 }

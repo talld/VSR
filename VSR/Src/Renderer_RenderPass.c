@@ -11,7 +11,7 @@
 // VSR_RendererPopulateRenderPassCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_RenderPassPopulateRenderPassCreateInfo(
+VSR_RenderPassPopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
 	VSR_RendererCreateInfoSubStructs* subStructs)
 {
