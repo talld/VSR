@@ -57,6 +57,7 @@ VSR_RendererGenerateCreateInfo(
 	VSR_DeviceQueuesPopulateCreateInfo(createInfo, createInfo->subStructs);
     VSR_LogicalDevicePopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_SwapchainPopulateCreateInfo(createInfo, createInfo->subStructs);
+	VSR_RendererPopulateRenderPassCreateInfo(createInfo, createInfo->subStructs);
 	VSR_RendererPopulateGraphicsPipelineCreateInfo(createInfo, createInfo->subStructs);
 
 	SUCCESS:
@@ -131,10 +132,11 @@ VSR_CreateRenderer(
 		VSR_ShaderCreate(renderer, kVertexShaderBytesSize, vertexShaderBytes);
 
 	renderer->subStructs->fragmentShader =
-		VSR_ShaderCreate(renderer, kVertexShaderBytesSize, vertexShaderBytes);
+		VSR_ShaderCreate(renderer, kFragmentShaderBytesSize, fragmentShaderBytes);
 
+	VSR_CreateRenderPass(renderer, rendererCreateInfo->subStructs);
 	VSR_CreateGraphicsPipeline(renderer, rendererCreateInfo->subStructs);
-	
+
 	return renderer;
 }
 
@@ -152,6 +154,8 @@ VSR_FreeRenderer(
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
+	VSR_RenderPassDestroy(renderer);
+
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
 	VSR_SurfaceDestroy(renderer);

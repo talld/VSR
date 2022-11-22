@@ -73,11 +73,11 @@ VSR_CreateGraphicsPipeline(
 	VSR_Renderer* renderer,
 	VSR_RendererCreateInfoSubStructs* subStructs)
 {
-	VSR_GraphicPipeline pipeline;
-
 	///////////////
 	/// aliases ///
 	///////////////
+
+	VSR_GraphicPipeline* pipeline = &renderer->subStructs->graphicPipeline;
 
 	VkPipelineLayoutCreateInfo* layoutCreateInfo =
 		&subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
@@ -217,6 +217,7 @@ VSR_CreateGraphicsPipeline(
 	blendInfo.flags = 0L;
 	blendInfo.logicOpEnable = VK_FALSE;
 	blendInfo.pAttachments = &colourInfo;
+	blendInfo.attachmentCount = 1;
 
 	/////////////////////
 	/// Dynamic sates ///
@@ -244,7 +245,7 @@ VSR_CreateGraphicsPipeline(
 		vkCreatePipelineLayout(renderer->subStructs->logicalDevice.device,
 							   layoutCreateInfo,
 							   VSR_GetAllocator(),
-							   &pipeline.pipelineLayout);
+							   &pipeline->pipelineLayout);
 
 	if(err != VK_SUCCESS)
 	{
@@ -272,17 +273,18 @@ VSR_CreateGraphicsPipeline(
 	pipelineCreateInfo->pMultisampleState = &sampleInfo;
 	pipelineCreateInfo->pColorBlendState = &blendInfo;
 	pipelineCreateInfo->pDynamicState = &dynamicInfo;
+	pipelineCreateInfo->basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo->basePipelineIndex = 0;
-	pipelineCreateInfo->basePipelineHandle = NULL;
-	pipelineCreateInfo->layout = pipeline.pipelineLayout;
+	pipelineCreateInfo->layout = pipeline->pipelineLayout;
+	pipelineCreateInfo->renderPass = renderer->subStructs->renderPass.renderPass;
+	pipelineCreateInfo->subpass = 0;
 
 	vkCreateGraphicsPipelines(renderer->subStructs->logicalDevice.device,
 							  NULL,
 							  1,
 							  pipelineCreateInfo,
 							  VSR_GetAllocator(),
-							  &pipeline.pipeline);
-
+							  &pipeline->pipeline);
 SUCCESS:
 	{
 		return SDL_TRUE;

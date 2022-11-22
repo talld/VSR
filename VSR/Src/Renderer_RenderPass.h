@@ -16,14 +16,19 @@ struct VSR_RenderPass
 };
 
 SDL_bool
-VSR_RendererPopulateRenderPassCreateInfo(
+VSR_RendererPassPopulateRenderPassCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
 	VSR_RendererCreateInfoSubStructs* subStructs);
 
 
 SDL_bool
-VSR_CreateRenderPass(
+VSR_RenderPassCreate(
 	VSR_Renderer* renderer,
 	VSR_RendererCreateInfoSubStructs* subStructs);
+
+void
+VSR_RenderPassDestroy(
+	VSR_Renderer* renderer
+	);
 
 #endif //VSR_SUITE_RENDERER_RENDERPASS_H

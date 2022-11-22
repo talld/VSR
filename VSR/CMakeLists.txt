@@ -21,8 +21,9 @@ set(VSR_SRC
         Src/Renderer_Surface.c
         Src/Renderer_Swapchain.c
         Src/Renderer_ImageView.c
-        Src/Renderer_GraphicsPipeline.c
         Src/VSR_Shader.c
+        Src/Renderer_RenderPass.c
+        Src/Renderer_GraphicsPipeline.c
         Src/ComputePipeline.c
         )
 

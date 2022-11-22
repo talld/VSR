@@ -9,8 +9,9 @@
 #include "Renderer_LogicalDevice.h"
 #include "Renderer_DeviceQueues.h"
 #include "Renderer_Swapchain.h"
-#include "Renderer_GraphicsPipeline.h"
 #include "VSR_Shader.h"
+#include "Renderer_RenderPass.h"
+#include "Renderer_GraphicsPipeline.h"
 
 
 typedef struct VSR_RendererCreateInfoSubStructs VSR_RendererCreateInfoSubStructs;
@@ -48,6 +49,8 @@ struct VSR_RendererSubStructs
 	VSR_Swapchain        swapchain;
 	VSR_Shader           vertexShader;
 	VSR_Shader           fragmentShader;
+	VSR_RenderPass       renderPass;
+	VSR_GraphicPipeline  graphicPipeline;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;
