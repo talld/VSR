@@ -8,7 +8,7 @@
 
 
 //==============================================================================
-// VSR_RendererPopulateGraphicsPipelineCreateInfo
+// VSR_GraphicsPipelinePopulateCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_GraphicsPipelinePopulateCreateInfo(
@@ -66,7 +66,7 @@ VSR_GraphicsPipelinePopulateCreateInfo(
 
 
 //==============================================================================
-// VSR_CreateGraphicsPipeline
+// VSR_GraphicsPipelineCreate
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_GraphicsPipelineCreate(
@@ -299,6 +299,10 @@ SUCCESS:
 
 
 
+
+//==============================================================================
+// VSR_GraphicsPipelinePopulateCreateInfo
+//------------------------------------------------------------------------------
 void
 VSR_GraphicPipelineDestroy(
 	VSR_Renderer* renderer

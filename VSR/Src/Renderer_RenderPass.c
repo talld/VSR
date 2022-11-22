@@ -8,7 +8,7 @@
 
 
 //==============================================================================
-// VSR_RendererPopulateRenderPassCreateInfo
+// VSR_RenderPassPopulateCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_RenderPassPopulateCreateInfo(
@@ -24,7 +24,7 @@ VSR_RenderPassPopulateCreateInfo(
 
 
 //==============================================================================
-// VSR_CreateRenderPass
+// VSR_RenderPassCreate
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_RenderPassCreate(
@@ -126,6 +126,13 @@ FAIL:
 	}
 }
 
+
+
+
+
+//==============================================================================
+// VSR_RenderPassDestroy
+//------------------------------------------------------------------------------
 void
 VSR_RenderPassDestroy(
 	VSR_Renderer* renderer
