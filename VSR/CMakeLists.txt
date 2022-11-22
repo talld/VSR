@@ -24,6 +24,7 @@ set(VSR_SRC
         Src/VSR_Shader.c
         Src/Renderer_RenderPass.c
         Src/Renderer_GraphicsPipeline.c
+        Src/Renderer_Framebuffer.c
         Src/ComputePipeline.c
         )
 

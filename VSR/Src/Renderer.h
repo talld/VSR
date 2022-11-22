@@ -12,6 +12,7 @@
 #include "VSR_Shader.h"
 #include "Renderer_RenderPass.h"
 #include "Renderer_GraphicsPipeline.h"
+#include "Renderer_Framebuffer.h"
 
 
 typedef struct VSR_RendererCreateInfoSubStructs VSR_RendererCreateInfoSubStructs;
@@ -25,6 +26,7 @@ struct VSR_RendererCreateInfoSubStructs
 	VSR_SwapchainCreateInfo         swapchainCreateInfo;
 	VSR_RenderPassCreateInfo        renderPassCreateInfo;
 	VSR_GraphicPipelineCreateInfo   graphicsPipelineCreateInfo;
+	VSR_FramebufferCreateInfo       framebufferCreateInfo;
 };
 
 
@@ -52,6 +54,7 @@ struct VSR_RendererSubStructs
 	VSR_Shader           fragmentShader;
 	VSR_RenderPass       renderPass;
 	VSR_GraphicPipeline  graphicPipeline;
+	VSR_Framebuffer      framebuffer;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;
