@@ -10,7 +10,7 @@ const char* VSR_getErr()
 
 void VSR_SetErr(char* errMsg)
 {
-	sErrorMessage = sErrorMessage;
+	sErrorMessage = errMsg;
 }
 
 const char* VSR_VkErrorToString(VkResult result)
