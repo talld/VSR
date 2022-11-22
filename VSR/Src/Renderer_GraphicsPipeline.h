@@ -38,4 +38,9 @@ VSR_GraphicsPipelineCreate(
 	VSR_Renderer* renderer,
 	VSR_RendererCreateInfoSubStructs* subStructs);
 
+void
+VSR_GraphicPipelineDestroy(
+	VSR_Renderer* renderer
+	);
+
 #endif //VSR_SUITE_RENDERER_GRAPHICSPIPELINE_H

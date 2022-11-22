@@ -155,7 +155,9 @@ VSR_FreeRenderer(
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
 	VSR_RenderPassDestroy(renderer);
-
+	VSR_GraphicPipelineDestroy(renderer);
+	VSR_ShaderDestroy(renderer, &renderer->subStructs->fragmentShader);
+	VSR_ShaderDestroy(renderer, &renderer->subStructs->vertexShader);
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
 	VSR_SurfaceDestroy(renderer);

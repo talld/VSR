@@ -295,3 +295,20 @@ SUCCESS:
 		return SDL_FALSE;
 	}
 }
+
+
+
+
+void
+VSR_GraphicPipelineDestroy(
+	VSR_Renderer* renderer
+)
+{
+	vkDestroyPipeline(renderer->subStructs->logicalDevice.device,
+					  renderer->subStructs->graphicPipeline.pipeline,
+					  VSR_GetAllocator());
+
+	vkDestroyPipelineLayout(renderer->subStructs->logicalDevice.device,
+							renderer->subStructs->graphicPipeline.pipelineLayout,
+							VSR_GetAllocator());
+}
