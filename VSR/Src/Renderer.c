@@ -3,8 +3,8 @@
 #include <vulkan/vulkan.h>
 #include "VSR_error.h"
 
-#include "vert.h"
-#include "frag.h"
+
+
 
 
 void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
@@ -158,12 +158,6 @@ VSR_RendererCreate(
 	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
 
-	renderer->subStructs->vertexShader =
-		VSR_ShaderCreate(renderer, kVertexShaderBytesSize, vertexShaderBytes);
-
-	renderer->subStructs->fragmentShader =
-		VSR_ShaderCreate(renderer, kFragmentShaderBytesSize, fragmentShaderBytes);
-
 	VSR_RenderPassCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_GraphicsPipelineCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_FramebufferCreate(renderer, rendererCreateInfo->subStructs);
@@ -194,8 +188,6 @@ VSR_RendererFree(
 	VSR_FramebufferDestroy(renderer);
 	VSR_GraphicPipelineDestroy(renderer);
 	VSR_RenderPassDestroy(renderer);
-	VSR_ShaderDestroy(renderer, &renderer->subStructs->fragmentShader);
-	VSR_ShaderDestroy(renderer, &renderer->subStructs->vertexShader);
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
 	VSR_SurfaceDestroy(renderer);
@@ -211,6 +203,25 @@ VSR_RendererFree(
 	/////////////////////
 	SDL_free((void*)renderer);
 }
+
+void
+VSR_RendererSetShader(
+	VSR_Renderer* renderer,
+	VSR_ShaderStage stage,
+	VSR_Shader* shader)
+{
+	if(stage == SHADER_STAGE_FRAGMENT)
+	{
+		renderer->subStructs->fragmentShader = shader;
+	}
+
+	if(stage == SHADER_STAGE_VERTEX)
+	{
+		renderer->subStructs->vertexShader = shader;
+	}
+
+}
+
 
 void VSR_RendererBeginPass(VSR_Renderer* renderer)
 {

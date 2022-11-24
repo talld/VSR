@@ -3,6 +3,9 @@
 #include "Renderer.h"
 #include "VSR_error.h"
 
+#include "vert.h"
+#include "frag.h"
+
 
 
 
@@ -91,11 +94,33 @@ VSR_GraphicsPipelineCreate(
 	/////////////////////
 	/// Shader stages ///
 	/////////////////////
-	shadersStages[SHADER_STAGE_FRAGMENT].module =
-		renderer->subStructs->fragmentShader.module;
 
-	shadersStages[SHADER_STAGE_VERTEX].module =
-		renderer->subStructs->vertexShader.module;
+	if(renderer->subStructs->fragmentShader)
+	{
+		shadersStages[SHADER_STAGE_FRAGMENT].module =
+			renderer->subStructs->fragmentShader->module;
+	}
+
+	VSR_Shader vertBackup =
+		VSR_ShaderCreate(renderer, kVertexShaderBytesSize, vertexShaderBytes);
+	shadersStages[SHADER_STAGE_VERTEX].module = vertBackup.module;
+
+	VSR_Shader fragBackup =
+		VSR_ShaderCreate(renderer, kFragmentShaderBytesSize, fragmentShaderBytes);
+	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup.module;
+
+	if(renderer->subStructs->vertexShader)
+	{
+		shadersStages[SHADER_STAGE_VERTEX].module =
+			renderer->subStructs->vertexShader->module;
+	}
+
+	if(renderer->subStructs->fragmentShader)
+	{
+		shadersStages[SHADER_STAGE_VERTEX].module =
+			renderer->subStructs->fragmentShader->module;
+	}
+
 
 	////////////////////
 	/// Vertex Input ///
@@ -216,8 +241,8 @@ VSR_GraphicsPipelineCreate(
 	blendInfo.pNext = NULL;
 	blendInfo.flags = 0L;
 	blendInfo.logicOpEnable = VK_FALSE;
-	blendInfo.pAttachments = &colourInfo;
 	blendInfo.attachmentCount = 1;
+	blendInfo.pAttachments = &colourInfo;
 
 	/////////////////////
 	/// Dynamic sates ///
@@ -285,6 +310,10 @@ VSR_GraphicsPipelineCreate(
 							  pipelineCreateInfo,
 							  VSR_GetAllocator(),
 							  &pipeline->pipeline);
+
+	VSR_ShaderDestroy(renderer, &fragBackup);
+	VSR_ShaderDestroy(renderer, &vertBackup);
+
 SUCCESS:
 	{
 		return SDL_TRUE;

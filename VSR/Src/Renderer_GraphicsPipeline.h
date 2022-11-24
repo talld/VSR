@@ -3,13 +3,6 @@
 
 #include <vulkan/vulkan.h>
 
-typedef enum VSR_ShaderStage VSR_ShaderStage;
-enum VSR_ShaderStage
-{
-	SHADER_STAGE_FRAGMENT = 0,
-	SHADER_STAGE_VERTEX = 1,
-};
-
 typedef struct VSR_GraphicPipelineCreateInfo VSR_GraphicPipelineCreateInfo;
 struct VSR_GraphicPipelineCreateInfo
 {

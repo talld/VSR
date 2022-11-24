@@ -52,8 +52,8 @@ struct VSR_RendererSubStructs
 	VSR_DeviceQueues     deviceQueues;
 	VSR_LogicalDevice    logicalDevice;
 	VSR_Swapchain        swapchain;
-	VSR_Shader           vertexShader;
-	VSR_Shader           fragmentShader;
+	VSR_Shader*          vertexShader;
+	VSR_Shader*          fragmentShader;
 	VSR_RenderPass       renderPass;
 	VSR_GraphicPipeline  graphicPipeline;
 	VSR_Framebuffer      framebuffer;
