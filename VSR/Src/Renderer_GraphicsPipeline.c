@@ -312,9 +312,9 @@ VSR_GraphicsPipelineCreate(
 							  VSR_GetAllocator(),
 							  &pipeline->pipeline);
 
+	// backup shaders are managed by us so delete them here
 	VSR_ShaderDestroy(renderer, &fragBackup);
 	VSR_ShaderDestroy(renderer, &vertBackup);
-
 SUCCESS:
 	{
 		return SDL_TRUE;
