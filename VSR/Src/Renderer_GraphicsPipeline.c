@@ -227,7 +227,7 @@ VSR_GraphicsPipelineCreate(
 		VK_COLOR_COMPONENT_A_BIT;
 
 	colourInfo.blendEnable = VK_TRUE;
-	colourInfo.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colourInfo.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	colourInfo.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 	colourInfo.colorBlendOp = VK_BLEND_OP_ADD;
 	colourInfo.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
@@ -241,6 +241,7 @@ VSR_GraphicsPipelineCreate(
 	blendInfo.pNext = NULL;
 	blendInfo.flags = 0L;
 	blendInfo.logicOpEnable = VK_FALSE;
+	blendInfo.logicOp = VK_LOGIC_OP_COPY;
 	blendInfo.attachmentCount = 1;
 	blendInfo.pAttachments = &colourInfo;
 
