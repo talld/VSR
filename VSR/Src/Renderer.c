@@ -1,13 +1,41 @@
-#include <vulkan/vulkan.h>
-
 #include "Renderer.h"
+
+#include <vulkan/vulkan.h>
 #include "VSR_error.h"
 
 #include "vert.h"
 #include "frag.h"
 
 
+void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
+{
+	VkSemaphoreCreateInfo semaphoreInfo = (VkSemaphoreCreateInfo){0};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	semaphoreInfo.pNext = NULL;
+	semaphoreInfo.flags = 0L;
 
+	vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
+					  &semaphoreInfo,
+					  VSR_GetAllocator(),
+					  &renderer->subStructs->imageCanBeRead);
+
+	vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
+					  &semaphoreInfo,
+					  VSR_GetAllocator(),
+					  &renderer->subStructs->imageCanBeWritten);
+}
+
+void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
+{
+	vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
+					   renderer->subStructs->imageCanBeWritten,
+					   VSR_GetAllocator());
+
+	vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
+					   renderer->subStructs->imageCanBeRead,
+					   VSR_GetAllocator());
+
+}
 
 //==============================================================================
 // VSR_RendererGenerateCreateInfo
@@ -110,7 +138,7 @@ VSR_RendererFreeCreateInfo(
 // VSR_CreateRenderer
 //------------------------------------------------------------------------------
 VSR_Renderer*
-VSR_CreateRenderer(
+VSR_RendererCreate(
 	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 	VSR_Renderer* renderer = SDL_calloc(1, sizeof(VSR_Renderer));
@@ -140,6 +168,9 @@ VSR_CreateRenderer(
 	VSR_GraphicsPipelineCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_FramebufferCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_CommandPoolCreate(renderer, rendererCreateInfo->subStructs);
+
+	Renderer_CreateSyncObjects(renderer);
+
 	return renderer;
 }
 
@@ -151,12 +182,13 @@ VSR_CreateRenderer(
 // VSR_FreeRenderer
 //------------------------------------------------------------------------------
 void
-VSR_FreeRenderer(
+VSR_RendererFree(
 	VSR_Renderer* renderer)
 {
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
+	Renderer_DestroySyncObjects(renderer);
 
 	VSR_CommandPoolDestroy(renderer);
 	VSR_FramebufferDestroy(renderer);
@@ -178,4 +210,51 @@ VSR_FreeRenderer(
 	/// Free renderer ///
 	/////////////////////
 	SDL_free((void*)renderer);
+}
+
+void VSR_RendererBeginPass(VSR_Renderer* renderer)
+{
+	uint32_t imageIndex;
+	vkAcquireNextImageKHR(renderer->subStructs->logicalDevice.device,
+						  renderer->subStructs->swapchain.swapchain,
+						  -1,
+						  renderer->subStructs->imageCanBeWritten,
+						  NULL,
+						  &imageIndex);
+
+	VkPipelineStageFlags waitStages[1] =
+		{VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeWritten;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &renderer->subStructs->imageCanBeRead;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &renderer->subStructs->commandPool.commandBuffers[imageIndex];
+
+	vkQueueSubmit(renderer->subStructs->deviceQueues.graphicsQueue,
+				  1,
+				  &submitInfo,
+				  VK_NULL_HANDLE);
+
+	VkPresentInfoKHR presentInfo = (VkPresentInfoKHR){0};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = NULL;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeRead;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &renderer->subStructs->swapchain.swapchain;
+	presentInfo.pImageIndices = &imageIndex;
+
+	vkQueuePresentKHR(renderer->subStructs->deviceQueues.presentQueue,
+					  &presentInfo);
+
+}
+
+void VSR_RendererEndPass(VSR_Renderer* renderer)
+{
+
 }
