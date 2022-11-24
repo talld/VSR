@@ -60,6 +60,7 @@ VSR_RendererGenerateCreateInfo(
 	VSR_RenderPassPopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_GraphicsPipelinePopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_FramebufferPopulateCreateInfo(createInfo, createInfo->subStructs);
+	VSR_CommandPoolPopulateCreateInfo(createInfo, createInfo->subStructs);
 
 	SUCCESS:
 	{
@@ -138,7 +139,7 @@ VSR_CreateRenderer(
 	VSR_RenderPassCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_GraphicsPipelineCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_FramebufferCreate(renderer, rendererCreateInfo->subStructs);
-
+	VSR_CommandPoolCreate(renderer, rendererCreateInfo->subStructs);
 	return renderer;
 }
 
@@ -156,6 +157,8 @@ VSR_FreeRenderer(
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
+
+	VSR_CommandPoolDestroy(renderer);
 	VSR_FramebufferDestroy(renderer);
 	VSR_GraphicPipelineDestroy(renderer);
 	VSR_RenderPassDestroy(renderer);

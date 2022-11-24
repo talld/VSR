@@ -13,6 +13,7 @@
 #include "Renderer_RenderPass.h"
 #include "Renderer_GraphicsPipeline.h"
 #include "Renderer_Framebuffer.h"
+#include "Renderer_CommandPool.h"
 
 
 typedef struct VSR_RendererCreateInfoSubStructs VSR_RendererCreateInfoSubStructs;
@@ -27,6 +28,7 @@ struct VSR_RendererCreateInfoSubStructs
 	VSR_RenderPassCreateInfo        renderPassCreateInfo;
 	VSR_GraphicPipelineCreateInfo   graphicsPipelineCreateInfo;
 	VSR_FramebufferCreateInfo       framebufferCreateInfo;
+	VSR_CommandPoolCreateInfo       commandPoolCreateInfo;
 };
 
 
@@ -55,6 +57,9 @@ struct VSR_RendererSubStructs
 	VSR_RenderPass       renderPass;
 	VSR_GraphicPipeline  graphicPipeline;
 	VSR_Framebuffer      framebuffer;
+	VSR_CommandPool      commandPool;
+	VkSemaphore          imageCanBeWritten;
+	VkSemaphore          imageCanBeRead;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;
