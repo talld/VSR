@@ -109,12 +109,13 @@ VSR_CommandPoolCreate(
 	passBeginInfo.renderArea.offset.y = 0;
 	passBeginInfo.renderArea.extent.width = renderer->subStructs->surface.surfaceWidth;
 	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
-	passBeginInfo.clearValueCount = 0;
-	passBeginInfo.pClearValues = NULL;
+	passBeginInfo.clearValueCount = 1;
+	VkClearValue clearValues = {{{0.f,0.f,0.f, 1.0f}}};
+	passBeginInfo.pClearValues = &clearValues;
 
 	for(size_t i = 0; i < frames; i++)
 	{
-		vkBeginCommandBuffer(buffs[i], &bufferBeginInfo);
+		err = vkBeginCommandBuffer(buffs[i], &bufferBeginInfo);
 		if(err != VK_SUCCESS)
 		{
 			char errMsg[255];
@@ -140,7 +141,7 @@ VSR_CommandPoolCreate(
 		}
 		vkCmdEndRenderPass(buffs[i]);
 
-		vkEndCommandBuffer(buffs[i]);
+		err = vkEndCommandBuffer(buffs[i]);
 		if(err != VK_SUCCESS)
 		{
 			char errMsg[255];
