@@ -26,6 +26,12 @@ struct VSR_RendererCreateInfo;
 typedef struct VSR_Renderer VSR_Renderer;
 struct VSR_Renderer;
 
+typedef enum VSR_ShaderStage VSR_ShaderStage;
+enum VSR_ShaderStage;
+
+typedef struct VSR_Shader VSR_Shader;
+struct VSR_Shader;
+
 typedef struct VSR_Model VSR_Model;
 struct VSR_Model;
 
@@ -69,12 +75,21 @@ VSR_RendererCreateInfo* VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_C
 
 void VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo);
 
-VSR_Renderer* VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo);
+VSR_Renderer* VSR_RendererCreate(VSR_RendererCreateInfo* rendererCreateInfo);
 
-void VSR_FreeRenderer(VSR_Renderer* renderer);
+void VSR_RendererFree(VSR_Renderer* renderer);
+
+void VSR_RendererBeginPass(VSR_Renderer* renderer);
+
+void VSR_RendererEndPass(VSR_Renderer* renderer);
+
+VSR_Shader VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, uint8_t* bytes);
+
+void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
+
+void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Shader* shader);
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
-
 
 VSR_Model* VSR_CreateModel(VSR_Renderer* renderer, int32_t* vertices, size_t vertiexCount, int32_t* indices, size_t indexCount);
 
