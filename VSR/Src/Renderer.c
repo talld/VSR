@@ -180,6 +180,12 @@ VSR_RendererFree(
 	VSR_Renderer* renderer)
 {
 	////////////////////////////////////////
+	/// wait for rendering to power down ///
+	////////////////////////////////////////
+	// TODO: make multi-threading safe
+	vkDeviceWaitIdle(renderer->subStructs->logicalDevice.device);
+
+	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
 	Renderer_DestroySyncObjects(renderer);
