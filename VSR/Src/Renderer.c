@@ -210,6 +210,13 @@ VSR_RendererFree(
 	SDL_free((void*)renderer);
 }
 
+
+
+
+
+//==============================================================================
+// VSR_RendererSetShader
+//------------------------------------------------------------------------------
 void
 VSR_RendererSetShader(
 	VSR_Renderer* renderer,
@@ -229,6 +236,12 @@ VSR_RendererSetShader(
 }
 
 
+
+
+
+//==============================================================================
+// VSR_RendererBeginPass
+//------------------------------------------------------------------------------
 void VSR_RendererBeginPass(VSR_Renderer* renderer)
 {
 	uint32_t imageIndex;
@@ -271,6 +284,13 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 
 }
 
+
+
+
+
+//==============================================================================
+// VSR_RendererEndPass
+//------------------------------------------------------------------------------
 void VSR_RendererEndPass(VSR_Renderer* renderer)
 {
 
