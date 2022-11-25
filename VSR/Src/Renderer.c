@@ -7,6 +7,9 @@
 
 
 
+//==============================================================================
+// Renderer_CreateSyncObjects
+//------------------------------------------------------------------------------
 void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 {
 	VkSemaphoreCreateInfo semaphoreInfo = (VkSemaphoreCreateInfo){0};
@@ -25,6 +28,13 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 					  &renderer->subStructs->imageCanBeWritten);
 }
 
+
+
+
+
+//==============================================================================
+// Renderer_DestroySyncObjects
+//------------------------------------------------------------------------------
 void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 {
 	vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
@@ -36,6 +46,10 @@ void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 					   VSR_GetAllocator());
 
 }
+
+
+
+
 
 //==============================================================================
 // VSR_RendererGenerateCreateInfo
