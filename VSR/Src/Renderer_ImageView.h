@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_IMAGEVIEW_H
-#define VSR_SUITE_RENDERER_IMAGEVIEW_H
+#ifndef VSR_IMAGEVIEW_H
+#define VSR_IMAGEVIEW_H
 
 #include <vulkan/vulkan.h>
 
@@ -23,4 +23,4 @@ VSR_ImageViewDestroy(
 	VSR_Renderer* renderer,
 	VSR_ImageView* imageView);
 
-#endif //VSR_SUITE_RENDERER_IMAGEVIEW_H
+#endif //VSR_IMAGEVIEW_H

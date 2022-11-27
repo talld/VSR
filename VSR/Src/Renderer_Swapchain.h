@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_SWAPCHAIN_H
-#define VSR_SUITE_RENDERER_SWAPCHAIN_H
+#ifndef VSR_SWAPCHAIN_H
+#define VSR_SWAPCHAIN_H
 
 #include <vulkan/vulkan.h>
 #include "Renderer_ImageView.h"
@@ -36,4 +36,4 @@ VSR_SwapchainDestroy(
 	VSR_Renderer* renderer
 	);
 
-#endif // VSR_SUITE_RENDERER_SWAPCHAIN_H
+#endif // VSR_SWAPCHAIN_H

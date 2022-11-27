@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_DEVICEQUEUES_H
-#define VSR_SUITE_RENDERER_DEVICEQUEUES_H
+#ifndef VSR_DEVICEQUEUES_H
+#define VSR_DEVICEQUEUES_H
 
 #include <vulkan/vulkan.h>
 
@@ -50,4 +50,4 @@ VSR_DeviceQueuesCreate(
 	VSR_Renderer* renderer,
 	VSR_RendererCreateInfoSubStructs* subStructs);
 
-#endif // VSR_SUITE_RENDERER_DEVICEQUEUES_H
+#endif // VSR_DEVICEQUEUES_H

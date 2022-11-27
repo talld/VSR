@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_COMMANDPOOL_H
-#define VSR_SUITE_RENDERER_COMMANDPOOL_H
+#ifndef VSR_COMMANDPOOL_H
+#define VSR_COMMANDPOOL_H
 
 #include "vulkan/vulkan.h"
 
@@ -33,4 +33,4 @@ VSR_CommandPoolDestroy(
 	VSR_Renderer* renderer
 );
 
-#endif //VSR_SUITE_RENDERER_COMMANDPOOL_H
+#endif //VSR_COMMANDPOOL_H

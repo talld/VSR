@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_RENDERPASS_H
-#define VSR_SUITE_RENDERER_RENDERPASS_H
+#ifndef VSR_RENDERPASS_H
+#define VSR_RENDERPASS_H
 
 #include "vulkan/vulkan.h"
 
@@ -31,4 +31,4 @@ VSR_RenderPassDestroy(
 	VSR_Renderer* renderer
 	);
 
-#endif //VSR_SUITE_RENDERER_RENDERPASS_H
+#endif //VSR_RENDERPASS_H

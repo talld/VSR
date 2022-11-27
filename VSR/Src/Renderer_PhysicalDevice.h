@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_PHYSICALDEVICE_H
-#define VSR_SUITE_RENDERER_PHYSICALDEVICE_H
+#ifndef VSR_PHYSICALDEVICE_H
+#define VSR_PHYSICALDEVICE_H
 
 #include <vulkan/vulkan.h>
 
@@ -24,4 +24,4 @@ VSR_PhysicalDeviceSelect(
 	VSR_Renderer* renderer,
 	VSR_RendererCreateInfoSubStructs* vkStructs);
 
-#endif //VSR_SUITE_RENDERER_PHYSICALDEVICE_H
+#endif //VSR_PHYSICALDEVICE_H

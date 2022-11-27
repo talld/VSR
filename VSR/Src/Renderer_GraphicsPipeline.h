@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_GRAPHICSPIPELINE_H
-#define VSR_SUITE_RENDERER_GRAPHICSPIPELINE_H
+#ifndef VSR_GRAPHICSPIPELINE_H
+#define VSR_GRAPHICSPIPELINE_H
 
 #include <vulkan/vulkan.h>
 
@@ -36,4 +36,4 @@ VSR_GraphicPipelineDestroy(
 	VSR_Renderer* renderer
 	);
 
-#endif //VSR_SUITE_RENDERER_GRAPHICSPIPELINE_H
+#endif //VSR_GRAPHICSPIPELINE_H

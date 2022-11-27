@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_LOGICALDEVICE_H
-#define VSR_SUITE_RENDERER_LOGICALDEVICE_H
+#ifndef VSR_LOGICALDEVICE_H
+#define VSR_LOGICALDEVICE_H
 
 #include <vulkan/vulkan.h>
 
@@ -32,4 +32,4 @@ void
 VSR_LogicalDeviceDestroy(
 	VSR_Renderer* renderer);
 
-#endif // VSR_SUITE_RENDERER_LOGICALDEVICE_H
+#endif // VSR_LOGICALDEVICE_H

@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_FRAMEBUFFER_H
-#define VSR_SUITE_RENDERER_FRAMEBUFFER_H
+#ifndef VSR_FRAMEBUFFER_H
+#define VSR_FRAMEBUFFER_H
 
 #include <vulkan/vulkan.h>
 
@@ -32,4 +32,4 @@ VSR_FramebufferDestroy(
 	VSR_Renderer* renderer
 );
 
-#endif //VSR_SUITE_RENDERER_FRAMEBUFFER_H
+#endif //VSR_FRAMEBUFFER_H

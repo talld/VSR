@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_INSTANCE_H
-#define VSR_SUITE_RENDERER_INSTANCE_H
+#ifndef VSR_INSTANCE_H
+#define VSR_INSTANCE_H
 
 #include <vulkan/vulkan.h>
 
@@ -30,4 +30,4 @@ void
 VSR_InstanceDestroy
 	(VSR_Renderer* renderer);
 
-#endif // VSR_SUITE_RENDERER_INSTANCE_H
+#endif // VSR_INSTANCE_H

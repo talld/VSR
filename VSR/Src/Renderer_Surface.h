@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_SURFACE_H
-#define VSR_SUITE_RENDERER_SURFACE_H
+#ifndef VSR_SURFACE_H
+#define VSR_SURFACE_H
 
 #include <vulkan/vulkan.h>
 
@@ -37,4 +37,4 @@ void
 VSR_SurfaceDestroy(
 	VSR_Renderer* renderer);
 
-#endif //VSR_SUITE_RENDERER_SURFACE_H
+#endif //VSR_SURFACE_H

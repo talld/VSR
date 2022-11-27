@@ -1,5 +1,5 @@
-#ifndef VSR_SUITE_RENDERER_H
-#define VSR_SUITE_RENDERER_H
+#ifndef VSR_RENDERER_H
+#define VSR_RENDERER_H
 
 #include <vulkan/vulkan.h>
 
@@ -80,4 +80,4 @@ VSR_GetAllocator()
 	return NULL;
 }
 
-#endif // VSR_SUITE_RENDERER_H
+#endif // VSR_RENDERER_H
