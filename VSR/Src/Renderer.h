@@ -58,8 +58,11 @@ struct VSR_RendererSubStructs
 	VSR_GraphicPipeline  graphicPipeline;
 	VSR_Framebuffer      framebuffer;
 	VSR_CommandPool      commandPool;
-	VkSemaphore          imageCanBeWritten;
-	VkSemaphore          imageCanBeRead;
+	VkSemaphore*         imageCanBeWritten;
+	VkSemaphore*         imageCanBeRead;
+	VkFence*             imageFinished;
+
+	size_t               currentFrame;
 };
 
 typedef struct VSR_Renderer VSR_Renderer;

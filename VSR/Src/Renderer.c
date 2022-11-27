@@ -12,20 +12,53 @@
 //------------------------------------------------------------------------------
 void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 {
+	//////////////////////////////////
+	/// alloc list of sync objects ///
+	//////////////////////////////////
+	size_t listSize;
+
+	listSize = renderer->subStructs->swapchain.imageViewCount * sizeof(VkSemaphore);
+	renderer->subStructs->imageCanBeRead = SDL_malloc(listSize);
+	renderer->subStructs->imageCanBeWritten = SDL_malloc(listSize);
+
+	listSize = renderer->subStructs->swapchain.imageViewCount * sizeof(VkFence);
+	renderer->subStructs->imageFinished = SDL_malloc(listSize);
+
+	//////////////////////////////
+	/// Create semaphores info ///
+	//////////////////////////////
 	VkSemaphoreCreateInfo semaphoreInfo = (VkSemaphoreCreateInfo){0};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 	semaphoreInfo.pNext = NULL;
 	semaphoreInfo.flags = 0L;
 
-	vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
-					  &semaphoreInfo,
-					  VSR_GetAllocator(),
-					  &renderer->subStructs->imageCanBeRead);
+	//////////////////////////
+	/// Create fences info ///
+	//////////////////////////
 
-	vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
-					  &semaphoreInfo,
+	VkFenceCreateInfo fenceInfo = (VkFenceCreateInfo){0};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.pNext = NULL;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	for(size_t i = 0; i < renderer->subStructs->swapchain.imageViewCount; i++)
+	{
+		vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
+						  &semaphoreInfo,
+						  VSR_GetAllocator(),
+						  &renderer->subStructs->imageCanBeRead[i]);
+
+		vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
+						  &semaphoreInfo,
+						  VSR_GetAllocator(),
+						  &renderer->subStructs->imageCanBeWritten[i]);
+
+		vkCreateFence(renderer->subStructs->logicalDevice.device,
+					  &fenceInfo,
 					  VSR_GetAllocator(),
-					  &renderer->subStructs->imageCanBeWritten);
+					  &renderer->subStructs->imageFinished[i]);
+	}
+
 }
 
 
@@ -37,13 +70,24 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 //------------------------------------------------------------------------------
 void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 {
-	vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
-					   renderer->subStructs->imageCanBeWritten,
-					   VSR_GetAllocator());
+	for(size_t i = 0; i < renderer->subStructs->swapchain.imageViewCount; i++)
+	{
+		vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
+						   renderer->subStructs->imageCanBeWritten[i],
+						   VSR_GetAllocator());
 
-	vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
-					   renderer->subStructs->imageCanBeRead,
-					   VSR_GetAllocator());
+		vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
+						   renderer->subStructs->imageCanBeRead[i],
+						   VSR_GetAllocator());
+
+		vkDestroyFence(renderer->subStructs->logicalDevice.device,
+						  renderer->subStructs->imageFinished[i],
+						  VSR_GetAllocator());
+	}
+
+	SDL_free(renderer->subStructs->imageCanBeWritten);
+	SDL_free(renderer->subStructs->imageCanBeRead);
+	SDL_free(renderer->subStructs->imageFinished);
 
 }
 
@@ -258,37 +302,67 @@ VSR_RendererSetShader(
 //------------------------------------------------------------------------------
 void VSR_RendererBeginPass(VSR_Renderer* renderer)
 {
+	///////////////
+	/// aliases ///
+	///////////////
+	size_t* frameIndex = &renderer->subStructs->currentFrame;
+
+
+	////////////////////////////////////////////////////////////////
+	/// wait for requested image to be done ( ready to use again ///
+	////////////////////////////////////////////////////////////////
+	vkWaitForFences(renderer->subStructs->logicalDevice.device,
+					1,
+					&renderer->subStructs->imageFinished[*frameIndex],
+					VK_TRUE,
+					-1);
+
+	vkResetFences(renderer->subStructs->logicalDevice.device,
+				  1,
+				  &renderer->subStructs->imageFinished[*frameIndex]);
+
+
+	///////////////////////////
+	/// get swapchain image ///
+	///////////////////////////
+
 	uint32_t imageIndex;
 	vkAcquireNextImageKHR(renderer->subStructs->logicalDevice.device,
 						  renderer->subStructs->swapchain.swapchain,
 						  -1,
-						  renderer->subStructs->imageCanBeWritten,
-						  NULL,
+						  renderer->subStructs->imageCanBeWritten[*frameIndex],
+						  VK_NULL_HANDLE,
 						  &imageIndex);
 
+	////////////////////////////////
+	/// submit commands to queue ///
+	////////////////////////////////
 	VkPipelineStageFlags waitStages[1] =
 		{VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeWritten;
+	submitInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeWritten[*frameIndex];
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &renderer->subStructs->imageCanBeRead;
+	submitInfo.pSignalSemaphores = &renderer->subStructs->imageCanBeRead[*frameIndex];
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &renderer->subStructs->commandPool.commandBuffers[imageIndex];
+	submitInfo.pCommandBuffers = &renderer->subStructs->commandPool.commandBuffers[*frameIndex];
 
 	vkQueueSubmit(renderer->subStructs->deviceQueues.graphicsQueue,
 				  1,
 				  &submitInfo,
-				  VK_NULL_HANDLE);
+				  renderer->subStructs->imageFinished[*frameIndex]);
 
+	///////////////////////////////////////////
+	/// present queue information to screen ///
+	///////////////////////////////////////////
 	VkPresentInfoKHR presentInfo = (VkPresentInfoKHR){0};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = NULL;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeRead;
+	presentInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeRead[*frameIndex];
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &renderer->subStructs->swapchain.swapchain;
 	presentInfo.pImageIndices = &imageIndex;
@@ -296,6 +370,7 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	vkQueuePresentKHR(renderer->subStructs->deviceQueues.presentQueue,
 					  &presentInfo);
 
+	*frameIndex = (*frameIndex + 1) % renderer->subStructs->swapchain.imageViewCount;
 }
 
 
