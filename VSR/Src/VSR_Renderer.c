@@ -288,6 +288,25 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 					&renderer->subStructs->imageFinished[*frameIndex],
 					VK_TRUE,
 					-1);
+}
+
+
+
+
+
+//==============================================================================
+// VSR_RendererEndPass
+//------------------------------------------------------------------------------
+void VSR_RendererEndPass(VSR_Renderer* renderer)
+{
+	///////////////
+	/// aliases ///
+	///////////////
+	size_t* frameIndex = &renderer->subStructs->currentFrame;
+
+	//////////////////
+	/// reset sync ///
+	//////////////////
 
 	vkResetFences(renderer->subStructs->logicalDevice.device,
 				  1,
@@ -310,7 +329,7 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	/// submit commands to queue ///
 	////////////////////////////////
 	VkPipelineStageFlags waitStages[1] =
-		{VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+							 {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -344,16 +363,4 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 					  &presentInfo);
 
 	*frameIndex = (*frameIndex + 1) % renderer->subStructs->swapchain.imageViewCount;
-}
-
-
-
-
-
-//==============================================================================
-// VSR_RendererEndPass
-//------------------------------------------------------------------------------
-void VSR_RendererEndPass(VSR_Renderer* renderer)
-{
-
 }
