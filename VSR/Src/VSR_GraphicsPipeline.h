@@ -21,18 +21,18 @@ struct GraphicsPipeline_CreateInfoSubStructs
 typedef struct VSR_GraphicsPipelineCreateInfo VSR_GraphicsPipelineCreateInfo;
 struct VSR_GraphicsPipelineCreateInfo
 {
+	VSR_Shader*                             vertexShader;
+	VSR_Shader*                             fragmentShader;
 	GraphicsPipeline_CreateInfoSubStructs*  subStructs;
 };
 
 typedef struct GraphicsPipeline_SubStructs GraphicsPipeline_SubStructs;
 struct GraphicsPipeline_SubStructs
 {
-	VSR_Shader*                      vertexShader;
-	VSR_Shader*                      fragmentShader;
-	GrapicsPipeline_RenderPass       renderPass;
-	GraphicsPipeline_GraphicsPipeline graphicPipeline;
-	GraphicsPipeline_Framebuffer     framebuffer;
-	GraphicsPipeline_CommandPool     commandPool;
+	GrapicsPipeline_RenderPass         renderPass;
+	GraphicsPipeline_GraphicsPipeline  graphicPipeline;
+	GraphicsPipeline_Framebuffer       framebuffer;
+	GraphicsPipeline_CommandPool       commandPool;
 };
 
 typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;

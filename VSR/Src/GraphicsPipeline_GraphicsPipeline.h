@@ -39,15 +39,14 @@ struct GraphicsPipeline_GraphicsPipeline
 SDL_bool
 GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs);
+	VSR_GraphicsPipelineCreateInfo* createInfo);
 
 
 SDL_bool
 GraphicsPipeline_GraphicsPipelineCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs);
+	VSR_GraphicsPipelineCreateInfo* createInfo);
 
 void
 GraphicsPipeline_GraphicPipelineDestroy(

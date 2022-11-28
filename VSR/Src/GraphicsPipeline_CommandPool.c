@@ -13,8 +13,7 @@
 SDL_bool
 GraphicsPipeline_CommandPoolPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo,
-	GraphicsPipeline_CreateInfoSubStructs * subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	return SDL_TRUE;
 }
@@ -30,14 +29,14 @@ SDL_bool
 GraphicsPipeline_CommandPoolCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	/////////////////////
 	/// command pools ///
 	/////////////////////
 
 	VkCommandPoolCreateInfo* poolCreateInfo =
-		&subStructs->commandPoolCreateInfo.commandPoolCreateInfo;
+		&createInfo->subStructs->commandPoolCreateInfo.commandPoolCreateInfo;
 
 	poolCreateInfo->sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolCreateInfo->pNext = NULL;

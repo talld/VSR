@@ -13,8 +13,7 @@
 SDL_bool
 GraphicsPipeline_RenderPassPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	// TODO: move stuff here
 	return SDL_TRUE;
@@ -31,7 +30,7 @@ SDL_bool
 GraphicsPipeline_RenderPassCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	///////////////////
 	/// colour pass ///

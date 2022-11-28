@@ -19,10 +19,10 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	createInfo->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_CreateInfoSubStructs));
 
 
-	GraphicsPipeline_RenderPassPopulateCreateInfo(renderer, createInfo, createInfo->subStructs);
-	GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(renderer, createInfo, createInfo->subStructs);
-	GraphicsPipeline_FramebufferPopulateCreateInfo(renderer, createInfo, createInfo->subStructs);
-	GraphicsPipeline_CommandPoolPopulateCreateInfo(renderer, createInfo, createInfo->subStructs);
+	GraphicsPipeline_RenderPassPopulateCreateInfo(renderer, createInfo);
+	GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(renderer, createInfo);
+	GraphicsPipeline_FramebufferPopulateCreateInfo(renderer, createInfo);
+	GraphicsPipeline_CommandPoolPopulateCreateInfo(renderer, createInfo);
 
 	return createInfo;
 }
@@ -57,10 +57,10 @@ VSR_GraphicsPipelineCreate(
 	VSR_GraphicsPipeline* pipeline = SDL_calloc(1, sizeof(VSR_GraphicsPipeline));
 	pipeline->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_SubStructs));
 
-	GraphicsPipeline_RenderPassCreate(renderer, pipeline, createInfo->subStructs);
-	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo->subStructs);
-	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo->subStructs);
-	GraphicsPipeline_CommandPoolCreate(renderer, pipeline, createInfo->subStructs);
+	GraphicsPipeline_RenderPassCreate(renderer, pipeline, createInfo);
+	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
+	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo);
+	GraphicsPipeline_CommandPoolCreate(renderer, pipeline, createInfo);
 
 	return pipeline;
 }
@@ -86,4 +86,21 @@ VSR_GraphicsPipelineFree(
 
 	SDL_free(pipeline->subStructs);
 	SDL_free(pipeline);
+}
+
+void
+VSR_GraphicsPipelineSetShader(
+	VSR_GraphicsPipelineCreateInfo* pipeline,
+	VSR_ShaderStage stage,
+	VSR_Shader* shader)
+{
+	if(stage == SHADER_STAGE_VERTEX)
+	{
+		pipeline->vertexShader = shader;
+	}
+
+	if(stage == SHADER_STAGE_FRAGMENT)
+	{
+		pipeline->fragmentShader = shader;
+	}
 }

@@ -17,14 +17,13 @@
 SDL_bool
 GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	//////////////////////////
 	/// Layout Create Info ///
 	//////////////////////////
 	VkPipelineLayoutCreateInfo* layoutCreateInfo =
-		&subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
+		&createInfo->subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
 
 	layoutCreateInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layoutCreateInfo->pNext = NULL;
@@ -36,7 +35,7 @@ GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 	const char* shaderEntryPoint = "main";
 
 	VkPipelineShaderStageCreateInfo* fragStageInfo =
-		&subStructs->graphicsPipelineCreateInfo
+		&createInfo->subStructs->graphicsPipelineCreateInfo
 			.shadersStages[SHADER_STAGE_FRAGMENT];
 
 	fragStageInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -47,7 +46,7 @@ GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 
 
 	VkPipelineShaderStageCreateInfo* vertStageInfo =
-		&subStructs->graphicsPipelineCreateInfo
+		&createInfo->subStructs->graphicsPipelineCreateInfo
 			.shadersStages[SHADER_STAGE_VERTEX];
 
 	vertStageInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -77,7 +76,7 @@ SDL_bool
 GraphicsPipeline_GraphicsPipelineCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	///////////////
 	/// aliases ///
@@ -86,13 +85,13 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	GraphicsPipeline_GraphicsPipeline* gp = &pipeline->subStructs->graphicPipeline;
 
 	VkPipelineLayoutCreateInfo* layoutCreateInfo =
-		&subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
+		&createInfo->subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
 
 	VkPipelineShaderStageCreateInfo* shadersStages =
-		subStructs->graphicsPipelineCreateInfo.shadersStages;
+		createInfo->subStructs->graphicsPipelineCreateInfo.shadersStages;
 
 	VkGraphicsPipelineCreateInfo* pipelineCreateInfo =
-		&subStructs->graphicsPipelineCreateInfo.graphicsPipelineCreateInfo;
+		&createInfo->subStructs->graphicsPipelineCreateInfo.graphicsPipelineCreateInfo;
 
 	/////////////////////
 	/// Shader stages ///
@@ -112,16 +111,16 @@ GraphicsPipeline_GraphicsPipelineCreate(
 		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderBytecode);
 	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup.module;
 
-	if(pipeline->subStructs->vertexShader)
+	if(createInfo->vertexShader)
 	{
 		shadersStages[SHADER_STAGE_VERTEX].module =
-			pipeline->subStructs->vertexShader->module;
+			createInfo->vertexShader->module;
 	}
 
-	if(pipeline->subStructs->fragmentShader)
+	if(createInfo->fragmentShader)
 	{
 		shadersStages[SHADER_STAGE_VERTEX].module =
-			pipeline->subStructs->fragmentShader->module;
+			createInfo->fragmentShader->module;
 	}
 
 
@@ -304,7 +303,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pipelineCreateInfo->pNext = NULL;
 	pipelineCreateInfo->flags = 0;
 	pipelineCreateInfo->stageCount = 2;
-	pipelineCreateInfo->pStages = subStructs->graphicsPipelineCreateInfo.shadersStages;
+	pipelineCreateInfo->pStages = createInfo->subStructs->graphicsPipelineCreateInfo.shadersStages;
 	pipelineCreateInfo->pVertexInputState = &vertInfo;
 	pipelineCreateInfo->pInputAssemblyState = &inputInfo;
 	pipelineCreateInfo->pViewportState = &viewInfo;

@@ -6,8 +6,7 @@
 SDL_bool
 GraphicsPipeline_FramebufferPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* graphicsPipelineCreateInfo,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* graphicsPipelineCreateInfo)
 {
 	return SDL_TRUE;
 }
@@ -17,7 +16,7 @@ SDL_bool
 GraphicsPipeline_FramebufferCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
 	VkResult err;
 
@@ -27,7 +26,7 @@ GraphicsPipeline_FramebufferCreate(
 	VkFramebuffer* frames = pipeline->subStructs->framebuffer.framebuffers;
 
 	VkFramebufferCreateInfo* framebufferCreateInfo =
-		&subStructs->framebufferCreateInfo.framebufferCreateInfo;
+		&createInfo->subStructs->framebufferCreateInfo.framebufferCreateInfo;
 
 	framebufferCreateInfo->sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferCreateInfo->pNext = NULL;

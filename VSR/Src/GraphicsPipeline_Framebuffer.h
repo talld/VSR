@@ -33,15 +33,14 @@ struct GraphicsPipeline_Framebuffer
 SDL_bool
 GraphicsPipeline_FramebufferPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* graphicsPipelineCreateInfo,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs);
+	VSR_GraphicsPipelineCreateInfo* graphicsPipelineCreateInfo);
 
 
 SDL_bool
 GraphicsPipeline_FramebufferCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs);
+	VSR_GraphicsPipelineCreateInfo* createInfo);
 
 void
 GraphicsPipeline_FramebufferDestroy(

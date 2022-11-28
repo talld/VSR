@@ -34,15 +34,14 @@ struct GraphicsPipeline_CommandPool
 SDL_bool
 GraphicsPipeline_CommandPoolPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo,
-	GraphicsPipeline_CreateInfoSubStructs * subStructs);
+	VSR_GraphicsPipelineCreateInfo* createInfo);
 
 
 SDL_bool
 GraphicsPipeline_CommandPoolCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	GraphicsPipeline_CreateInfoSubStructs* subStructs);
+	VSR_GraphicsPipelineCreateInfo* createInfo);
 
 void
 GraphicsPipeline_CommandPoolDestroy(
