@@ -166,3 +166,101 @@ VSR_LogicalDeviceDestroy(
 	vkDestroyDevice(renderer->subStructs->logicalDevice.device,
 	                VSR_GetAllocator());
 }
+
+
+
+
+
+//==============================================================================
+// VSR_LogicalDeviceCreateBuffer
+//------------------------------------------------------------------------------
+VkBuffer
+VSR_LogicalDeviceCreateBuffer(
+	VSR_Renderer* renderer,
+	size_t size,
+	VkBufferUsageFlags usage,
+	VkMemoryPropertyFlags properties)
+{
+	VkBuffer buffer;
+
+	VkBufferCreateInfo bufferInfo = (VkBufferCreateInfo){0};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.pNext = NULL;
+	bufferInfo.flags = 0L;
+	bufferInfo.size = size;
+	bufferInfo.usage = usage;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VkResult err =
+	vkCreateBuffer(renderer->subStructs->logicalDevice.device,
+				   &bufferInfo,
+				   VSR_GetAllocator(),
+				   &buffer);
+
+	if(err != VK_SUCCESS)
+	{
+		char errMsg[255];
+		sprintf(errMsg, "Failed to create buffer: %s",
+				VSR_VkErrorToString(err));
+
+		VSR_SetErr(errMsg);
+	}
+
+	VkMemoryRequirements memReq = (VkMemoryRequirements){0};
+	vkGetBufferMemoryRequirements(renderer->subStructs->logicalDevice.device,
+								  buffer,
+								  &memReq);
+
+	VkPhysicalDeviceMemoryProperties memoryProperties;
+
+	vkGetPhysicalDeviceMemoryProperties(
+		renderer->subStructs->physicalDevice.device,
+		&memoryProperties);
+
+	size_t memIndex = -1;
+	for(size_t i = 0; i < memoryProperties.memoryTypeCount; i++)
+	{
+		if((memReq.memoryTypeBits) & (1 << i )
+		&& (properties & memoryProperties.memoryTypes[i].propertyFlags) == properties)
+		{
+			memIndex = i;
+			break;
+		}
+	}
+
+	VkMemoryAllocateInfo allocateInfo = (VkMemoryAllocateInfo){0};
+	allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocateInfo.pNext = NULL;
+	allocateInfo.allocationSize = memReq.size;
+	allocateInfo.memoryTypeIndex = memIndex;
+
+	VkDeviceMemory deviceMemory;
+	vkAllocateMemory(renderer->subStructs->logicalDevice.device,
+					 &allocateInfo,
+					 VSR_GetAllocator(),
+					 &deviceMemory);
+
+	vkBindBufferMemory(renderer->subStructs->logicalDevice.device,
+					   buffer,
+					   deviceMemory,
+					   0);
+
+	return buffer;
+}
+
+
+
+
+
+//==============================================================================
+// VSR_LogicalDeviceFreeBuffer
+//------------------------------------------------------------------------------
+void
+VSR_LogicalDeviceFreeBuffer(
+	VSR_Renderer* renderer,
+	VkBuffer buffer)
+{
+	vkDestroyBuffer(renderer->subStructs->logicalDevice.device,
+					buffer,
+					VSR_GetAllocator());
+}
