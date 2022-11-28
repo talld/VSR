@@ -84,4 +84,6 @@ GraphicsPipeline_FramebufferDestroy(
 							 pipeline->subStructs->framebuffer.framebuffers[i],
 							 VSR_GetAllocator());
 	}
+
+	SDL_free(pipeline->subStructs->framebuffer.framebuffers);
 }

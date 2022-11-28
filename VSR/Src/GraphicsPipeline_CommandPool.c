@@ -182,4 +182,6 @@ GraphicsPipeline_CommandPoolDestroy(
 	vkDestroyCommandPool(renderer->subStructs->logicalDevice.device,
 						 pipeline->subStructs->commandPool.graphicsPool,
 						 VSR_GetAllocator());
+
+	SDL_free(pipeline->subStructs->commandPool.commandBuffers);
 }

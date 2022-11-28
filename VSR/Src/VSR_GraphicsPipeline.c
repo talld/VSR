@@ -83,4 +83,7 @@ VSR_GraphicsPipelineFree(
 	GraphicsPipeline_FramebufferDestroy(renderer, pipeline);
 	GraphicsPipeline_GraphicPipelineDestroy(renderer, pipeline);
 	GraphicsPipeline_RenderPassDestroy(renderer, pipeline);
+
+	SDL_free(pipeline->subStructs);
+	SDL_free(pipeline);
 }
