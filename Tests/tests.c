@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	VSR_ShaderDestroy(renderer, shader);
 	VSR_GraphicsPipelineCreateInfoFree(pipelineCreateInfo);
 	VSR_GraphicsPipelineFree(renderer, pipeline);
 	VSR_RendererFreeCreateInfo(createInfo);
