@@ -83,7 +83,7 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer);
 
 void VSR_RendererEndPass(VSR_Renderer* renderer);
 
-VSR_Shader VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, uint8_t* bytes);
+VSR_Shader VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, const uint8_t* bytes);
 
 void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
 

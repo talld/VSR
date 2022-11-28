@@ -21,7 +21,7 @@ VSR_Shader
 VSR_ShaderCreate(
 	VSR_Renderer* renderer,
 	size_t byteCount,
-	uint8_t* bytes);
+	const uint8_t* bytes);
 
 void
 VSR_ShaderDestroy(
