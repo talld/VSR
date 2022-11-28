@@ -9,26 +9,26 @@
 //==============================================================================
 // VSR_ShaderCreate
 //------------------------------------------------------------------------------
-VSR_Shader
+VSR_Shader*
 VSR_ShaderCreate(
 	VSR_Renderer* renderer,
 	size_t byteCount,
 	const uint8_t* bytes)
 {
-	VSR_Shader shader;
+	VSR_Shader* shader = SDL_calloc(1, sizeof(VSR_Shader));
 
-	shader.createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	shader.createInfo.pNext = NULL;
-	shader.createInfo.flags = 0L;
+	shader->createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	shader->createInfo.pNext = NULL;
+	shader->createInfo.flags = 0L;
 
-	shader.createInfo.codeSize = byteCount;
-	shader.createInfo.pCode = (uint32_t*) bytes;
+	shader->createInfo.codeSize = byteCount;
+	shader->createInfo.pCode = (uint32_t*) bytes;
 
 	vkCreateShaderModule(
 		renderer->subStructs->logicalDevice.device,
-		&shader.createInfo,
+		&shader->createInfo,
 		VSR_GetAllocator(),
-		&shader.module
+		&shader->module
 		);
 
 	return shader;
@@ -51,4 +51,6 @@ VSR_ShaderDestroy(
 		shader->module,
 		VSR_GetAllocator()
 		);
+
+	SDL_free(shader);
 }

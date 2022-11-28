@@ -30,7 +30,11 @@ typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;
 struct VSR_GraphicsPipeline;
 
 typedef enum VSR_ShaderStage VSR_ShaderStage;
-enum VSR_ShaderStage;
+enum VSR_ShaderStage
+{
+	SHADER_STAGE_FRAGMENT = 0,
+	SHADER_STAGE_VERTEX = 1,
+};
 
 typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
@@ -96,7 +100,9 @@ VSR_GraphicsPipeline* VSR_GraphicsPipelineCreate(VSR_Renderer* renderer, VSR_Gra
 
 void VSR_GraphicsPipelineFree(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline);
 
-VSR_Shader VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, const uint8_t* bytes);
+void VSR_GraphicsPipelineSetShader(VSR_GraphicsPipelineCreateInfo* pipeline, VSR_ShaderStage stage, VSR_Shader* shader);
+
+VSR_Shader* VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, const uint8_t* bytes);
 
 void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
 

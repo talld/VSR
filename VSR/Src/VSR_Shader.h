@@ -3,13 +3,6 @@
 
 #include <vulkan/vulkan.h>
 
-typedef enum VSR_ShaderStage VSR_ShaderStage;
-enum VSR_ShaderStage
-{
-	SHADER_STAGE_FRAGMENT = 0,
-	SHADER_STAGE_VERTEX = 1,
-};
-
 typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader
 {
@@ -17,7 +10,7 @@ struct VSR_Shader
 	VkShaderModule           module;
 };
 
-VSR_Shader
+VSR_Shader*
 VSR_ShaderCreate(
 	VSR_Renderer* renderer,
 	size_t byteCount,

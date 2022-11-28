@@ -96,20 +96,13 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/////////////////////
 	/// Shader stages ///
 	/////////////////////
-
-	if(pipeline->subStructs->fragmentShader)
-	{
-		shadersStages[SHADER_STAGE_FRAGMENT].module =
-			pipeline->subStructs->fragmentShader->module;
-	}
-
-	VSR_Shader vertBackup =
+	VSR_Shader* vertBackup =
 		VSR_ShaderCreate(renderer, kVertexShaderBytecodeSize, kVertexShaderBytecode);
-	shadersStages[SHADER_STAGE_VERTEX].module = vertBackup.module;
+	shadersStages[SHADER_STAGE_VERTEX].module = vertBackup->module;
 
-	VSR_Shader fragBackup =
+	VSR_Shader* fragBackup =
 		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderBytecode);
-	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup.module;
+	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup->module;
 
 	if(createInfo->vertexShader)
 	{
@@ -122,7 +115,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 		shadersStages[SHADER_STAGE_VERTEX].module =
 			createInfo->fragmentShader->module;
 	}
-
 
 	////////////////////
 	/// Vertex Input ///
@@ -325,8 +317,8 @@ GraphicsPipeline_GraphicsPipelineCreate(
 							  &gp->pipeline);
 
 	// backup shaders are managed by us so delete them here
-	VSR_ShaderDestroy(renderer, &fragBackup);
-	VSR_ShaderDestroy(renderer, &vertBackup);
+	VSR_ShaderDestroy(renderer, fragBackup);
+	VSR_ShaderDestroy(renderer, vertBackup);
 SUCCESS:
 	{
 		return SDL_TRUE;
