@@ -106,7 +106,7 @@ VSR_GraphicsPipelineCreate(
 	shadersStages[SHADER_STAGE_VERTEX].module = vertBackup.module;
 
 	VSR_Shader fragBackup =
-		VSR_ShaderCreate(renderer, kFragmentShaderBytesSize, fragmentShaderBytes);
+		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderByteCode);
 	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup.module;
 
 	if(renderer->subStructs->vertexShader)
