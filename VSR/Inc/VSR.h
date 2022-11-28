@@ -39,8 +39,39 @@ enum VSR_ShaderStage
 typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
 
+typedef struct VSR_Vertex VSR_Vertex;
+struct VSR_Vertex
+{
+	float x;
+	float y;
+	float z;
+};
+
+typedef struct VSR_Index VSR_Index;
+struct VSR_Index
+{
+	uint32_t i;
+};
+
+typedef struct VSR_UV VSR_UV;
+struct VSR_UV
+{
+	float x;
+	float y;
+};
+
 typedef struct VSR_Model VSR_Model;
-struct VSR_Model;
+struct VSR_Model
+{
+	const size_t bufferIndex;
+
+	size_t      vertexCount;
+	VSR_Vertex* vertices;
+	VSR_UV*     UVs;
+
+	size_t      indexCount;
+	VSR_Index*  indices;
+};
 
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler;
@@ -110,9 +141,11 @@ void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Sh
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
 
-VSR_Model* VSR_CreateModel(VSR_Renderer* renderer, int32_t* vertices, size_t vertiexCount, int32_t* indices, size_t indexCount);
+VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
 
-int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, int32_t* UVs);
+void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
+
+int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, float* UVs);
 
 VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
 

@@ -2,7 +2,6 @@
 
 #include "VSR_Renderer.h"
 #include "VSR_error.h"
-#include "VSR_Vertex.h"
 
 #include "vert.h"
 #include "frag.h"
