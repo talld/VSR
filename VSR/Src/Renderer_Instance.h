@@ -3,15 +3,22 @@
 
 #include <vulkan/vulkan.h>
 
-typedef struct VSR_InstanceCreateInfo VSR_InstanceCreateInfo;
-struct VSR_InstanceCreateInfo
+////////////////////////////////
+/// Renderer pre-declaration ///
+////////////////////////////////
+typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
+struct Renderer_CreateInfoSubStructs;
+
+
+typedef struct Renderer_InstanceCreateInfo Renderer_InstanceCreateInfo;
+struct Renderer_InstanceCreateInfo
 {
 	VkApplicationInfo      applicationInfo;
 	VkInstanceCreateInfo   createInfo;
 };
 
-typedef struct VSR_Instance VSR_Instance;
-struct VSR_Instance
+typedef struct Renderer_Instance Renderer_Instance;
+struct Renderer_Instance
 {
 	VkInstance   instance;
 };
@@ -19,12 +26,12 @@ struct VSR_Instance
 SDL_bool
 VSR_InstancePopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 SDL_bool
 VSR_InstanceCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 void
 VSR_InstanceDestroy

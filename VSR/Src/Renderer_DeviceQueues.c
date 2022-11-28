@@ -1,15 +1,15 @@
 #include "Renderer_DeviceQueues.h"
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 
 SDL_bool VSR_DeviceQueuesPopulateCreateInfo(
 	VSR_RendererCreateInfo* rendererCreateInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	///////////////
 	/// Aliases ///
 	///////////////
-	VSR_DeviceQueuesCreateInfo* deviceQueuesCreateInfo =
+	Renderer_DeviceQueuesCreateInfo* deviceQueuesCreateInfo =
 		&subStructs->deviceQueuesCreateInfo;
 
 	VkDeviceQueueCreateInfo* createInfoList =
@@ -81,13 +81,13 @@ SDL_bool VSR_DeviceQueuesPopulateCreateInfo(
 //==============================================================================
 // VSR_SelectPhysicalDevice
 //------------------------------------------------------------------------------
-VSR_DeviceQueues
+Renderer_DeviceQueues
 VSR_DeviceQueuesSelectFromDevice(
 	VkPhysicalDevice physicalDevice,
 	VSR_Renderer* renderer
 	)
 {
-	VSR_DeviceQueues queues;
+	Renderer_DeviceQueues queues;
 
 	///////////////////////////////////
 	/// Get queue family properties ///
@@ -191,7 +191,7 @@ VSR_DeviceQueuesSelectFromDevice(
 SDL_bool
 VSR_DeviceQueuesCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	// now we can assume that our chosen device is final!
 

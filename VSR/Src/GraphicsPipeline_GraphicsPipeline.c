@@ -1,7 +1,8 @@
-#include "Renderer_GraphicsPipeline.h"
+#include "GraphicsPipeline_GraphicsPipeline.h"
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
+#include "VSR_Vertex.h"
 
 #include "vert.h"
 #include "frag.h"
@@ -14,9 +15,10 @@
 // VSR_GraphicsPipelinePopulateCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_GraphicsPipelinePopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipelineCreateInfo* createInfo,
+	GraphicsPipeline_CreateInfoSubStructs* subStructs)
 {
 	//////////////////////////
 	/// Layout Create Info ///
@@ -72,15 +74,16 @@ VSR_GraphicsPipelinePopulateCreateInfo(
 // VSR_GraphicsPipelineCreate
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_GraphicsPipelineCreate(
+GraphicsPipeline_GraphicsPipelineCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipeline* pipeline,
+	GraphicsPipeline_CreateInfoSubStructs* subStructs)
 {
 	///////////////
 	/// aliases ///
 	///////////////
 
-	VSR_GraphicPipeline* pipeline = &renderer->subStructs->graphicPipeline;
+	GraphicsPipeline_GraphicsPipeline* gp = &pipeline->subStructs->graphicPipeline;
 
 	VkPipelineLayoutCreateInfo* layoutCreateInfo =
 		&subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
@@ -95,30 +98,30 @@ VSR_GraphicsPipelineCreate(
 	/// Shader stages ///
 	/////////////////////
 
-	if(renderer->subStructs->fragmentShader)
+	if(pipeline->subStructs->fragmentShader)
 	{
 		shadersStages[SHADER_STAGE_FRAGMENT].module =
-			renderer->subStructs->fragmentShader->module;
+			pipeline->subStructs->fragmentShader->module;
 	}
 
 	VSR_Shader vertBackup =
-		VSR_ShaderCreate(renderer, kVertexShaderBytecodeSize, kVertexShaderByteCode);
+		VSR_ShaderCreate(renderer, kVertexShaderBytecodeSize, kVertexShaderBytecode);
 	shadersStages[SHADER_STAGE_VERTEX].module = vertBackup.module;
 
 	VSR_Shader fragBackup =
-		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderByteCode);
+		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderBytecode);
 	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup.module;
 
-	if(renderer->subStructs->vertexShader)
+	if(pipeline->subStructs->vertexShader)
 	{
 		shadersStages[SHADER_STAGE_VERTEX].module =
-			renderer->subStructs->vertexShader->module;
+			pipeline->subStructs->vertexShader->module;
 	}
 
-	if(renderer->subStructs->fragmentShader)
+	if(pipeline->subStructs->fragmentShader)
 	{
 		shadersStages[SHADER_STAGE_VERTEX].module =
-			renderer->subStructs->fragmentShader->module;
+			pipeline->subStructs->fragmentShader->module;
 	}
 
 
@@ -126,7 +129,18 @@ VSR_GraphicsPipelineCreate(
 	/// Vertex Input ///
 	////////////////////
 
-	// TODO : implement vertex desc
+	VkVertexInputBindingDescription vertexInputDesc[1] = {0};
+
+	vertexInputDesc[0].binding = 0;
+	vertexInputDesc[0].stride = sizeof(VSR_Vertex);
+	vertexInputDesc[0].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+
+	VkVertexInputAttributeDescription vertexAttrDesc[1] = {0};
+	vertexAttrDesc[0].binding = 0;
+	vertexAttrDesc[0].location = 0;
+	vertexAttrDesc[0].offset = offsetof(VSR_Vertex, x); // this may bite in ass;
+	vertexAttrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3 nonsense...
+
 	VkPipelineVertexInputStateCreateInfo vertInfo =
 		(VkPipelineVertexInputStateCreateInfo){0};
 
@@ -134,9 +148,9 @@ VSR_GraphicsPipelineCreate(
 	vertInfo.pNext = NULL;
 	vertInfo.flags = 0L;
 	vertInfo.vertexBindingDescriptionCount = 0;
-	vertInfo.pVertexBindingDescriptions = NULL;
+	vertInfo.pVertexBindingDescriptions = &vertexInputDesc[0];
 	vertInfo.vertexAttributeDescriptionCount = 0;
-	vertInfo.pVertexAttributeDescriptions = NULL;
+	vertInfo.pVertexAttributeDescriptions = &vertexAttrDesc[0];
 
 	//////////////////////
 	/// Input Assembly ///
@@ -271,7 +285,7 @@ VSR_GraphicsPipelineCreate(
 		vkCreatePipelineLayout(renderer->subStructs->logicalDevice.device,
 							   layoutCreateInfo,
 							   VSR_GetAllocator(),
-							   &pipeline->pipelineLayout);
+							   &gp->pipelineLayout);
 
 	if(err != VK_SUCCESS)
 	{
@@ -290,8 +304,7 @@ VSR_GraphicsPipelineCreate(
 	pipelineCreateInfo->pNext = NULL;
 	pipelineCreateInfo->flags = 0;
 	pipelineCreateInfo->stageCount = 2;
-	pipelineCreateInfo->pStages =
-		subStructs->graphicsPipelineCreateInfo.shadersStages;
+	pipelineCreateInfo->pStages = subStructs->graphicsPipelineCreateInfo.shadersStages;
 	pipelineCreateInfo->pVertexInputState = &vertInfo;
 	pipelineCreateInfo->pInputAssemblyState = &inputInfo;
 	pipelineCreateInfo->pViewportState = &viewInfo;
@@ -301,8 +314,8 @@ VSR_GraphicsPipelineCreate(
 	pipelineCreateInfo->pDynamicState = &dynamicInfo;
 	pipelineCreateInfo->basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo->basePipelineIndex = 0;
-	pipelineCreateInfo->layout = pipeline->pipelineLayout;
-	pipelineCreateInfo->renderPass = renderer->subStructs->renderPass.renderPass;
+	pipelineCreateInfo->layout = gp->pipelineLayout;
+	pipelineCreateInfo->renderPass = pipeline->subStructs->renderPass.renderPass;
 	pipelineCreateInfo->subpass = 0;
 
 	vkCreateGraphicsPipelines(renderer->subStructs->logicalDevice.device,
@@ -310,7 +323,7 @@ VSR_GraphicsPipelineCreate(
 							  1,
 							  pipelineCreateInfo,
 							  VSR_GetAllocator(),
-							  &pipeline->pipeline);
+							  &gp->pipeline);
 
 	// backup shaders are managed by us so delete them here
 	VSR_ShaderDestroy(renderer, &fragBackup);
@@ -334,15 +347,16 @@ SUCCESS:
 // VSR_GraphicsPipelinePopulateCreateInfo
 //------------------------------------------------------------------------------
 void
-VSR_GraphicPipelineDestroy(
-	VSR_Renderer* renderer
+GraphicsPipeline_GraphicPipelineDestroy(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline
 )
 {
 	vkDestroyPipeline(renderer->subStructs->logicalDevice.device,
-					  renderer->subStructs->graphicPipeline.pipeline,
+					  pipeline->subStructs->graphicPipeline.pipeline,
 					  VSR_GetAllocator());
 
 	vkDestroyPipelineLayout(renderer->subStructs->logicalDevice.device,
-							renderer->subStructs->graphicPipeline.pipelineLayout,
+							pipeline->subStructs->graphicPipeline.pipelineLayout,
 							VSR_GetAllocator());
 }

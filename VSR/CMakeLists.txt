@@ -1,6 +1,6 @@
 project(VSR)
 cmake_minimum_required(VERSION 3.19)
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 
 set(VSR_INC
         Src)
@@ -13,7 +13,7 @@ set(VSR_SRC
         Src/VSR_error.c
 
         # Rendering
-        Src/Renderer.c
+        Src/VSR_Renderer.c
         Src/Renderer_Instance.c
         Src/Renderer_PhysicalDevice.c
         Src/Renderer_LogicalDevice.c
@@ -21,12 +21,13 @@ set(VSR_SRC
         Src/Renderer_Surface.c
         Src/Renderer_Swapchain.c
         Src/Renderer_ImageView.c
+
+        Src/VSR_GraphicsPipeline.c
         Src/VSR_Shader.c
-        Src/Renderer_RenderPass.c
-        Src/Renderer_GraphicsPipeline.c
-        Src/Renderer_Framebuffer.c
-        Src/Renderer_CommandPool.c
-        Src/ComputePipeline.c
+        Src/GraphicsPipeline_RenderPass.c
+        Src/GraphicsPipeline_GraphicsPipeline.c
+        Src/GraphicsPipeline_Framebuffer.c
+        Src/GraphicsPipeline_CommandPool.c
         )
 
 add_library(${PROJECT_NAME} ${VSR_SRC})

@@ -2,7 +2,7 @@
 
 #include <SDL_vulkan.h>
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
 
 //==============================================================================
@@ -11,7 +11,7 @@
 SDL_bool
 VSR_SurfaceCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	SDL_bool err;
 
@@ -43,12 +43,12 @@ VSR_SurfaceCreate(
 	}
 }
 
-VSR_Surface
+Renderer_Surface
 VSR_SurfaceGetSurfaceFormatFromDevice(
 	VSR_Renderer* renderer,
 	VkPhysicalDevice device)
 {
-	VSR_Surface surface;
+	Renderer_Surface surface;
 	surface.surface = renderer->subStructs->surface.surface;
 
 	///////////////////////////

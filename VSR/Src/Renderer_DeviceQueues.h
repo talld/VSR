@@ -4,8 +4,15 @@
 #include <vulkan/vulkan.h>
 
 
-typedef struct VSR_DeviceQueuesCreateInfo VSR_DeviceQueuesCreateInfo;
-struct VSR_DeviceQueuesCreateInfo
+////////////////////////////////
+/// Renderer pre-declaration ///
+////////////////////////////////
+typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
+struct Renderer_CreateInfoSubStructs;
+
+
+typedef struct Renderer_DeviceQueuesCreateInfo Renderer_DeviceQueuesCreateInfo;
+struct Renderer_DeviceQueuesCreateInfo
 {
 	VkDeviceQueueCreateInfo   queueCreateInfoList[3];
 	size_t                    transferQueueCreateInfoIndex;
@@ -14,8 +21,8 @@ struct VSR_DeviceQueuesCreateInfo
 };
 
 
-typedef struct VSR_DeviceQueues VSR_DeviceQueues;
-struct VSR_DeviceQueues
+typedef struct Renderer_DeviceQueues Renderer_DeviceQueues;
+struct Renderer_DeviceQueues
 {
 	uint32_t   graphicsQueueIndex;
 	uint32_t   computeQueueIndex;
@@ -37,9 +44,9 @@ struct VSR_DeviceQueues
 SDL_bool
 VSR_DeviceQueuesPopulateCreateInfo(
 	VSR_RendererCreateInfo* rendererCreateInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
-VSR_DeviceQueues
+Renderer_DeviceQueues
 VSR_DeviceQueuesSelectFromDevice(
 	VkPhysicalDevice physicalDevice,
 	VSR_Renderer* renderer
@@ -48,6 +55,6 @@ VSR_DeviceQueuesSelectFromDevice(
 SDL_bool
 VSR_DeviceQueuesCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 #endif // VSR_DEVICEQUEUES_H

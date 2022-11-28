@@ -4,15 +4,22 @@
 #include <vulkan/vulkan.h>
 
 
-typedef struct VSR_SurfaceCreateInfo VSR_SurfaceCreateInfo;
-struct VSR_SurfaceCreateInfo
+////////////////////////////////
+/// Renderer pre-declaration ///
+////////////////////////////////
+typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
+struct Renderer_CreateInfoSubStructs;
+
+
+typedef struct Renderer_SurfaceCreateInfo Renderer_SurfaceCreateInfo;
+struct Renderer_SurfaceCreateInfo
 {
 
 };
 
 
-typedef struct VSR_Surface VSR_Surface;
-struct VSR_Surface
+typedef struct Renderer_Surface Renderer_Surface;
+struct Renderer_Surface
 {
 	VkSurfaceKHR               surface;
 	VkSurfaceCapabilitiesKHR   surfaceCapabilities;
@@ -26,9 +33,9 @@ struct VSR_Surface
 SDL_bool
 VSR_SurfaceCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
-VSR_Surface
+Renderer_Surface
 VSR_SurfaceGetSurfaceFormatFromDevice(
 	VSR_Renderer* renderer,
 	VkPhysicalDevice device);

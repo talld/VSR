@@ -4,15 +4,22 @@
 #include <vulkan/vulkan.h>
 
 
-typedef struct VSR_LogicalDeviceCreateInfo VSR_LogicalDeviceCreateInfo;
-struct VSR_LogicalDeviceCreateInfo
+////////////////////////////////
+/// Renderer pre-declaration ///
+////////////////////////////////
+typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
+struct Renderer_CreateInfoSubStructs;
+
+
+typedef struct Renderer_LogicalDeviceCreateInfo Renderer_LogicalDeviceCreateInfo;
+struct Renderer_LogicalDeviceCreateInfo
 {
 	VkDeviceCreateInfo   createInfo;
 };
 
 
-typedef struct VSR_LogicalDevice VSR_LogicalDevice;
-struct VSR_LogicalDevice
+typedef struct Renderer_LogicalDevice Renderer_LogicalDevice;
+struct Renderer_LogicalDevice
 {
 	VkDevice   device;
 };
@@ -21,12 +28,12 @@ struct VSR_LogicalDevice
 SDL_bool
 VSR_LogicalDevicePopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 SDL_bool
 VSR_LogicalDeviceCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 void
 VSR_LogicalDeviceDestroy(

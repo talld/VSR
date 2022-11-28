@@ -1,6 +1,6 @@
-#include "Renderer_RenderPass.h"
+#include "GraphicsPipeline_RenderPass.h"
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
 
 
@@ -11,9 +11,10 @@
 // VSR_RenderPassPopulateCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_RenderPassPopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+GraphicsPipeline_RenderPassPopulateCreateInfo(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipelineCreateInfo* createInfo,
+	GraphicsPipeline_CreateInfoSubStructs* subStructs)
 {
 	// TODO: move stuff here
 	return SDL_TRUE;
@@ -27,9 +28,10 @@ VSR_RenderPassPopulateCreateInfo(
 // VSR_RenderPassCreate
 //------------------------------------------------------------------------------
 SDL_bool
-VSR_RenderPassCreate(
+GraphicsPipeline_RenderPassCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	VSR_GraphicsPipeline* pipeline,
+	GraphicsPipeline_CreateInfoSubStructs* subStructs)
 {
 	///////////////////
 	/// colour pass ///
@@ -103,7 +105,7 @@ VSR_RenderPassCreate(
 		renderer->subStructs->logicalDevice.device,
 		&passInfo,
 		VSR_GetAllocator(),
-		&renderer->subStructs->renderPass.renderPass);
+		&pipeline->subStructs->renderPass.renderPass);
 
 	if(err != VK_SUCCESS)
 	{
@@ -134,11 +136,12 @@ FAIL:
 // VSR_RenderPassDestroy
 //------------------------------------------------------------------------------
 void
-VSR_RenderPassDestroy(
-	VSR_Renderer* renderer
+GraphicsPipeline_RenderPassDestroy(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline
 )
 {
 	vkDestroyRenderPass(renderer->subStructs->logicalDevice.device,
-						renderer->subStructs->renderPass.renderPass,
+						pipeline->subStructs->renderPass.renderPass,
 						VSR_GetAllocator());
 }

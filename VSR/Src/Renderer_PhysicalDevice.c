@@ -1,6 +1,6 @@
 #include "Renderer_PhysicalDevice.h"
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "Renderer_DeviceQueues.h"
 #include "Renderer_Surface.h"
 #include "VSR_error.h"
@@ -11,14 +11,14 @@
 SDL_bool
 VSR_PhysicalDeviceSelect(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* vkStructs)
+	Renderer_CreateInfoSubStructs* vkStructs)
 {
 	///////////////
 	/// Aliases ///
 	///////////////
 	VkInstance* instance = &renderer->subStructs->instance.instance;
 
-	VSR_PhysicalDevice* physicalDevice = &renderer->subStructs->physicalDevice;
+	Renderer_PhysicalDevice* physicalDevice = &renderer->subStructs->physicalDevice;
 
 
 	///////////////////////////////////////
@@ -65,8 +65,8 @@ VSR_PhysicalDeviceSelect(
 	VkPhysicalDeviceVulkan11Properties chosenDeviceVulkan11Properties;
 	VkPhysicalDeviceVulkan12Properties chosenDeviceVulkan12Properties;
 	VkPhysicalDeviceVulkan13Properties chosenDeviceVulkan13Properties;
-	VSR_DeviceQueues chosenDeviceQueues;
-	VSR_Surface      chosenDeviceSurface;
+	Renderer_DeviceQueues chosenDeviceQueues;
+	Renderer_Surface chosenDeviceSurface;
 	VkPhysicalDevice chosenDevice;
 	size_t chosenDeviceScore = 0;
 	for ( size_t i = 0; i < deviceCount; i++ )
@@ -120,11 +120,11 @@ VSR_PhysicalDeviceSelect(
 			deviceScore = deviceScore / 3; // assume 2/3s is going to be in use
 		}
 
-		VSR_DeviceQueues deviceQueues =
+		Renderer_DeviceQueues deviceQueues =
 			VSR_DeviceQueuesSelectFromDevice(testedDevice,
 											 renderer);
 
-		VSR_Surface deviceSurface = VSR_SurfaceGetSurfaceFormatFromDevice(
+		Renderer_Surface deviceSurface = VSR_SurfaceGetSurfaceFormatFromDevice(
 			renderer,
 			testedDevice);
 

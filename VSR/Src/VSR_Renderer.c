@@ -1,4 +1,4 @@
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 
 #include <vulkan/vulkan.h>
 #include "VSR_error.h"
@@ -118,7 +118,7 @@ VSR_RendererGenerateCreateInfo(
 	size_t createInfoSize = sizeof(VSR_RendererCreateInfo);
 	VSR_RendererCreateInfo* createInfo =  SDL_calloc(1, createInfoSize);
 	
-	size_t subStructsSize = sizeof(VSR_RendererCreateInfoSubStructs);
+	size_t subStructsSize = sizeof(Renderer_CreateInfoSubStructs);
 	createInfo->subStructs = SDL_calloc(1, subStructsSize);
 
 	createInfo->SDLWindow = window;
@@ -143,10 +143,6 @@ VSR_RendererGenerateCreateInfo(
 	VSR_DeviceQueuesPopulateCreateInfo(createInfo, createInfo->subStructs);
     VSR_LogicalDevicePopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_SwapchainPopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_RenderPassPopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_GraphicsPipelinePopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_FramebufferPopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_CommandPoolPopulateCreateInfo(createInfo, createInfo->subStructs);
 
 	SUCCESS:
 	{
@@ -170,7 +166,7 @@ void
 VSR_RendererFreeCreateInfo(
 	VSR_RendererCreateInfo* rendererCreateInfo)
 {
-	VSR_RendererCreateInfoSubStructs* subStructs =
+	Renderer_CreateInfoSubStructs* subStructs =
 		rendererCreateInfo->subStructs;
 	
 	// in an ideal world all of this would not exist
@@ -200,7 +196,7 @@ VSR_RendererCreate(
 	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 	VSR_Renderer* renderer = SDL_calloc(1, sizeof(VSR_Renderer));
-	renderer->subStructs = SDL_calloc(1, sizeof(VSR_RendererSubStructs));
+	renderer->subStructs = SDL_calloc(1, sizeof(Renderer_SubStructs));
 	
 	//////////////////////////////////
 	/// pass info to new structure ///
@@ -215,11 +211,6 @@ VSR_RendererCreate(
 
 	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
-
-	VSR_RenderPassCreate(renderer, rendererCreateInfo->subStructs);
-	VSR_GraphicsPipelineCreate(renderer, rendererCreateInfo->subStructs);
-	VSR_FramebufferCreate(renderer, rendererCreateInfo->subStructs);
-	VSR_CommandPoolCreate(renderer, rendererCreateInfo->subStructs);
 
 	Renderer_CreateSyncObjects(renderer);
 
@@ -248,10 +239,6 @@ VSR_RendererFree(
 	////////////////////////////////////////
 	Renderer_DestroySyncObjects(renderer);
 
-	VSR_CommandPoolDestroy(renderer);
-	VSR_FramebufferDestroy(renderer);
-	VSR_GraphicPipelineDestroy(renderer);
-	VSR_RenderPassDestroy(renderer);
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
 	VSR_SurfaceDestroy(renderer);
@@ -268,33 +255,12 @@ VSR_RendererFree(
 	SDL_free((void*)renderer);
 }
 
-
-
-
-
-//==============================================================================
-// VSR_RendererSetShader
-//------------------------------------------------------------------------------
-void
-VSR_RendererSetShader(
+void VSR_RendererSetPipeline(
 	VSR_Renderer* renderer,
-	VSR_ShaderStage stage,
-	VSR_Shader* shader)
+	VSR_GraphicsPipeline* pipeline)
 {
-	if(stage == SHADER_STAGE_FRAGMENT)
-	{
-		renderer->subStructs->fragmentShader = shader;
-	}
-
-	if(stage == SHADER_STAGE_VERTEX)
-	{
-		renderer->subStructs->vertexShader = shader;
-	}
-
+	renderer->subStructs->pipeline = pipeline;
 }
-
-
-
 
 
 //==============================================================================
@@ -302,6 +268,12 @@ VSR_RendererSetShader(
 //------------------------------------------------------------------------------
 void VSR_RendererBeginPass(VSR_Renderer* renderer)
 {
+	////////////////
+	/// Bouncers ///
+	////////////////
+	if(!renderer->subStructs->pipeline) return;
+
+
 	///////////////
 	/// aliases ///
 	///////////////
@@ -348,7 +320,8 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &renderer->subStructs->imageCanBeRead[*frameIndex];
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &renderer->subStructs->commandPool.commandBuffers[*frameIndex];
+	submitInfo.pCommandBuffers = &renderer->subStructs->pipeline->
+		subStructs->commandPool.commandBuffers[*frameIndex];
 
 	vkQueueSubmit(renderer->subStructs->deviceQueues.graphicsQueue,
 				  1,

@@ -2,7 +2,7 @@
 
 #include <SDL_vulkan.h>
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
 
 //==============================================================================
@@ -11,7 +11,7 @@
 SDL_bool
 VSR_SwapchainPopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 
 	SUCCESS:
@@ -35,7 +35,7 @@ VSR_SwapchainPopulateCreateInfo(
 SDL_bool
 VSR_SwapchainCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	///////////////////////////////////
 	/// Fill missing swapchain data ///

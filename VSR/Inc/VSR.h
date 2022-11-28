@@ -17,14 +17,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Struct pre-declarations                                                  ///
 ////////////////////////////////////////////////////////////////////////////////
-typedef struct VSR_RendererCreateInfoSubStructs VSR_RendererCreateInfoSubStructs;
-struct VSR_RendererCreateInfoSubStructs;
-
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo;
 
 typedef struct VSR_Renderer VSR_Renderer;
 struct VSR_Renderer;
+
+typedef struct VSR_GraphicsPipelineCreateInfo VSR_GraphicsPipelineCreateInfo;
+struct VSR_GraphicsPipelineCreateInfo;
+
+typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;
+struct VSR_GraphicsPipeline;
 
 typedef enum VSR_ShaderStage VSR_ShaderStage;
 enum VSR_ShaderStage;
@@ -79,9 +82,19 @@ VSR_Renderer* VSR_RendererCreate(VSR_RendererCreateInfo* rendererCreateInfo);
 
 void VSR_RendererFree(VSR_Renderer* renderer);
 
+void VSR_RendererSetPipeline(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline);
+
 void VSR_RendererBeginPass(VSR_Renderer* renderer);
 
 void VSR_RendererEndPass(VSR_Renderer* renderer);
+
+VSR_GraphicsPipelineCreateInfo* VSR_GraphicsPipelineGenerateCreateInfo(VSR_Renderer* renderer);
+
+void VSR_GraphicsPipelineCreateInfoFree(VSR_GraphicsPipelineCreateInfo* createInfo);
+
+VSR_GraphicsPipeline* VSR_GraphicsPipelineCreate(VSR_Renderer* renderer, VSR_GraphicsPipelineCreateInfo* createInfo);
+
+void VSR_GraphicsPipelineFree(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline);
 
 VSR_Shader VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, const uint8_t* bytes);
 

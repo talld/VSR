@@ -2,7 +2,7 @@
 
 #include <SDL_vulkan.h>
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
 
 //==============================================================================
@@ -11,12 +11,12 @@
 SDL_bool
 VSR_InstancePopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	///////////////
 	/// Aliases ///
 	///////////////
-	VSR_InstanceCreateInfo* instanceInfo = &subStructs->instanceCreateInfo;
+	Renderer_InstanceCreateInfo* instanceInfo = &subStructs->instanceCreateInfo;
 
 	VkInstanceCreateInfo* instanceCreateInfo = &instanceInfo->createInfo;
 
@@ -97,7 +97,7 @@ VSR_InstancePopulateCreateInfo(
 SDL_bool
 VSR_InstanceCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	///////////////
 	/// Aliases ///

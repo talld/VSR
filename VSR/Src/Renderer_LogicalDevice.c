@@ -1,6 +1,6 @@
 #include "Renderer_LogicalDevice.h"
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
 
 //==============================================================================
@@ -9,19 +9,19 @@
 SDL_bool
 VSR_LogicalDevicePopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	///////////////
 	/// aliases ///
 	///////////////
 
-	VSR_PhysicalDeviceCreateInfo* physicalDeviceCreateInfo =
+	Renderer_PhysicalDeviceCreateInfo* physicalDeviceCreateInfo =
 		&subStructs->physicalDeviceCreateInfo;
 
-	VSR_LogicalDeviceCreateInfo* logicalDeviceCreateInfo =
+	Renderer_LogicalDeviceCreateInfo * logicalDeviceCreateInfo =
 		&subStructs->logicalDeviceCreateInfo;
 
-	VSR_DeviceQueuesCreateInfo* deviceQueuesCreateInfo =
+	Renderer_DeviceQueuesCreateInfo * deviceQueuesCreateInfo =
 		&subStructs->deviceQueuesCreateInfo;
 
 	VkDeviceCreateInfo* deviceCreateInfo =
@@ -92,7 +92,7 @@ VSR_LogicalDevicePopulateCreateInfo(
 SDL_bool
 VSR_LogicalDeviceCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs)
+	Renderer_CreateInfoSubStructs* subStructs)
 {
 	VkResult err;
 	VkDevice logicalDevice;

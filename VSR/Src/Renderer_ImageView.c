@@ -1,6 +1,6 @@
 #include "Renderer_ImageView.h"
 
-#include "Renderer.h"
+#include "VSR_Renderer.h"
 #include "VSR_error.h"
 
 

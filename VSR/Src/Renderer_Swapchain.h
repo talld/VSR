@@ -4,15 +4,23 @@
 #include <vulkan/vulkan.h>
 #include "Renderer_ImageView.h"
 
-typedef struct VSR_SwapchainCreateInfo VSR_SwapchainCreateInfo;
-struct VSR_SwapchainCreateInfo
+
+////////////////////////////////
+/// Renderer pre-declaration ///
+////////////////////////////////
+typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
+struct Renderer_CreateInfoSubStructs;
+
+
+typedef struct Renderer_SwapchainCreateInfo Renderer_SwapchainCreateInfo;
+struct Renderer_SwapchainCreateInfo
 {
 	VkSwapchainCreateInfoKHR   createInfo;
 };
 
 
-typedef struct VSR_Swapchain VSR_Swapchain;
-struct VSR_Swapchain
+typedef struct Renderer_Swapchain Renderer_Swapchain;
+struct Renderer_Swapchain
 {
 	VkSwapchainKHR   swapchain;
 	size_t           imageViewCount;
@@ -23,13 +31,13 @@ struct VSR_Swapchain
 SDL_bool
 VSR_SwapchainPopulateCreateInfo(
 	VSR_RendererCreateInfo* createInfo,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 
 SDL_bool
 VSR_SwapchainCreate(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* subStructs);
+	Renderer_CreateInfoSubStructs* subStructs);
 
 void
 VSR_SwapchainDestroy(

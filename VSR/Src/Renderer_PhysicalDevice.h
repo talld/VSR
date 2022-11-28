@@ -3,14 +3,22 @@
 
 #include <vulkan/vulkan.h>
 
-typedef struct VSR_PhysicalDeviceCreateInfo VSR_PhysicalDeviceCreateInfo;
-struct VSR_PhysicalDeviceCreateInfo
+
+////////////////////////////////
+/// Renderer pre-declaration ///
+////////////////////////////////
+typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
+struct Renderer_CreateInfoSubStructs;
+
+
+typedef struct Renderer_PhysicalDeviceCreateInfo Renderer_PhysicalDeviceCreateInfo;
+struct Renderer_PhysicalDeviceCreateInfo
 {
 	VkPhysicalDeviceFeatures2    physicalDeviceFeatures2;
 };
 
-typedef struct VSR_PhysicalDevice VSR_PhysicalDevice;
-struct VSR_PhysicalDevice
+typedef struct Renderer_PhysicalDevice Renderer_PhysicalDevice;
+struct Renderer_PhysicalDevice
 {
 	VkPhysicalDevice                     device;
 	VkPhysicalDeviceProperties2          deviceProperties;
@@ -22,6 +30,6 @@ struct VSR_PhysicalDevice
 SDL_bool
 VSR_PhysicalDeviceSelect(
 	VSR_Renderer* renderer,
-	VSR_RendererCreateInfoSubStructs* vkStructs);
+	Renderer_CreateInfoSubStructs* vkStructs);
 
 #endif //VSR_PHYSICALDEVICE_H
