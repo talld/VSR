@@ -117,6 +117,9 @@ VSR_LogicalDeviceCreate(
 
 	renderer->subStructs->logicalDevice.device = logicalDevice;
 
+	////////////////////
+	/// Fetch queues ///
+	////////////////////
 	// FIXME: this is broken, handle queues better!
 
 	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
