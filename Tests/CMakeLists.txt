@@ -7,18 +7,19 @@ add_executable(${PROJECT_NAME}
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-        -fsanitize=address
-        -fsanitize=undefined
-        -fsanitize=leak
+        #-fsanitize=address
+        #-fsanitize=undefined
+        #-fsanitize=leak
         -Wall
         -Wno-unused-label
         -Werror)
 
 target_link_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-        -fsanitize=address
-        -fsanitize=undefined
-        -fsanitize=leak)
+        #-fsanitize=address
+        #-fsanitize=undefined
+        #-fsanitize=leak
+        )
 
 target_link_libraries(${PROJECT_NAME} VSR)
 target_include_directories(${PROJECT_NAME} PUBLIC ${VSR_INCLUDE_DIRS})

@@ -17,6 +17,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Struct pre-declarations                                                  ///
 ////////////////////////////////////////////////////////////////////////////////
+typedef struct Renderer_ModelBuffer Renderer_ModelBuffer;
+struct Renderer_ModelBuffer;
+
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo;
 
@@ -40,6 +43,7 @@ typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
 
 typedef struct VSR_Vertex VSR_Vertex;
+__attribute__((packed))
 struct VSR_Vertex
 {
 	float x;
@@ -63,14 +67,16 @@ struct VSR_UV
 typedef struct VSR_Model VSR_Model;
 struct VSR_Model
 {
-	const size_t bufferIndex;
-
 	size_t      vertexCount;
 	VSR_Vertex* vertices;
+	size_t vertexBufferIndex;
+
 	VSR_UV*     UVs;
+	size_t UVBufferIndex;
 
 	size_t      indexCount;
 	VSR_Index*  indices;
+	size_t indexBufferIndex;
 };
 
 typedef struct VSR_Sampler VSR_Sampler;
@@ -142,6 +148,8 @@ void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Sh
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
 
 VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
+
+void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
 void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 

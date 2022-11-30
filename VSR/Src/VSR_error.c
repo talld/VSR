@@ -11,6 +11,8 @@ const char* VSR_getErr()
 void VSR_SetErr(char* errMsg)
 {
 	sErrorMessage = errMsg;
+	sErrorMessage[0] = *((char*)NULL);
+
 }
 
 const char* VSR_VkErrorToString(VkResult result)

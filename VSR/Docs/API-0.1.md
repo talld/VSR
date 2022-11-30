@@ -1,13 +1,17 @@
 
 # Models
 ```c
-VSR_Model* VSR_CreateModel(VSR_Renderer* renderer, int32_t* vertices, size_t vertiexCount, int32_t* indices, size_t indexCount);
+VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
 ```
 models are created as a list of vertices and indices points
 vertices having a stride of 3, being: x y z points with verticesCount being a multiple of 3 and the number of these xyz groups.
 Ensure that your vertices are in the correct order as your triangle winding ( default is counterclockwise )
 ```c
-int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, int32_t* UVs);
+void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
+```
+remember to free models when your done with them
+```c
+int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, float* UVs);
 ```
 UVs are bound optionally and like vertices are in an u v group, 1 uv is 
 required per vertex so UVCount === vertexCount at all times, as a result this function does not take a UVCount instead vertexCount will be attempted to be read from the UVs pointer

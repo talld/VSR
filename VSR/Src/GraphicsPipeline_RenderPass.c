@@ -40,7 +40,7 @@ GraphicsPipeline_RenderPassCreate(
 	colourAttachment.flags = 0L;
 	colourAttachment.format = renderer->subStructs->surface.surfaceFormat;
 	colourAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	colourAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	colourAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colourAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	colourAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colourAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;

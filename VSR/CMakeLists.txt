@@ -1,6 +1,6 @@
 project(VSR)
 cmake_minimum_required(VERSION 3.19)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
 
 set(VSR_INC
         Src)
@@ -12,7 +12,9 @@ set(VSR_SRC
         ${VSR_PCH}
         Src/VSR_error.c
 
-        # Rendering
+        ### Rendering ###
+
+        # Renderer
         Src/VSR_Renderer.c
         Src/Renderer_Instance.c
         Src/Renderer_PhysicalDevice.c
@@ -22,30 +24,34 @@ set(VSR_SRC
         Src/Renderer_Swapchain.c
         Src/Renderer_ImageView.c
 
+        # GraphicsPipeline
         Src/VSR_GraphicsPipeline.c
         Src/VSR_Shader.c
         Src/GraphicsPipeline_RenderPass.c
         Src/GraphicsPipeline_GraphicsPipeline.c
         Src/GraphicsPipeline_Framebuffer.c
         Src/GraphicsPipeline_CommandPool.c
+
+        Src/VSR_Model.c
         )
 
-add_library(${PROJECT_NAME} ${VSR_SRC})
+add_library(${PROJECT_NAME} STATIC ${VSR_SRC})
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-        -fsanitize=address
-        -fsanitize=undefined
-        -fsanitize=leak
+        #-fsanitize=address
+        #-fsanitize=undefined
+        #-fsanitize=leak
         -Wall
         -Wno-unused-label
         -Werror)
 
 target_link_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-        -fsanitize=address
-        -fsanitize=undefined
-        -fsanitize=leak)
+       # -fsanitize=address
+       # -fsanitize=undefined
+       # -fsanitize=leak
+        )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${VSR_PCH})
 target_include_directories(${PROJECT_NAME} PRIVATE ${VSR_INC})

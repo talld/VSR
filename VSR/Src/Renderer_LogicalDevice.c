@@ -144,6 +144,8 @@ VSR_LogicalDeviceCreate(
 					 renderer->subStructs->deviceQueues.computeQueueIndex,
 					 &renderer->subStructs->deviceQueues.computeQueue);
 
+	///
+
 	SUCCESS:
 	{
 		return SDL_TRUE;
@@ -177,14 +179,14 @@ VSR_LogicalDeviceDestroy(
 //==============================================================================
 // VSR_LogicalDeviceCreateBuffer
 //------------------------------------------------------------------------------
-VkBuffer
-VSR_LogicalDeviceCreateBuffer(
+VkDeviceMemory
+VSR_LogicalDeviceGetMemory(
 	VSR_Renderer* renderer,
 	size_t size,
 	VkBufferUsageFlags usage,
-	VkMemoryPropertyFlags properties)
+	VkMemoryPropertyFlags properties,
+	VkBuffer* buffer)
 {
-	VkBuffer buffer;
 
 	VkBufferCreateInfo bufferInfo = (VkBufferCreateInfo){0};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -198,7 +200,7 @@ VSR_LogicalDeviceCreateBuffer(
 	vkCreateBuffer(renderer->subStructs->logicalDevice.device,
 				   &bufferInfo,
 				   VSR_GetAllocator(),
-				   &buffer);
+				   buffer);
 
 	if(err != VK_SUCCESS)
 	{
@@ -211,7 +213,7 @@ VSR_LogicalDeviceCreateBuffer(
 
 	VkMemoryRequirements memReq = (VkMemoryRequirements){0};
 	vkGetBufferMemoryRequirements(renderer->subStructs->logicalDevice.device,
-								  buffer,
+								  *buffer,
 								  &memReq);
 
 	VkPhysicalDeviceMemoryProperties memoryProperties;
@@ -238,17 +240,19 @@ VSR_LogicalDeviceCreateBuffer(
 	allocateInfo.memoryTypeIndex = memIndex;
 
 	VkDeviceMemory deviceMemory;
+
+	err =
 	vkAllocateMemory(renderer->subStructs->logicalDevice.device,
 					 &allocateInfo,
 					 VSR_GetAllocator(),
 					 &deviceMemory);
-
+	err =
 	vkBindBufferMemory(renderer->subStructs->logicalDevice.device,
-					   buffer,
+					   renderer->subStructs->deviceBuffer,
 					   deviceMemory,
 					   0);
 
-	return buffer;
+	return deviceMemory;
 }
 
 
@@ -259,11 +263,11 @@ VSR_LogicalDeviceCreateBuffer(
 // VSR_LogicalDeviceFreeBuffer
 //------------------------------------------------------------------------------
 void
-VSR_LogicalDeviceFreeBuffer(
+VSR_LogicalDeviceFreeMemory(
 	VSR_Renderer* renderer,
-	VkBuffer buffer)
+	VkDeviceMemory memory)
 {
-	vkDestroyBuffer(renderer->subStructs->logicalDevice.device,
-					buffer,
-					VSR_GetAllocator());
+	vkFreeMemory(renderer->subStructs->logicalDevice.device,
+				 memory,
+				 VSR_GetAllocator());
 }

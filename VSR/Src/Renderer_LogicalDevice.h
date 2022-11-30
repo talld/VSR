@@ -39,16 +39,17 @@ void
 VSR_LogicalDeviceDestroy(
 	VSR_Renderer* renderer);
 
-VkBuffer
-VSR_LogicalDeviceCreateBuffer(
+VkDeviceMemory
+VSR_LogicalDeviceGetMemory(
 	VSR_Renderer* renderer,
 	size_t size,
 	VkBufferUsageFlags usage,
-	VkMemoryPropertyFlags properties);
+	VkMemoryPropertyFlags properties,
+	VkBuffer* buffer);
 
 void
-VSR_LogicalDeviceFreeBuffer(
+VSR_LogicalDeviceFreeMemory(
 	VSR_Renderer* renderer,
-	VkBuffer buffer);
+	VkDeviceMemory memory);
 
 #endif // VSR_LOGICALDEVICE_H

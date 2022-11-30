@@ -65,9 +65,10 @@ uint8_t* loadShader(const char* fName, size_t* n)
 
 int main(int argc, char* argv[])
 {
+///*
 	writeSPIRVToFile("vert.spv", "vert.h");
 	writeSPIRVToFile("frag.spv", "frag.h");
-
+//*/
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Window* window = SDL_CreateWindow("TestWindow", 0,0,640,480,
 								   SDL_WINDOW_VULKAN);
@@ -79,19 +80,37 @@ int main(int argc, char* argv[])
 
 	size_t n;
 	uint8_t* vertBytes = loadShader("vert.spv", &n);
-	VSR_Shader* shader = VSR_ShaderCreate(renderer, n, vertBytes);
-	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, shader);
+	VSR_Shader* vertShader = VSR_ShaderCreate(renderer, n, vertBytes);
+	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vertShader);
+
+	uint8_t* fragBytes = loadShader("frag.spv", &n);
+	VSR_Shader* fragShader = VSR_ShaderCreate(renderer, n, fragBytes);
+	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_FRAGMENT, fragShader);
 
 	VSR_GraphicsPipeline* pipeline = VSR_GraphicsPipelineCreate(renderer, pipelineCreateInfo);
 
 	VSR_RendererSetPipeline(renderer, pipeline);
 
+	float verts[9] = {
+		 0.0f,  -0.5f, 0.0f,
+		 0.5f,   0.5f, 0.0f,
+		-0.5f,   0.5f, 0.0f,};
+
+	VSR_Model* model =
+	VSR_ModelCreate(renderer, verts, 3, NULL, 0);
+
 	int shouldQuit = 0;
 	SDL_Event event;
 	while(!shouldQuit)
 	{
-		VSR_RendererBeginPass(renderer);
 
+		model->vertices[0].x += 0.00001f;
+		model->vertices[1].x += 0.00001f;
+		model->vertices[2].x += 0.00001f;
+
+		VSR_RendererBeginPass(renderer);
+		VSR_ModelUpdate(renderer, model);
+		VSR_RenderModels(renderer, model, NULL, 1);
 		VSR_RendererEndPass(renderer);
 
 		SDL_PollEvent(&event);
@@ -101,7 +120,9 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	VSR_ShaderDestroy(renderer, shader);
+	VSR_ShaderDestroy(renderer, vertShader);
+	VSR_ShaderDestroy(renderer, fragShader);
+
 	VSR_GraphicsPipelineCreateInfoFree(pipelineCreateInfo);
 	VSR_GraphicsPipelineFree(renderer, pipeline);
 	VSR_RendererFreeCreateInfo(createInfo);

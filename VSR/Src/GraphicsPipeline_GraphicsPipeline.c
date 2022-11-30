@@ -111,7 +111,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 
 	if(createInfo->fragmentShader)
 	{
-		shadersStages[SHADER_STAGE_VERTEX].module =
+		shadersStages[SHADER_STAGE_FRAGMENT].module =
 			createInfo->fragmentShader->module;
 	}
 
@@ -120,7 +120,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	////////////////////
 
 	VkVertexInputBindingDescription vertexInputDesc[1] = {0};
-
 	vertexInputDesc[0].binding = 0;
 	vertexInputDesc[0].stride = sizeof(VSR_Vertex);
 	vertexInputDesc[0].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
@@ -137,9 +136,9 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	vertInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertInfo.pNext = NULL;
 	vertInfo.flags = 0L;
-	vertInfo.vertexBindingDescriptionCount = 0;
+	vertInfo.vertexBindingDescriptionCount = 1;
 	vertInfo.pVertexBindingDescriptions = &vertexInputDesc[0];
-	vertInfo.vertexAttributeDescriptionCount = 0;
+	vertInfo.vertexAttributeDescriptionCount = 1;
 	vertInfo.pVertexAttributeDescriptions = &vertexAttrDesc[0];
 
 	//////////////////////
@@ -164,8 +163,8 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	viewport.y = 0;
 	viewport.width = renderer->subStructs->surface.surfaceWidth;
 	viewport.height = renderer->subStructs->surface.surfaceHeight;
-	viewport.minDepth = 0.f;
-	viewport.maxDepth = 1.f;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor = (VkRect2D){0};
 	scissor.offset.x = 0;

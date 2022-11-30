@@ -40,7 +40,7 @@ GraphicsPipeline_CommandPoolCreate(
 
 	poolCreateInfo->sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolCreateInfo->pNext = NULL;
-	poolCreateInfo->flags = 0L;
+	poolCreateInfo->flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 
 	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.graphicsQueueFamilyIndex;
@@ -63,8 +63,6 @@ GraphicsPipeline_CommandPoolCreate(
 	///////////////////////
 	/// command buffers ///
 	///////////////////////
-
-
 
 	size_t frames = renderer->subStructs->swapchain.imageViewCount;
 	size_t listSize = frames * sizeof(VkCommandBuffer);
@@ -91,69 +89,6 @@ GraphicsPipeline_CommandPoolCreate(
 		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
-
-	/////////////////////////
-	/// prerecord buffers ///
-	/////////////////////////
-
-	VkCommandBufferBeginInfo bufferBeginInfo;
-	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	bufferBeginInfo.pNext = NULL;
-	bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-	bufferBeginInfo.pInheritanceInfo = NULL;
-
-	VkRenderPassBeginInfo passBeginInfo;
-	passBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	passBeginInfo.pNext = NULL;
-	passBeginInfo.renderPass = pipeline->subStructs->renderPass.renderPass;
-	passBeginInfo.renderArea.offset.x = 0;
-	passBeginInfo.renderArea.offset.y = 0;
-	passBeginInfo.renderArea.extent.width = renderer->subStructs->surface.surfaceWidth;
-	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
-	passBeginInfo.clearValueCount = 1;
-	VkClearValue clearValues = {{{0.f,0.f,0.f, 1.0f}}};
-	passBeginInfo.pClearValues = &clearValues;
-
-	for(size_t i = 0; i < frames; i++)
-	{
-		err = vkBeginCommandBuffer(buffs[i], &bufferBeginInfo);
-		if(err != VK_SUCCESS)
-		{
-			char errMsg[255];
-			sprintf(errMsg, "Failed to start command recording: %s",
-					VSR_VkErrorToString(err));
-
-			VSR_SetErr(errMsg);
-			goto FAIL;
-		}
-
-		passBeginInfo.framebuffer = pipeline->subStructs->framebuffer.framebuffers[i];
-		vkCmdBeginRenderPass(buffs[i], &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-		{
-			// colour + depth pass?
-			vkCmdBindPipeline(buffs[i],
-							  VK_PIPELINE_BIND_POINT_GRAPHICS,
-							  pipeline->subStructs->graphicPipeline.pipeline);
-
-			vkCmdDraw(buffs[i], 3, 1, 0, 0);
-
-			// vkCmdDraw(buffs[i], verts, instances, 0, 0);
-			// vkCmdPushConstants(buffs[i]... camera constants ...);
-		}
-		vkCmdEndRenderPass(buffs[i]);
-
-		err = vkEndCommandBuffer(buffs[i]);
-		if(err != VK_SUCCESS)
-		{
-			char errMsg[255];
-			sprintf(errMsg, "Failed to end command recording: %s",
-					VSR_VkErrorToString(err));
-
-			VSR_SetErr(errMsg);
-			goto FAIL;
-		}
-	}
-
 SUCCESS:
 	{
 	return SDL_TRUE;
@@ -166,8 +101,104 @@ FAIL:
 }
 
 
+int
+GraphicsPipeline_CommandBufferRecordStart(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline)
+{
+	VkCommandBuffer* buffs =  pipeline->subStructs->commandPool.commandBuffers;
+
+	VkCommandBufferBeginInfo bufferBeginInfo = (VkCommandBufferBeginInfo){0};
+	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	bufferBeginInfo.pNext = NULL;
+	bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+	bufferBeginInfo.pInheritanceInfo = NULL;
+
+	VkRenderPassBeginInfo passBeginInfo = (VkRenderPassBeginInfo){0};
+	passBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	passBeginInfo.pNext = NULL;
+	passBeginInfo.renderPass = pipeline->subStructs->renderPass.renderPass;
+	passBeginInfo.framebuffer = pipeline->subStructs->framebuffer.framebuffers[renderer->subStructs->imageIndex];
+	passBeginInfo.renderArea.offset.x = 0;
+	passBeginInfo.renderArea.offset.y = 0;
+	passBeginInfo.renderArea.extent.width = renderer->subStructs->surface.surfaceWidth;
+	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
+	passBeginInfo.clearValueCount = 1;
+	VkClearValue clearValues = {{{0.f,0.f,0.f, 1.0f}}};
+	passBeginInfo.pClearValues = &clearValues;
 
 
+	/////////////////////////
+	/// record buffers    ///
+	/////////////////////////
+	size_t i = renderer->subStructs->currentFrame;
+	{
+		VkResult err = vkBeginCommandBuffer(buffs[i], &bufferBeginInfo);
+		if(err != VK_SUCCESS)
+		{
+			char errMsg[255];
+			sprintf(errMsg, "Failed to start command recording: %s",
+					VSR_VkErrorToString(err));
+
+			VSR_SetErr(errMsg);
+			goto FAIL;
+		}
+
+		vkCmdBindPipeline(buffs[i],
+						  VK_PIPELINE_BIND_POINT_GRAPHICS,
+						  pipeline->subStructs->graphicPipeline.pipeline);
+
+		vkCmdBeginRenderPass(buffs[i], &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	}
+
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
+
+int
+GraphicsPipeline_CommandBufferRecordEnd(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline)
+{
+	VkCommandBuffer* buffs =  pipeline->subStructs->commandPool.commandBuffers;
+
+	///////////////////////////
+	/// end record buffers ///
+	//////////////////////////
+	size_t i = renderer->subStructs->currentFrame;
+	{
+		vkCmdEndRenderPass(buffs[i]);
+
+		VkResult err = vkEndCommandBuffer(buffs[i]);
+		if (err != VK_SUCCESS)
+		{
+			char errMsg[255];
+			sprintf(errMsg, "Failed to end command recording: %s",
+					VSR_VkErrorToString(err));
+
+			VSR_SetErr(errMsg);
+			goto FAIL;
+		}
+	}
+
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
 
 //==============================================================================
 // VSR_SwapchainPopulateCreateInfo
