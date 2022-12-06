@@ -1,25 +1,32 @@
 #ifndef VSR_MODEL_H
 #define VSR_MODEL_H
 
+#include "VSR_Mesh.h"
+#include "Renderer_Memory.h"
+
+typedef struct VSR_Model VSR_Model;
+struct VSR_Model
+{
+	VSR_Mesh* mesh; // callback for counts
+	Renderer_MemoryAlloc vertices;
+	Renderer_MemoryAlloc UVs;
+	Renderer_MemoryAlloc indices;
+};
+
 VSR_Model*
 VSR_ModelCreate(
 	VSR_Renderer* renderer,
-	float* vertices,
-	size_t vertexCount,
-	uint32_t* indices,
-	size_t indexCount);
+	VSR_Mesh* mesh);
 
 void
 VSR_ModelFree(
 	VSR_Renderer* renderer,
 	VSR_Model* model);
 
-int
-VSR_BindUVs(
+void
+VSR_ModelUpdate(
 	VSR_Renderer* renderer,
-	VSR_Model* model,
-	float* UVs);
+	VSR_Model* model);
 
-void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
 #endif //VSR_MODEL_H
