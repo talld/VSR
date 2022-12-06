@@ -49,33 +49,79 @@ VSR_ModelUpdate(
 	VSR_Renderer* renderer,
 	VSR_Model* model)
 {
+	////////////////////////
+	/// update mesh info ///
+	////////////////////////
+	model->vertexCount = model->mesh->vertexCount;
+	model->indexCount = model->mesh->indexCount;
+
+	///////////////
+	/// get mem ///
+	///////////////
+	Renderer_Memory* stageMem = &renderer->subStructs->VUIStagingBuffer;
+	Renderer_Memory* GPUMem = &renderer->subStructs->VUIGPUBuffer;
+
+	////////////////
+	/// vertices ///
+	////////////////
 	size_t vertSize = model->mesh->vertexCount * sizeof(VSR_Vertex);
 
-	Renderer_Memory* vertexStageMem = &renderer->subStructs->VUIStagingBuffer;
-	Renderer_MemoryReset(vertexStageMem); // this should NEVER have state!
-
-	Renderer_MemoryAlloc vertexStage = Renderer_MemoryAllocate(
+	Renderer_MemoryReset(stageMem); // this should NEVER have state!
+	Renderer_MemoryAlloc stage = Renderer_MemoryAllocate(
 			renderer,
-			vertexStageMem,
+			stageMem,
 			vertSize);
 
-	void* p = Render_MemoryMapAlloc(renderer, *vertexStageMem, vertexStage);
-	memcpy(p, model->mesh->vertices, vertSize);
-	Render_MemoryUnmapAlloc(renderer, *vertexStageMem);
+	void* pV = Render_MemoryMapAlloc(renderer, *stageMem, stage);
+	memcpy(pV, model->mesh->vertices, vertSize);
+	Render_MemoryUnmapAlloc(renderer, *stageMem);
 
 
-	Renderer_Memory* vertexGPUMem = &renderer->subStructs->VUIGPUBuffer;
 	Renderer_MemoryAlloc vertGPU = Renderer_MemoryAllocate(
 		 renderer,
-		 vertexGPUMem,
+		 GPUMem,
 		 vertSize);
 
 	Renderer_MemoryTransfer(renderer,
-							*vertexGPUMem,
+							*GPUMem,
 							vertGPU.offset,
-							*vertexStageMem,
-							vertexStage.offset,
+							*stageMem,
+							stage.offset,
 							vertGPU.size);
 
 	model->vertices = vertGPU;
+
+	///////////////
+	/// indices ///
+	///////////////
+	if(model->indexCount)
+	{
+		size_t indSize = model->mesh->indexCount * sizeof(VSR_Index);
+
+		Renderer_MemoryReset(stageMem); // reset for indices use
+		stage = Renderer_MemoryAllocate(
+			renderer,
+			stageMem,
+			indSize);
+
+		void* pI = Render_MemoryMapAlloc(renderer, *stageMem, stage);
+		memcpy(pI, model->mesh->indices, indSize);
+		Render_MemoryUnmapAlloc(renderer, *stageMem);
+
+		// create GPU index buffer
+		Renderer_MemoryAlloc indGPU = Renderer_MemoryAllocate(
+			renderer,
+			GPUMem,
+			indSize);
+
+		Renderer_MemoryTransfer(renderer,
+								*GPUMem,
+								indGPU.offset,
+								*stageMem,
+								stage.offset,
+								indGPU.size);
+
+		model->indices = indGPU;
+	}
+
 }

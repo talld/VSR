@@ -8,8 +8,10 @@ typedef struct VSR_Model VSR_Model;
 struct VSR_Model
 {
 	VSR_Mesh* mesh; // callback for counts
+	size_t vertexCount;
 	Renderer_MemoryAlloc vertices;
 	Renderer_MemoryAlloc UVs;
+	size_t indexCount;
 	Renderer_MemoryAlloc indices;
 };
 
