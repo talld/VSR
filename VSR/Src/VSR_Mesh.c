@@ -28,6 +28,7 @@ VSR_MeshCreate(
 
 
 	mesh->indices = indices;
+	mesh->indexCount = 0;
 	if(indices)
 	{
 		size_t indicesSize = indexCount * sizeof(VSR_Index);
