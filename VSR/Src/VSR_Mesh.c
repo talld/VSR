@@ -15,7 +15,7 @@ VSR_Mesh*
 VSR_MeshCreate(
 	VSR_Vertex* vertices,
 	size_t vertexCount,
-	uint32_t* indices,
+	VSR_Index* indices,
 	size_t indexCount)
 {
 	VSR_Mesh* mesh;
@@ -27,6 +27,7 @@ VSR_MeshCreate(
 	memcpy(mesh->vertices, vertices, vertSize);
 
 
+	mesh->indices = indices;
 	if(indices)
 	{
 		size_t indicesSize = indexCount * sizeof(VSR_Index);
@@ -34,6 +35,8 @@ VSR_MeshCreate(
 		mesh->indexCount = indexCount;
 		memcpy(mesh->indices, indices, indicesSize);
 	}
+
+	mesh->UVs = NULL;
 
 	return mesh;
 }
