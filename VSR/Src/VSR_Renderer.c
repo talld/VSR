@@ -1,9 +1,19 @@
 #include "VSR_Renderer.h"
 
 #include <vulkan/vulkan.h>
-#include "VSR_error.h"
+#include <VSR_error.h>
+#include <VSR_Mesh.h>
+#include <VSR_Model.h>
 
-
+/// pre-declarations ///
+typedef struct VSR_Model VSR_Model;
+struct VSR_Model
+{
+	VSR_Mesh* mesh; // callback for counts
+	Renderer_MemoryAlloc vertices;
+	Renderer_MemoryAlloc UVs;
+	Renderer_MemoryAlloc indices;
+};
 
 
 
@@ -209,6 +219,35 @@ VSR_RendererCreate(
 	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo->subStructs);
 
+	VkBufferUsageFlagBits VUIStageBufferBits =
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+		| VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+	VkMemoryPropertyFlagBits VUIstagingProps =
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+	renderer->subStructs->VUIStagingBuffer = Renderer_MemoryCreate(
+		renderer,
+		64 * 1024,
+		VUIStageBufferBits,
+		VUIstagingProps);
+
+	VkBufferUsageFlagBits VUIGPUBufferBits =
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits VUIGPUProps =
+	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	renderer->subStructs->VUIGPUBuffer = Renderer_MemoryCreate(
+		renderer,
+		256 * 1024 * 1024,
+		VUIGPUBufferBits,
+		VUIGPUProps);
+
 	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
 
@@ -239,6 +278,9 @@ VSR_RendererFree(
 	////////////////////////////////////////
 	Renderer_DestroySyncObjects(renderer);
 
+	Renderer_MemoryFree(renderer, renderer->subStructs->VUIGPUBuffer);
+	Renderer_MemoryFree(renderer, renderer->subStructs->VUIStagingBuffer);
+
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
 	VSR_SurfaceDestroy(renderer);
@@ -262,6 +304,8 @@ void VSR_RendererSetPipeline(
 	renderer->subStructs->pipeline = pipeline;
 }
 
+
+static VkCommandBuffer cBuff = NULL;
 
 //==============================================================================
 // VSR_RendererBeginPass
@@ -304,10 +348,14 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 						  VK_NULL_HANDLE,
 						  &renderer->subStructs->imageIndex);
 
+	cBuff = GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(renderer,
+															   renderer->subStructs->pipeline);
+
 	/// step 1 command record
 	GraphicsPipeline_CommandBufferRecordStart(
 		renderer,
-		renderer->subStructs->pipeline);
+		renderer->subStructs->pipeline,
+		cBuff);
 }
 
 
@@ -333,7 +381,8 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	/// step2 command record
 	GraphicsPipeline_CommandBufferRecordEnd(
 		renderer,
-		renderer->subStructs->pipeline);
+		renderer->subStructs->pipeline,
+		cBuff);
 
 	////////////////////////////////
 	/// submit commands to queue ///
@@ -349,8 +398,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &renderer->subStructs->imageCanBeRead[*frameIndex];
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &renderer->subStructs->pipeline->
-		subStructs->commandPool.commandBuffers[*frameIndex];
+	submitInfo.pCommandBuffers = &cBuff;
 
 	vkQueueSubmit(renderer->subStructs->deviceQueues.graphicsQueue,
 				  1,
@@ -375,150 +423,6 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	*frameIndex = (*frameIndex + 1) % renderer->subStructs->swapchain.imageViewCount;
 }
 
-
-void Renderer_GrowMemory(VSR_Renderer* renderer, size_t growAmount)
-{
-	size_t newSize = renderer->subStructs->deviceBufferMemorySize + growAmount;
-	const VkBufferUsageFlagBits use = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-
-
-	VkBufferCreateInfo bufferInfo = (VkBufferCreateInfo){0};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.pNext = NULL;
-	bufferInfo.flags = 0L;
-	bufferInfo.size = newSize;
-	bufferInfo.usage = use;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	VkDeviceMemory mem =
-		VSR_LogicalDeviceGetMemory(renderer,
-								   newSize,
-								   bufferInfo.usage,
-								   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-								   | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-								   &renderer->subStructs->deviceBuffer);
-
-	renderer->subStructs->deviceBufferMemorySize = newSize;
-	renderer->subStructs->deviceBufferMemory = mem;
-}
-
-
-//==============================================================================
-// Renderer_AllocateModelBuffer
-//------------------------------------------------------------------------------
-Renderer_ModelBuffer
-Renderer_AllocateModelBuffer(
-	VSR_Renderer* renderer,
-	VSR_Model* model,
-	Renderer_ResourceType resourceType,
-	size_t size)
-{
-	Renderer_ModelBuffer modelBuffer = (Renderer_ModelBuffer){};
-
-	if(!renderer->subStructs->deviceBufferMemorySize)
-	{
-		Renderer_GrowMemory(renderer, size);
-	}
-
-
-	static size_t offset = 0;
-	size_t start = offset;
-	offset += size;
-
-	modelBuffer.pModel       = model;
-	modelBuffer.resourceType = resourceType;
-	modelBuffer.offset       = start;
-	modelBuffer.len          = size;
-
-	return modelBuffer;
-}
-
-
-
-
-
-//==============================================================================
-// Renderer_UpdateModelBuffer
-//------------------------------------------------------------------------------
-void
-Renderer_UpdateModelBuffer(
-	VSR_Renderer* renderer,
-	Renderer_ModelBuffer modelBuffer,
-	size_t size)
-{
-
-}
-
-
-
-
-
-//==============================================================================
-// Renderer_GetModelBufferIndex
-//------------------------------------------------------------------------------
-size_t
-Renderer_GetModelBufferIndex(
-	VSR_Renderer* renderer,
-	VSR_Model* model)
-{
-	size_t index = -1; // flag
-
-	for(size_t i = 0; i < renderer->subStructs->modelBuffersSize; i++)
-	{
-		if(renderer->subStructs->modelBuffers[i].pModel == model)
-		{
-			index = i;
-			break;
-		}
-	}
-
-	return index;
-}
-
-
-
-
-
-//==============================================================================
-// Renderer_AppendModelBuffer
-//------------------------------------------------------------------------------
-size_t
-Renderer_AppendModelBuffer(
-	VSR_Renderer* renderer,
-	Renderer_ModelBuffer modelBuffer)
-{
-	renderer->subStructs->modelBuffers = realloc(
-		renderer->subStructs->modelBuffers,
-		sizeof(Renderer_ModelBuffer) * (renderer->subStructs->modelBuffersSize + 1));
-
-	renderer->subStructs->modelBuffers[renderer->subStructs->modelBuffersSize++] = modelBuffer;
-	return renderer->subStructs->modelBuffersSize-1;
-}
-
-
-void* Renderer_MapModelBuffer(
-	VSR_Renderer* renderer,
-	size_t index)
-{
-	void* mappedData;
-	vkMapMemory(renderer->subStructs->logicalDevice.device,
-				renderer->subStructs->deviceBufferMemory,
-				renderer->subStructs->modelBuffers[index].offset,
-				renderer->subStructs->modelBuffers[index].len,
-				0L,
-				&mappedData);
-
-	return mappedData;
-}
-
-void Renderer_UnmapModelBuffer(
-	VSR_Renderer* renderer,
-	void* mappedData)
-{
-	vkUnmapMemory(renderer->subStructs->logicalDevice.device,
-				  renderer->subStructs->deviceBufferMemory);
-}
-
 int
 VSR_RenderModels(
 	VSR_Renderer* renderer,
@@ -526,25 +430,19 @@ VSR_RenderModels(
 	VSR_Transform* transforms,
 	size_t batchCount)
 {
-	VkCommandBuffer* buffs =  renderer->subStructs
-		->pipeline->subStructs->commandPool.commandBuffers;
 
-	size_t i = renderer->subStructs->currentFrame;
-	{
-		size_t index = Renderer_GetModelBufferIndex(renderer, model);
-		Renderer_ModelBuffer buf = renderer->subStructs->modelBuffers[index];
+	vkCmdBindVertexBuffers(cBuff,
+						   0,
+						   1,
+						   &renderer->subStructs->VUIGPUBuffer.buffer,
+						   &model->vertices.offset);
 
-		VkDeviceSize offset = buf.offset;
-		uint32_t count = model->vertexCount;
-
-		vkCmdBindVertexBuffers(buffs[i],
-							   0,
-							   1,
-							   &renderer->subStructs->deviceBuffer,
-							   &offset);
-
-		vkCmdDraw(buffs[i], count, 1, 0, 0);
-	}
+	vkCmdDraw(
+		cBuff,
+		model->mesh->vertexCount,
+		batchCount,
+		0,
+		0);
 
 	return 0;
 }

@@ -10,6 +10,8 @@
 #include "Renderer_LogicalDevice.h"
 #include "Renderer_DeviceQueues.h"
 #include "Renderer_Swapchain.h"
+#include "Renderer_Memory.h"
+
 
 typedef enum Renderer_ResourceType Renderer_ResourceType;
 enum Renderer_ResourceType
@@ -23,7 +25,7 @@ enum Renderer_ResourceType
 typedef struct Renderer_ModelBuffer Renderer_ModelBuffer;
 struct Renderer_ModelBuffer
 {
-	VSR_Model* pModel;
+	VSR_Mesh* pModel;
 	Renderer_ResourceType resourceType; // not needed but good for sanity checks
 	size_t offset;
 	size_t len;
@@ -63,32 +65,18 @@ struct Renderer_SubStructs
 	Renderer_LogicalDevice  logicalDevice;
 	Renderer_Swapchain      swapchain;
 
-	/// pipeline ( subject to change at runtime! )
+	/// pipeline ( subject to change at runtime! ) ///
 	VSR_GraphicsPipeline*   pipeline;
-
-	/// device memory ///
-	size_t                  deviceBufferMemorySize;
-	VkDeviceMemory          deviceBufferMemory;
-	VkBuffer                deviceBuffer;
-
-	VkDeviceSize            vertexStartRange;
-	VkDeviceSize            vertexEndRange;
-
-	VkDeviceSize            indexStartRange;
-	VkDeviceSize            indexEndRange;
-
-	VkDeviceSize            UVStartRange;
-	VkDeviceSize            UVEndRange;
-
-
-	// store model resources
-	size_t modelBuffersSize;
-	Renderer_ModelBuffer* modelBuffers;
 
 	/// render sync ///
 	VkSemaphore*            imageCanBeWritten;
 	VkSemaphore*            imageCanBeRead;
 	VkFence*                imageFinished;
+
+	/// memory ///
+	Renderer_Memory VUIStagingBuffer;
+	Renderer_Memory VUIGPUBuffer;
+
 
 	uint32_t                imageIndex;
 	size_t                  currentFrame;
@@ -108,43 +96,5 @@ VSR_GetAllocator()
 {
 	return NULL;
 }
-
-Renderer_ModelBuffer
-Renderer_AllocateModelBuffer(
-	VSR_Renderer* renderer,
-	VSR_Model* model,
-	Renderer_ResourceType resourceType,
-	size_t size
-	);
-
-
-void
-Renderer_UpdateModelBuffer(
-	VSR_Renderer* renderer,
-	Renderer_ModelBuffer modelBuffer,
-	size_t size
-);
-
-
-size_t
-Renderer_GetModelBufferIndex(
-	VSR_Renderer* renderer,
-	VSR_Model* model);
-
-
-size_t
-Renderer_AppendModelBuffer(
-	VSR_Renderer* renderer,
-	Renderer_ModelBuffer modelBuffer);
-
-
-void* Renderer_MapModelBuffer(
-	VSR_Renderer* renderer,
-	size_t index);
-
-
-void Renderer_UnmapModelBuffer(
-	VSR_Renderer* renderer,
-	void* mappedData);
 
 #endif // VSR_RENDERER_H
