@@ -1,4 +1,5 @@
 #include <VSR.h>
+#include <cglm/cglm.h>
 #include "stdio.h"
 
 void writeSPIRVToFile(const char* fNameIn, const char* fNameOut)
@@ -93,41 +94,81 @@ int main(int argc, char* argv[])
 
 	VSR_RendererSetPipeline(renderer, pipeline);
 
-	VSR_Vertex verts[3] = {
-		  {  0.0f , -0.5f , 0.0f,}
-		, {0.5f   , 0.5f  , 0.0f,}
-		, {-0.5f  , 0.5f  , 0.7f,}
-		,};
+	VSR_Vertex vert[8] = {
+		//Top
+		{-1, -1, -1}
+		, {1, -1, -1}
+		, {1, 1, -1}
+		, {-1, 1, -1}
+		, {-1, -1, 1}
+		, {1, -1, 1}
+		, {1, 1, 1,}
+		, { -1, 1, 1 }
+	};
 
-	VSR_Mesh* mesh = VSR_MeshCreate(verts, 3, NULL, 0);
-	VSR_Model* model = VSR_ModelCreate(renderer, mesh);
+	VSR_Index indices[6 * 6] =
+			{
+				{0}, {1}, {3},
+				{3}, {1}, {2},
+				{1}, {5}, {2},
+				{2}, {5}, {6},
+				{5}, {4}, {6},
+				{6}, {4}, {7},
+				{4}, {0}, {7},
+				{7}, {0}, {3},
+				{3}, {2}, {7},
+				{7}, {2}, {6},
+				{4}, {5}, {0},
+				{0}, {5}, {1}
+			};
 
-	int moveDir = 1;
+	VSR_Mesh* mesh = VSR_MeshCreate(vert, 8, indices, 6 * 6);
+	VSR_Model* mod = VSR_ModelCreate(renderer, mesh);
+
+	mat4 model;
+	glm_mat4_identity(model);
+
+	mat4 view;
+
+	vec3 eye = {0.f, 0.f, 6.f};
+	vec3 center = {0.f, 0.f, 0.f};
+	vec3 up = {0.f, 1.f, 0.f};
+
+	glm_lookat(
+		eye,
+		center,
+		up,
+		view
+		);
+
+	float deg = 45.f;
+	glm_make_rad(&deg);
+
+	mat4 projection;
+	glm_perspective(
+		deg,
+		640.f / 480.f,
+		0.1f,
+		100.f,
+		projection);
+
+	projection[1][1] *= -1;
+
+
+	mat4 transform;
+	glm_mat4_mul(projection, view, view);
+	glm_mat4_mul(view, model, transform);
+
 	int shouldQuit = 0;
 	SDL_Event event;
 	while(!shouldQuit)
 	{
 		VSR_RendererBeginPass(renderer);
-		VSR_RenderModels(renderer, model, NULL, 1);
+		VSR_RenderModels(renderer, mod, (VSR_Mat4*)&transform, 1);
 		VSR_RendererEndPass(renderer);
 
-		mesh->vertices[0].x += 0.002f * moveDir;
-		mesh->vertices[1].x += 0.002f * moveDir;
-		mesh->vertices[2].x += 0.002f * moveDir;
-
-
-		float x = mesh->vertices[0].x;
-		if(x < 0)
-		{
-			x *= -1;
-		}
-
-		if(x > 0.5)
-		{
-			moveDir = moveDir * -1;
-		}
-
-		VSR_ModelUpdate(renderer,model);
+		glm_rotate(transform, 0.01f, (vec3){0.0f, 1.f, 0.f});
+		glm_rotate(transform, 0.01f, (vec3){1.0f, 0.f, 0.f});
 
 		SDL_PollEvent(&event);
 		if(event.type == SDL_QUIT)
@@ -137,7 +178,7 @@ int main(int argc, char* argv[])
 	}
 
 	VSR_MeshFree(mesh);
-	VSR_ModelFree(renderer, model);
+	VSR_ModelFree(renderer, mod);
 
 	VSR_ShaderDestroy(renderer, vertShader);
 	VSR_ShaderDestroy(renderer, fragShader);

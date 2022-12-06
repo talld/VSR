@@ -19,8 +19,14 @@ target_link_options(${PROJECT_NAME} PRIVATE
         -fsanitize=address
         -fsanitize=undefined
         -fsanitize=leak
+        -ldl
+        -lm
         )
 
-target_link_libraries(${PROJECT_NAME} VSR)
+add_subdirectory(External/cglm)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE VSR cglm)
 target_include_directories(${PROJECT_NAME} PUBLIC ${VSR_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ../VSR/Inc)
+
+
