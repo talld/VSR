@@ -64,20 +64,19 @@ struct VSR_UV
 	float y;
 };
 
-typedef struct VSR_Model VSR_Model;
-struct VSR_Model
+typedef struct VSR_Mesh VSR_Mesh;
+struct VSR_Mesh
 {
 	size_t      vertexCount;
 	VSR_Vertex* vertices;
-	size_t vertexBufferIndex;
-
 	VSR_UV*     UVs;
-	size_t UVBufferIndex;
 
 	size_t      indexCount;
 	VSR_Index*  indices;
-	size_t indexBufferIndex;
 };
+
+typedef struct VSR_Model VSR_Model;
+struct VSR_Model;
 
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler;
@@ -147,13 +146,15 @@ void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Sh
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
 
-VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
+VSR_Mesh* VSR_MeshCreate(VSR_Vertex* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
 
-void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
+void VSR_MeshFree(VSR_Mesh* model);
+
+VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, VSR_Mesh* mesh);
 
 void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 
-int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, float* UVs);
+void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
 VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
 
