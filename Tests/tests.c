@@ -91,27 +91,41 @@ int main(int argc, char* argv[])
 
 	VSR_RendererSetPipeline(renderer, pipeline);
 
-	float verts[9] = {
-		 0.0f,  -0.5f, 0.0f,
-		 0.5f,   0.5f, 0.0f,
-		-0.5f,   0.5f, 0.0f,};
+	VSR_Vertex verts[3] = {
+		  {  0.0f , -0.5f , 0.0f,}
+		, {0.5f   , 0.5f  , 0.0f,}
+		, {-0.5f  , 0.5f  , 0.7f,}
+		,};
 
-	VSR_Model* model =
-	VSR_ModelCreate(renderer, verts, 3, NULL, 0);
+	VSR_Mesh* mesh = VSR_MeshCreate(verts, 3, NULL, 0);
+	VSR_Model* model = VSR_ModelCreate(renderer, mesh);
 
+	int moveDir = 1;
 	int shouldQuit = 0;
 	SDL_Event event;
 	while(!shouldQuit)
 	{
-
-		model->vertices[0].x += 0.00001f;
-		model->vertices[1].x += 0.00001f;
-		model->vertices[2].x += 0.00001f;
-
 		VSR_RendererBeginPass(renderer);
-		VSR_ModelUpdate(renderer, model);
 		VSR_RenderModels(renderer, model, NULL, 1);
 		VSR_RendererEndPass(renderer);
+
+		mesh->vertices[0].x += 0.002f * moveDir;
+		mesh->vertices[1].x += 0.002f * moveDir;
+		mesh->vertices[2].x += 0.002f * moveDir;
+
+
+		float x = mesh->vertices[0].x;
+		if(x < 0)
+		{
+			x *= -1;
+		}
+
+		if(x > 0.5)
+		{
+			moveDir = moveDir * -1;
+		}
+
+		VSR_ModelUpdate(renderer,model);
 
 		SDL_PollEvent(&event);
 		if(event.type == SDL_QUIT)
@@ -119,6 +133,9 @@ int main(int argc, char* argv[])
 			shouldQuit = 1;
 		}
 	}
+
+	VSR_MeshFree(mesh);
+	VSR_ModelFree(renderer, model);
 
 	VSR_ShaderDestroy(renderer, vertShader);
 	VSR_ShaderDestroy(renderer, fragShader);
