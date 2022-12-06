@@ -144,7 +144,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	//////////////////////
 	/// Input Assembly ///
 	//////////////////////
-
 	VkPipelineInputAssemblyStateCreateInfo inputInfo =
 		(VkPipelineInputAssemblyStateCreateInfo) {0};
 
@@ -157,7 +156,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/////////////////
 	/// View-Port ///
 	/////////////////
-
 	VkViewport viewport = (VkViewport){0};
 	viewport.x = 0;
 	viewport.y = 0;
@@ -186,7 +184,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/////////////////////
 	/// Raster states ///
 	/////////////////////
-
 	VkPipelineRasterizationStateCreateInfo rasterInfo =
 		(VkPipelineRasterizationStateCreateInfo){0};
 
@@ -204,7 +201,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	//////////////////////
 	/// Multi-Sampling ///
 	//////////////////////
-
 	VkPipelineMultisampleStateCreateInfo sampleInfo =
 		(VkPipelineMultisampleStateCreateInfo){0};
 
@@ -219,7 +215,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	////////////////
 	/// blending ///
 	////////////////
-
 	VkPipelineColorBlendAttachmentState colourInfo =
 		(VkPipelineColorBlendAttachmentState){0};
 
@@ -251,7 +246,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/////////////////////
 	/// Dynamic sates ///
 	/////////////////////
-
 	VkPipelineDynamicStateCreateInfo dynamicInfo =
 		(VkPipelineDynamicStateCreateInfo){0};
 
@@ -264,7 +258,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	//////////////
 	/// layout ///
 	//////////////
-
 	layoutCreateInfo->setLayoutCount = 0;
 	layoutCreateInfo->pSetLayouts = NULL;
 	layoutCreateInfo->pushConstantRangeCount = 0;
