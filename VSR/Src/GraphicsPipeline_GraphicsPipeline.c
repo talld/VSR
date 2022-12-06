@@ -122,12 +122,12 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	VkVertexInputBindingDescription vertexInputDesc[1] = {0};
 	vertexInputDesc[0].binding = 0;
 	vertexInputDesc[0].stride = sizeof(VSR_Vertex);
-	vertexInputDesc[0].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+	vertexInputDesc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
 	VkVertexInputAttributeDescription vertexAttrDesc[1] = {0};
 	vertexAttrDesc[0].binding = 0;
 	vertexAttrDesc[0].location = 0;
-	vertexAttrDesc[0].offset = offsetof(VSR_Vertex, x); // this may bite in ass;
+	vertexAttrDesc[0].offset = 0; // this may bite in ass;
 	vertexAttrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3 nonsense...
 
 	VkPipelineVertexInputStateCreateInfo vertInfo =
