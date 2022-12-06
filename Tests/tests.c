@@ -82,10 +82,12 @@ int main(int argc, char* argv[])
 	uint8_t* vertBytes = loadShader("vert.spv", &n);
 	VSR_Shader* vertShader = VSR_ShaderCreate(renderer, n, vertBytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vertShader);
+	free(vertBytes);
 
 	uint8_t* fragBytes = loadShader("frag.spv", &n);
 	VSR_Shader* fragShader = VSR_ShaderCreate(renderer, n, fragBytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_FRAGMENT, fragShader);
+	free(fragBytes);
 
 	VSR_GraphicsPipeline* pipeline = VSR_GraphicsPipelineCreate(renderer, pipelineCreateInfo);
 
