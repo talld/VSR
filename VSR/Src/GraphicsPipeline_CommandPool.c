@@ -34,21 +34,28 @@ GraphicsPipeline_CommandPoolCreate(
 	/////////////////////
 	/// command pools ///
 	/////////////////////
+	VkResult err;
 
 	VkCommandPoolCreateInfo* poolCreateInfo =
 		&createInfo->subStructs->commandPoolCreateInfo.commandPoolCreateInfo;
 
 	poolCreateInfo->sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolCreateInfo->pNext = NULL;
-	poolCreateInfo->flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	poolCreateInfo->flags = 0L;
 
 
 	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.graphicsQueueFamilyIndex;
-	VkResult err;
 	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
 						poolCreateInfo,
 						VSR_GetAllocator(),
 						&pipeline->subStructs->commandPool.graphicsPool);
+
+	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.transferQueueFamilyIndex;
+	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
+							  poolCreateInfo,
+							  VSR_GetAllocator(),
+							  &pipeline->subStructs->commandPool.transferPool);
+
 
 	if(err != VK_SUCCESS)
 	{
@@ -60,54 +67,74 @@ GraphicsPipeline_CommandPoolCreate(
 		goto FAIL;
 	}
 
+
+	SUCCESS:
+	{
+		return SDL_TRUE;
+	}
+
+	FAIL:
+	{
+		return SDL_FALSE;
+	}
+}
+
+VkCommandBuffer
+GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline)
+{
 	///////////////////////
 	/// command buffers ///
 	///////////////////////
-
-	size_t frames = renderer->subStructs->swapchain.imageViewCount;
-	size_t listSize = frames * sizeof(VkCommandBuffer);
-	pipeline->subStructs->commandPool.commandBuffers = SDL_malloc(listSize);
-	VkCommandBuffer* buffs =  pipeline->subStructs->commandPool.commandBuffers;
+	VkCommandBuffer buff;
 
 	VkCommandBufferAllocateInfo commandBufInfo = (VkCommandBufferAllocateInfo){0};
 	commandBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	commandBufInfo.pNext = NULL;
 	commandBufInfo.commandPool = pipeline->subStructs->commandPool.graphicsPool;
 	commandBufInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	commandBufInfo.commandBufferCount = frames;
+	commandBufInfo.commandBufferCount = 1;
 
-	err = vkAllocateCommandBuffers(renderer->subStructs->logicalDevice.device,
+	VkResult err = vkAllocateCommandBuffers(renderer->subStructs->logicalDevice.device,
 								   &commandBufInfo,
-								   buffs);
+								   &buff);
 
-	if(err != VK_SUCCESS)
+	if(err)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create command buffers: %s",
-				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
-		goto FAIL;
-	}
-SUCCESS:
-	{
-	return SDL_TRUE;
+		buff = NULL;
 	}
 
-FAIL:
-	{
-	return SDL_FALSE;
-	}
+	return buff;
 }
 
+VkCommandBuffer
+GraphicsPipeline_CommandPoolAllocateTransferBuffer(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline)
+{
+	VkCommandBuffer buff;
+
+	VkCommandBufferAllocateInfo allocInfo = (VkCommandBufferAllocateInfo){0};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = pipeline->subStructs->commandPool.transferPool;
+	allocInfo.commandBufferCount = 1;
+
+	vkAllocateCommandBuffers(
+		renderer->subStructs->logicalDevice.device,
+							 &allocInfo,
+							 &buff);
+
+	return buff;
+}
 
 int
 GraphicsPipeline_CommandBufferRecordStart(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline)
+	VSR_GraphicsPipeline* pipeline,
+	VkCommandBuffer cBuff)
 {
-	VkCommandBuffer* buffs =  pipeline->subStructs->commandPool.commandBuffers;
-
 	VkCommandBufferBeginInfo bufferBeginInfo = (VkCommandBufferBeginInfo){0};
 	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	bufferBeginInfo.pNext = NULL;
@@ -124,16 +151,15 @@ GraphicsPipeline_CommandBufferRecordStart(
 	passBeginInfo.renderArea.extent.width = renderer->subStructs->surface.surfaceWidth;
 	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
 	passBeginInfo.clearValueCount = 1;
-	VkClearValue clearValues = {{{0.f,0.f,0.f, 1.0f}}};
+	VkClearValue clearValues = {{{0.1f,0.1f,0.f, 1.0f}}};
 	passBeginInfo.pClearValues = &clearValues;
 
 
 	/////////////////////////
 	/// record buffers    ///
 	/////////////////////////
-	size_t i = renderer->subStructs->currentFrame;
 	{
-		VkResult err = vkBeginCommandBuffer(buffs[i], &bufferBeginInfo);
+		VkResult err = vkBeginCommandBuffer(cBuff, &bufferBeginInfo);
 		if(err != VK_SUCCESS)
 		{
 			char errMsg[255];
@@ -143,12 +169,11 @@ GraphicsPipeline_CommandBufferRecordStart(
 			VSR_SetErr(errMsg);
 			goto FAIL;
 		}
+		vkCmdBeginRenderPass(cBuff, &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(buffs[i],
+		vkCmdBindPipeline(cBuff,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,
 						  pipeline->subStructs->graphicPipeline.pipeline);
-
-		vkCmdBeginRenderPass(buffs[i], &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	}
 
@@ -166,18 +191,17 @@ GraphicsPipeline_CommandBufferRecordStart(
 int
 GraphicsPipeline_CommandBufferRecordEnd(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline)
+	VSR_GraphicsPipeline* pipeline,
+	VkCommandBuffer cBuff)
 {
-	VkCommandBuffer* buffs =  pipeline->subStructs->commandPool.commandBuffers;
 
 	///////////////////////////
 	/// end record buffers ///
 	//////////////////////////
-	size_t i = renderer->subStructs->currentFrame;
 	{
-		vkCmdEndRenderPass(buffs[i]);
+		vkCmdEndRenderPass(cBuff);
 
-		VkResult err = vkEndCommandBuffer(buffs[i]);
+		VkResult err = vkEndCommandBuffer(cBuff);
 		if (err != VK_SUCCESS)
 		{
 			char errMsg[255];
@@ -213,5 +237,7 @@ GraphicsPipeline_CommandPoolDestroy(
 						 pipeline->subStructs->commandPool.graphicsPool,
 						 VSR_GetAllocator());
 
-	SDL_free(pipeline->subStructs->commandPool.commandBuffers);
+	vkDestroyCommandPool(renderer->subStructs->logicalDevice.device,
+						 pipeline->subStructs->commandPool.transferPool,
+						 VSR_GetAllocator());
 }

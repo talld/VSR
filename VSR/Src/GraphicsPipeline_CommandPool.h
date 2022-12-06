@@ -27,7 +27,7 @@ typedef struct GraphicsPipeline_CommandPool GraphicsPipeline_CommandPool;
 struct GraphicsPipeline_CommandPool
 {
 	VkCommandPool graphicsPool;
-	VkCommandBuffer* commandBuffers;
+	VkCommandPool transferPool;
 };
 
 
@@ -49,16 +49,28 @@ GraphicsPipeline_CommandPoolDestroy(
 	VSR_GraphicsPipeline* pipeline
 );
 
+VkCommandBuffer
+GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline);
+
+VkCommandBuffer
+GraphicsPipeline_CommandPoolAllocateTransferBuffer(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline);
 
 int
 GraphicsPipeline_CommandBufferRecordStart(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline);
+	VSR_GraphicsPipeline* pipeline,
+	VkCommandBuffer cBuff
+	);
 
 
 int
 GraphicsPipeline_CommandBufferRecordEnd(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline);
+	VSR_GraphicsPipeline* pipeline,
+	VkCommandBuffer cBuff);
 
 #endif //VSR_COMMANDPOOL_H
