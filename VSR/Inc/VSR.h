@@ -42,6 +42,27 @@ enum VSR_ShaderStage
 typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
 
+typedef struct VSR_Mat4 VSR_Mat4;
+struct VSR_Mat4
+{
+	float m0;
+	float m1;
+	float m2;
+	float m3;
+	float m4;
+	float m5;
+	float m6;
+	float m7;
+	float m8;
+	float m9;
+	float m10;
+	float m11;
+	float m12;
+	float m13;
+	float m14;
+	float m15;
+};
+
 typedef struct VSR_Vertex VSR_Vertex;
 __attribute__((packed))
 struct VSR_Vertex
@@ -80,10 +101,6 @@ struct VSR_Model;
 
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler;
-
-typedef struct VSR_Transform VSR_Transform;
-struct VSR_Transform;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Enum pre-declarations                                                    ///
@@ -144,7 +161,7 @@ void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
 
 void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Shader* shader);
 
-int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
+int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, size_t batchCount);
 
 VSR_Mesh* VSR_MeshCreate(VSR_Vertex* vertices, size_t vertexCount, VSR_Index* indices, size_t indexCount);
 
@@ -157,16 +174,6 @@ void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
 VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
-
-VSR_Transform* VSR_CreateTransforms(size_t count);
-
-void VSR_FreeTransforms(size_t count);
-
-VSR_Transform VSR_SetTransformsPosition(VSR_Transform transform, float x, float y, float z);
-
-VSR_Transform VSR_SetTransformsRotation(VSR_Transform transform, float xRot, float yRot, float zRot);
-
-VSR_Transform VSR_SetTransformsScale(VSR_Transform transform, float xScale, float yScale, float zScale);
 
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 
