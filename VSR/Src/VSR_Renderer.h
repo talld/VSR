@@ -21,6 +21,18 @@ enum Renderer_ResourceType
 	RESOURCE_TYPE_UV,
 };
 
+typedef struct Renderer_PushConstantsVertex Renderer_PushConstantsVertex;
+struct Renderer_PushConstantsVertex
+{
+	VSR_Mat4 MVP;
+};
+
+typedef struct Renderer_PushConstantsFragment Renderer_PushConstantsFragment;
+struct Renderer_PushConstantsFragment
+{
+
+};
+
 // struct for holding (sub-allocated) data used by a model
 typedef struct Renderer_ModelBuffer Renderer_ModelBuffer;
 struct Renderer_ModelBuffer

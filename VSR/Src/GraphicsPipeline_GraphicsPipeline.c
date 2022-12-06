@@ -194,7 +194,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	rasterInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterInfo.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterInfo.lineWidth = 1.f;
-	rasterInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterInfo.depthBiasEnable = VK_FALSE;
 
@@ -255,13 +255,22 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	dynamicInfo.dynamicStateCount = 0;
 	dynamicInfo.pDynamicStates = NULL;
 
+	//////////////////////
+	/// push constants ///
+	//////////////////////
+	enum { pushConstantCount = 1 };
+	VkPushConstantRange pushConstants[pushConstantCount];
+	pushConstants[0].offset = 0;
+	pushConstants[0].size = sizeof(Renderer_PushConstantsVertex);
+	pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
 	//////////////
 	/// layout ///
 	//////////////
 	layoutCreateInfo->setLayoutCount = 0;
 	layoutCreateInfo->pSetLayouts = NULL;
-	layoutCreateInfo->pushConstantRangeCount = 0;
-	layoutCreateInfo->pPushConstantRanges = NULL;
+	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
+	layoutCreateInfo->pPushConstantRanges = pushConstants;
 
 	VkResult err =
 		vkCreatePipelineLayout(renderer->subStructs->logicalDevice.device,
@@ -296,9 +305,10 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pipelineCreateInfo->pDynamicState = &dynamicInfo;
 	pipelineCreateInfo->basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo->basePipelineIndex = 0;
-	pipelineCreateInfo->layout = gp->pipelineLayout;
 	pipelineCreateInfo->renderPass = pipeline->subStructs->renderPass.renderPass;
 	pipelineCreateInfo->subpass = 0;
+	pipelineCreateInfo->layout = gp->pipelineLayout;
+
 
 	vkCreateGraphicsPipelines(renderer->subStructs->logicalDevice.device,
 							  NULL,

@@ -2,19 +2,7 @@
 
 #include <vulkan/vulkan.h>
 #include <VSR_error.h>
-#include <VSR_Mesh.h>
 #include <VSR_Model.h>
-
-/// pre-declarations ///
-typedef struct VSR_Model VSR_Model;
-struct VSR_Model
-{
-	VSR_Mesh* mesh; // callback for counts
-	Renderer_MemoryAlloc vertices;
-	Renderer_MemoryAlloc UVs;
-	Renderer_MemoryAlloc indices;
-};
-
 
 
 //==============================================================================
@@ -427,22 +415,69 @@ int
 VSR_RenderModels(
 	VSR_Renderer* renderer,
 	VSR_Model* model,
-	VSR_Transform* transforms,
+	VSR_Mat4* transforms,
 	size_t batchCount)
 {
 
-	vkCmdBindVertexBuffers(cBuff,
-						   0,
-						   1,
-						   &renderer->subStructs->VUIGPUBuffer.buffer,
-						   &model->vertices.offset);
+	for(size_t i = 0; i < batchCount; i++)
+	{
+		vkCmdBindVertexBuffers(
+			cBuff,
+			0,
+			1,
+			&renderer->subStructs->VUIGPUBuffer.buffer,
+			&model->vertices.offset);
 
-	vkCmdDraw(
-		cBuff,
-		model->mesh->vertexCount,
-		batchCount,
-		0,
-		0);
+		Renderer_PushConstantsVertex pushConstantsVertex = (Renderer_PushConstantsVertex){0};
 
+		if(transforms)
+		{
+			pushConstantsVertex.MVP = transforms[i];
+		}
+		else // assign identity matrix
+		{
+			pushConstantsVertex.MVP.m0 = 1;
+			pushConstantsVertex.MVP.m5 = 1;
+			pushConstantsVertex.MVP.m10 = 1;
+			pushConstantsVertex.MVP.m15 = 1;
+		}
+
+		vkCmdPushConstants(
+			cBuff,
+			renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+			VK_SHADER_STAGE_VERTEX_BIT,
+			0,
+			sizeof(Renderer_PushConstantsVertex),
+			&pushConstantsVertex);
+
+		vkCmdSetSampleLocationsEXT()
+
+		if (model->indexCount)
+		{
+			vkCmdBindIndexBuffer(
+				cBuff,
+				renderer->subStructs->VUIGPUBuffer.buffer,
+				model->indices.offset,
+				VK_INDEX_TYPE_UINT32);
+
+			vkCmdDrawIndexed(
+				cBuff,
+				model->indexCount,
+				batchCount,
+				0,
+				0,
+				0);
+		}
+		else
+		{
+			// don't know why i couldn't just do index = 0 for this...
+			vkCmdDraw(
+				cBuff,
+				model->vertexCount,
+				batchCount,
+				0,
+				0);
+		}
+	}
 	return 0;
 }
