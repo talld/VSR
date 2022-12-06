@@ -19,6 +19,7 @@ set(VSR_SRC
         Src/Renderer_Instance.c
         Src/Renderer_PhysicalDevice.c
         Src/Renderer_LogicalDevice.c
+        Src/Renderer_Memory.c
         Src/Renderer_DeviceQueues.c
         Src/Renderer_Surface.c
         Src/Renderer_Swapchain.c
