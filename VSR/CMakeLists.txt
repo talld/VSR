@@ -32,6 +32,7 @@ set(VSR_SRC
         Src/GraphicsPipeline_Framebuffer.c
         Src/GraphicsPipeline_CommandPool.c
 
+        Src/VSR_Mesh.c
         Src/VSR_Model.c
         )
 
@@ -48,9 +49,9 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 target_link_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-       # -fsanitize=address
-       # -fsanitize=undefined
-       # -fsanitize=leak
+        #-fsanitize=address
+        #-fsanitize=undefined
+        #-fsanitize=leak
         )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${VSR_PCH})
