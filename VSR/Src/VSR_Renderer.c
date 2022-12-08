@@ -428,6 +428,13 @@ VSR_RenderModels(
 			&renderer->subStructs->VUIGPUBuffer.buffer,
 			&model->vertices.offset);
 
+		vkCmdBindVertexBuffers(
+			cBuff,
+			1,
+			1,
+			&renderer->subStructs->VUIGPUBuffer.buffer,
+			&model->UVs.offset);
+
 		Renderer_PushConstantsVertex pushConstantsVertex = (Renderer_PushConstantsVertex){0};
 
 		if(transforms)
@@ -449,8 +456,6 @@ VSR_RenderModels(
 			0,
 			sizeof(Renderer_PushConstantsVertex),
 			&pushConstantsVertex);
-
-		vkCmdSetSampleLocationsEXT()
 
 		if (model->indexCount)
 		{

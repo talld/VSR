@@ -13,10 +13,11 @@
 //------------------------------------------------------------------------------
 VSR_Mesh*
 VSR_MeshCreate(
-	VSR_Vertex* vertices,
 	size_t vertexCount,
-	VSR_Index* indices,
-	size_t indexCount)
+	VSR_Vertex* vertices,
+	VSR_UV* UVs,
+	size_t indexCount,
+	VSR_Index* indices)
 {
 	VSR_Mesh* mesh;
 	mesh = SDL_malloc(sizeof(VSR_Mesh));
@@ -26,6 +27,9 @@ VSR_MeshCreate(
 	mesh->vertexCount = vertexCount;
 	memcpy(mesh->vertices, vertices, vertSize);
 
+	size_t UVSize = vertexCount * sizeof(VSR_UV);
+	mesh->UVs = malloc(UVSize);
+	memcpy(mesh->UVs, UVs, UVSize);
 
 	mesh->indices = indices;
 	mesh->indexCount = 0;
@@ -36,8 +40,6 @@ VSR_MeshCreate(
 		mesh->indexCount = indexCount;
 		memcpy(mesh->indices, indices, indicesSize);
 	}
-
-	mesh->UVs = NULL;
 
 	return mesh;
 }
@@ -54,15 +56,11 @@ VSR_MeshFree(
 	VSR_Mesh* mesh)
 {
 	SDL_free(mesh->vertices);
+	SDL_free(mesh->UVs);
 
 	if(mesh->indices)
 	{
 		SDL_free(mesh->indices);
-	}
-
-	if(mesh->UVs)
-	{
-		SDL_free(mesh->UVs);
 	}
 
 	SDL_free(mesh);

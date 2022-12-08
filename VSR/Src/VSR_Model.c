@@ -67,12 +67,12 @@ VSR_ModelUpdate(
 	size_t vertSize = model->mesh->vertexCount * sizeof(VSR_Vertex);
 
 	Renderer_MemoryReset(stageMem); // this should NEVER have state!
-	Renderer_MemoryAlloc stage = Renderer_MemoryAllocate(
+	Renderer_MemoryAlloc stageV = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
 			vertSize);
 
-	void* pV = Render_MemoryMapAlloc(renderer, *stageMem, stage);
+	void* pV = Render_MemoryMapAlloc(renderer, *stageMem, stageV);
 	memcpy(pV, model->mesh->vertices, vertSize);
 	Render_MemoryUnmapAlloc(renderer, *stageMem);
 
@@ -86,10 +86,40 @@ VSR_ModelUpdate(
 							*GPUMem,
 							vertGPU.offset,
 							*stageMem,
-							stage.offset,
+							stageV.offset,
 							vertGPU.size);
 
 	model->vertices = vertGPU;
+
+	////////////
+	/// UVs ///
+	///////////
+	size_t UVSize = model->mesh->vertexCount * sizeof(VSR_UV);
+
+	Renderer_MemoryReset(stageMem); // this should NEVER have state!
+	Renderer_MemoryAlloc stageUV = Renderer_MemoryAllocate(
+		renderer,
+		stageMem,
+		UVSize);
+
+	void* pUV = Render_MemoryMapAlloc(renderer, *stageMem, stageUV);
+	memcpy(pUV, model->mesh->UVs, UVSize);
+	Render_MemoryUnmapAlloc(renderer, *stageMem);
+
+
+	Renderer_MemoryAlloc UVGPU = Renderer_MemoryAllocate(
+		renderer,
+		GPUMem,
+		UVSize);
+
+	Renderer_MemoryTransfer(renderer,
+							*GPUMem,
+							UVGPU.offset,
+							*stageMem,
+							stageUV.offset,
+							UVGPU.size);
+
+	model->UVs = UVGPU;
 
 	///////////////
 	/// indices ///
@@ -99,12 +129,12 @@ VSR_ModelUpdate(
 		size_t indSize = model->mesh->indexCount * sizeof(VSR_Index);
 
 		Renderer_MemoryReset(stageMem); // reset for indices use
-		stage = Renderer_MemoryAllocate(
+		Renderer_MemoryAlloc stageI = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
 			indSize);
 
-		void* pI = Render_MemoryMapAlloc(renderer, *stageMem, stage);
+		void* pI = Render_MemoryMapAlloc(renderer, *stageMem, stageI);
 		memcpy(pI, model->mesh->indices, indSize);
 		Render_MemoryUnmapAlloc(renderer, *stageMem);
 
@@ -118,7 +148,7 @@ VSR_ModelUpdate(
 								*GPUMem,
 								indGPU.offset,
 								*stageMem,
-								stage.offset,
+								stageI.offset,
 								indGPU.size);
 
 		model->indices = indGPU;

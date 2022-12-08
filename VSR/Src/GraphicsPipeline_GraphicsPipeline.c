@@ -119,16 +119,29 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/// Vertex Input ///
 	////////////////////
 
-	VkVertexInputBindingDescription vertexInputDesc[1] = {0};
+	enum {kVertexInputCount = 2};
+	VkVertexInputBindingDescription vertexInputDesc[kVertexInputCount] = {0};
+	VkVertexInputAttributeDescription vertexAttrDesc[kVertexInputCount] = {0};
+
+	// vertices
 	vertexInputDesc[0].binding = 0;
 	vertexInputDesc[0].stride = sizeof(VSR_Vertex);
 	vertexInputDesc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	VkVertexInputAttributeDescription vertexAttrDesc[1] = {0};
 	vertexAttrDesc[0].binding = 0;
 	vertexAttrDesc[0].location = 0;
-	vertexAttrDesc[0].offset = 0; // this may bite in ass;
-	vertexAttrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3 nonsense...
+	vertexAttrDesc[0].offset = 0;
+	vertexAttrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3
+
+	// UVs
+	vertexInputDesc[1].binding = 1;
+	vertexInputDesc[1].stride = sizeof(VSR_UV);
+	vertexInputDesc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	vertexAttrDesc[1].binding = 1;
+	vertexAttrDesc[1].location = 1;
+	vertexAttrDesc[1].offset = 0;
+	vertexAttrDesc[1].format = VK_FORMAT_R32G32_SFLOAT; // vec2
 
 	VkPipelineVertexInputStateCreateInfo vertInfo =
 		(VkPipelineVertexInputStateCreateInfo){0};
@@ -136,10 +149,10 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	vertInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertInfo.pNext = NULL;
 	vertInfo.flags = 0L;
-	vertInfo.vertexBindingDescriptionCount = 1;
-	vertInfo.pVertexBindingDescriptions = &vertexInputDesc[0];
-	vertInfo.vertexAttributeDescriptionCount = 1;
-	vertInfo.pVertexAttributeDescriptions = &vertexAttrDesc[0];
+	vertInfo.vertexBindingDescriptionCount = kVertexInputCount;
+	vertInfo.pVertexBindingDescriptions = vertexInputDesc;
+	vertInfo.vertexAttributeDescriptionCount = kVertexInputCount;
+	vertInfo.pVertexAttributeDescriptions = vertexAttrDesc;
 
 	//////////////////////
 	/// Input Assembly ///

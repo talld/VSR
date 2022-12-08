@@ -163,7 +163,7 @@ void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Sh
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, size_t batchCount);
 
-VSR_Mesh* VSR_MeshCreate(VSR_Vertex* vertices, size_t vertexCount, VSR_Index* indices, size_t indexCount);
+VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex* vertices, VSR_UV* UVs, size_t indexCount, VSR_Index* indices);
 
 void VSR_MeshFree(VSR_Mesh* model);
 
