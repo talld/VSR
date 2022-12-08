@@ -94,7 +94,9 @@ int main(int argc, char* argv[])
 
 	VSR_RendererSetPipeline(renderer, pipeline);
 
-	VSR_Vertex vert[8] = {
+
+	enum {kVertexCount= 8, kIndexCount = 6 * 6};
+	VSR_Vertex verts[kVertexCount] = {
 		//Top
 		{-1, -1, -1}
 		, {1, -1, -1}
@@ -106,7 +108,19 @@ int main(int argc, char* argv[])
 		, { -1, 1, 1 }
 	};
 
-	VSR_Index indices[6 * 6] =
+	VSR_UV UVs[kVertexCount] = {
+		//Top
+		{0.5, 1}
+		, {0.5, 1}
+		, {0.5, 1}
+		, {1, 1}
+		, {1, 1}
+		, {1, 1}
+		, {1, 1}
+		, { 1, 1}
+	};
+
+	VSR_Index indices[kIndexCount] =
 			{
 				{0}, {1}, {3},
 				{3}, {1}, {2},
@@ -122,7 +136,13 @@ int main(int argc, char* argv[])
 				{0}, {5}, {1}
 			};
 
-	VSR_Mesh* mesh = VSR_MeshCreate(vert, 8, indices, 6 * 6);
+	VSR_Mesh* mesh = VSR_MeshCreate(
+		kVertexCount,
+		verts,
+		UVs,
+		kIndexCount,
+		indices);
+
 	VSR_Model* mod = VSR_ModelCreate(renderer, mesh);
 
 	mat4 model;
