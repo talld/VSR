@@ -41,18 +41,17 @@ add_library(${PROJECT_NAME} STATIC ${VSR_SRC})
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-        -fsanitize=address
-        -fsanitize=undefined
-        -fsanitize=leak
         -Wall
         -Wno-unused-label
-        -Werror)
+        -Werror
+        )
 
 target_link_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
-        -fsanitize=address
-        -fsanitize=undefined
-        -fsanitize=leak
+
+        -fsanitize=address   -static-libasan
+        -fsanitize=undefined -static-libubsan
+        -fsanitize=leak      -static-liblsan
         )
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${VSR_PCH})
