@@ -94,6 +94,96 @@ void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 
 
 //==============================================================================
+// Renderer_AllocateBuffers
+//------------------------------------------------------------------------------
+void
+Renderer_AllocateBuffers(
+	VSR_Renderer* renderer)
+{
+	VkBufferUsageFlagBits VUVIStageBufferBits =
+							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+	VkMemoryPropertyFlagBits VUVIstagingProps =
+								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+								 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+	renderer->subStructs->VUVIStagingBuffer = Renderer_MemoryCreate(
+		renderer,
+		64 * 1024,
+		VUVIStageBufferBits,
+		VUVIstagingProps);
+
+	VkBufferUsageFlagBits VUVIGPUBufferBits =
+							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits VUVIGPUProps =
+								 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
+		renderer,
+		128 * 1024 * 1024,
+		VUVIGPUBufferBits,
+		VUVIGPUProps);
+
+	VkBufferUsageFlagBits USDStageBufferBits =
+							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits USDStageProps =
+								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+								 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;;
+
+	renderer->subStructs->USDStagingBuffer = Renderer_MemoryCreate(
+		renderer,
+		64 * 1024,
+		USDStageBufferBits,
+		USDStageProps);
+
+	VkBufferUsageFlagBits USDGPUBufferBits =
+							  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+							  | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+							  | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT
+							  | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT
+							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits USDGPUProps =
+								 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	renderer->subStructs->USDGPUBuffer = Renderer_MemoryCreate(
+		renderer,
+		128 * 1024 * 1024,
+		USDGPUBufferBits,
+		USDGPUProps);
+}
+
+
+
+
+
+//==============================================================================
+// Renderer_AllocateBuffers
+//------------------------------------------------------------------------------
+void
+Renderer_FreeBuffers(
+	VSR_Renderer* renderer)
+{
+	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIGPUBuffer);
+	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIStagingBuffer);
+	Renderer_MemoryFree(renderer, renderer->subStructs->USDGPUBuffer);
+	Renderer_MemoryFree(renderer, renderer->subStructs->USDStagingBuffer);
+
+}
+
+
+
+
+
+//==============================================================================
 // VSR_RendererGenerateCreateInfo
 //------------------------------------------------------------------------------
 VSR_RendererCreateInfo*
@@ -207,65 +297,7 @@ VSR_RendererCreate(
 	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo->subStructs);
 
-	VkBufferUsageFlagBits VUVIStageBufferBits =
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-		| VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-	VkMemoryPropertyFlagBits VUVIstagingProps =
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-	renderer->subStructs->VUVIStagingBuffer = Renderer_MemoryCreate(
-		renderer,
-		64 * 1024,
-		VUVIStageBufferBits,
-		VUVIstagingProps);
-
-	VkBufferUsageFlagBits VUVIGPUBufferBits =
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-	VkMemoryPropertyFlagBits VUVIGPUProps =
-	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
-		renderer,
-		128 * 1024 * 1024,
-		VUVIGPUBufferBits,
-		VUVIGPUProps);
-
-	VkBufferUsageFlagBits USDStageBufferBits =
-							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-	VkMemoryPropertyFlagBits USDStageProps =
-								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-								 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;;
-
-	renderer->subStructs->USDStagingBuffer = Renderer_MemoryCreate(
-		renderer,
-		64 * 1024,
-		USDStageBufferBits,
-		USDStageProps);
-
-	VkBufferUsageFlagBits USDGPUBufferBits =
-							VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
-							| VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-							| VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT
-							| VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT
-							| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-	VkMemoryPropertyFlagBits USDGPUProps =
-								 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-	renderer->subStructs->USDGPUBuffer = Renderer_MemoryCreate(
-		renderer,
-		128 * 1024 * 1024,
-		USDGPUBufferBits,
-		USDGPUProps);
+	Renderer_AllocateBuffers(renderer);
 
 	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
@@ -296,9 +328,7 @@ VSR_RendererFree(
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
 	Renderer_DestroySyncObjects(renderer);
-
-	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIGPUBuffer);
-	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIStagingBuffer);
+	Renderer_FreeBuffers(renderer);
 
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
