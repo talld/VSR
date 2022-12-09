@@ -58,8 +58,8 @@ VSR_ModelUpdate(
 	///////////////
 	/// get mem ///
 	///////////////
-	Renderer_Memory* stageMem = &renderer->subStructs->VUIStagingBuffer;
-	Renderer_Memory* GPUMem = &renderer->subStructs->VUIGPUBuffer;
+	Renderer_Memory* stageMem = &renderer->subStructs->VUVIStagingBuffer;
+	Renderer_Memory* GPUMem = &renderer->subStructs->VUVIGPUBuffer;
 
 	////////////////
 	/// vertices ///

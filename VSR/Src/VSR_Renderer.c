@@ -216,7 +216,7 @@ VSR_RendererCreate(
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-	renderer->subStructs->VUIStagingBuffer = Renderer_MemoryCreate(
+	renderer->subStructs->VUVIStagingBuffer = Renderer_MemoryCreate(
 		renderer,
 		64 * 1024,
 		VUIStageBufferBits,
@@ -230,7 +230,7 @@ VSR_RendererCreate(
 	VkMemoryPropertyFlagBits VUIGPUProps =
 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	renderer->subStructs->VUIGPUBuffer = Renderer_MemoryCreate(
+	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
 		renderer,
 		256 * 1024 * 1024,
 		VUIGPUBufferBits,
@@ -266,8 +266,8 @@ VSR_RendererFree(
 	////////////////////////////////////////
 	Renderer_DestroySyncObjects(renderer);
 
-	Renderer_MemoryFree(renderer, renderer->subStructs->VUIGPUBuffer);
-	Renderer_MemoryFree(renderer, renderer->subStructs->VUIStagingBuffer);
+	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIGPUBuffer);
+	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIStagingBuffer);
 
 	VSR_SwapchainDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
@@ -425,14 +425,14 @@ VSR_RenderModels(
 			cBuff,
 			0,
 			1,
-			&renderer->subStructs->VUIGPUBuffer.buffer,
+			&renderer->subStructs->VUVIGPUBuffer.buffer,
 			&model->vertices.offset);
 
 		vkCmdBindVertexBuffers(
 			cBuff,
 			1,
 			1,
-			&renderer->subStructs->VUIGPUBuffer.buffer,
+			&renderer->subStructs->VUVIGPUBuffer.buffer,
 			&model->UVs.offset);
 
 		Renderer_PushConstantsVertex pushConstantsVertex = (Renderer_PushConstantsVertex){0};
@@ -461,7 +461,7 @@ VSR_RenderModels(
 		{
 			vkCmdBindIndexBuffer(
 				cBuff,
-				renderer->subStructs->VUIGPUBuffer.buffer,
+				renderer->subStructs->VUVIGPUBuffer.buffer,
 				model->indices.offset,
 				VK_INDEX_TYPE_UINT32);
 

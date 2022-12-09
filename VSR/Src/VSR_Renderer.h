@@ -86,8 +86,8 @@ struct Renderer_SubStructs
 	VkFence*                imageFinished;
 
 	/// memory ///
-	Renderer_Memory VUIStagingBuffer;
-	Renderer_Memory VUIGPUBuffer;
+	Renderer_Memory VUVIStagingBuffer;
+	Renderer_Memory VUVIGPUBuffer;
 
 
 	uint32_t                imageIndex;
