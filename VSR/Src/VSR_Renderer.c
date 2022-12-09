@@ -207,34 +207,34 @@ VSR_RendererCreate(
 	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo->subStructs);
 
-	VkBufferUsageFlagBits VUIStageBufferBits =
+	VkBufferUsageFlagBits VUVIStageBufferBits =
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT
 		| VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-	VkMemoryPropertyFlagBits VUIstagingProps =
+	VkMemoryPropertyFlagBits VUVIstagingProps =
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
 	renderer->subStructs->VUVIStagingBuffer = Renderer_MemoryCreate(
 		renderer,
 		64 * 1024,
-		VUIStageBufferBits,
-		VUIstagingProps);
+		VUVIStageBufferBits,
+		VUVIstagingProps);
 
-	VkBufferUsageFlagBits VUIGPUBufferBits =
+	VkBufferUsageFlagBits VUVIGPUBufferBits =
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT
 		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-	VkMemoryPropertyFlagBits VUIGPUProps =
+	VkMemoryPropertyFlagBits VUVIGPUProps =
 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
 		renderer,
 		256 * 1024 * 1024,
-		VUIGPUBufferBits,
-		VUIGPUProps);
+		VUVIGPUBufferBits,
+		VUVIGPUProps);
 
 	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
