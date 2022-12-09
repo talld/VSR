@@ -86,9 +86,14 @@ struct Renderer_SubStructs
 	VkFence*                imageFinished;
 
 	/// memory ///
+
+	// Vertex UV Index:
 	Renderer_Memory VUVIStagingBuffer;
 	Renderer_Memory VUVIGPUBuffer;
 
+	// Uniform Storage Descriptor
+	Renderer_Memory USDStagingBuffer;
+	Renderer_Memory USDGPUBuffer;
 
 	uint32_t                imageIndex;
 	size_t                  currentFrame;

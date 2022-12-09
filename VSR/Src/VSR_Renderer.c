@@ -232,9 +232,40 @@ VSR_RendererCreate(
 
 	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		256 * 1024 * 1024,
+		128 * 1024 * 1024,
 		VUVIGPUBufferBits,
 		VUVIGPUProps);
+
+	VkBufferUsageFlagBits USDStageBufferBits =
+							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits USDStageProps =
+								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+								 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;;
+
+	renderer->subStructs->USDStagingBuffer = Renderer_MemoryCreate(
+		renderer,
+		64 * 1024,
+		USDStageBufferBits,
+		USDStageProps);
+
+	VkBufferUsageFlagBits USDGPUBufferBits =
+							VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+							| VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+							| VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT
+							| VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT
+							| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits USDGPUProps =
+								 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	renderer->subStructs->USDGPUBuffer = Renderer_MemoryCreate(
+		renderer,
+		128 * 1024 * 1024,
+		USDGPUBufferBits,
+		USDGPUProps);
 
 	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
