@@ -5,6 +5,9 @@
 #include <VSR_Model.h>
 
 
+
+
+
 //==============================================================================
 // Renderer_CreateSyncObjects
 //------------------------------------------------------------------------------
@@ -79,8 +82,8 @@ void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 						   VSR_GetAllocator());
 
 		vkDestroyFence(renderer->subStructs->logicalDevice.device,
-						  renderer->subStructs->imageFinished[i],
-						  VSR_GetAllocator());
+					   renderer->subStructs->imageFinished[i],
+					   VSR_GetAllocator());
 	}
 
 	SDL_free(renderer->subStructs->imageCanBeWritten);
