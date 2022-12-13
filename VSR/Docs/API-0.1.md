@@ -1,17 +1,17 @@
 
 # Models
 ```c
-VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
+VSR_Mesh* VSR_MeshCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
 ```
 models are created as a list of vertices and indices points
 vertices having a stride of 3, being: x y z points with verticesCount being a multiple of 3 and the number of these xyz groups.
 Ensure that your vertices are in the correct order as your triangle winding ( default is counterclockwise )
 ```c
-void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
+void VSR_MeshFree(VSR_Renderer* renderer, VSR_Mesh* model);
 ```
 remember to free models when your done with them
 ```c
-int VSR_BindUVs(VSR_Renderer* renderer, VSR_Model* model, float* UVs);
+int VSR_MeshBindUVs(VSR_Renderer* renderer, VSR_Mesh* model, float* UVs);
 ```
 UVs are bound optionally and like vertices are in an u v group, 1 uv is 
 required per vertex so UVCount === vertexCount at all times, as a result this function does not take a UVCount instead vertexCount will be attempted to be read from the UVs pointer
@@ -73,7 +73,7 @@ int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 ```
 Set the sample stage that appropriate model UVs will sample when rendered
 ```c
-int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Transform* transforms, size_t batchCount);
+int VSR_RenderModels(VSR_Renderer* renderer, VSR_Mesh* models, VSR_Transform* transforms, size_t batchCount);
 ```
 sends a list of models and transforms to the renderer of count batchCount 
 allowing models to easily batched for efficient draw-calls in multi-model scenes
