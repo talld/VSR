@@ -492,12 +492,15 @@ VSR_RenderModels(
 			&renderer->subStructs->VUVIGPUBuffer.buffer,
 			&model->vertices.offset);
 
-		vkCmdBindVertexBuffers(
-			cBuff,
-			1,
-			1,
-			&renderer->subStructs->VUVIGPUBuffer.buffer,
-			&model->UVs.offset);
+		if(model->mesh->UVs)
+		{
+			vkCmdBindVertexBuffers(
+				cBuff,
+				1,
+				1,
+				&renderer->subStructs->VUVIGPUBuffer.buffer,
+				&model->UVs.offset);
+		}
 
 		Renderer_PushConstantsVertex pushConstantsVertex = (Renderer_PushConstantsVertex){0};
 
