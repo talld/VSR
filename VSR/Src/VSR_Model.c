@@ -94,32 +94,35 @@ VSR_ModelUpdate(
 	////////////
 	/// UVs ///
 	///////////
-	size_t UVSize = model->mesh->vertexCount * sizeof(VSR_UV);
+	if(model->mesh->UVs)
+	{
+		size_t UVSize = model->mesh->vertexCount * sizeof(VSR_UV);
 
-	Renderer_MemoryReset(stageMem); // this should NEVER have state!
-	Renderer_MemoryAlloc stageUV = Renderer_MemoryAllocate(
-		renderer,
-		stageMem,
-		UVSize);
+		Renderer_MemoryReset(stageMem); // this should NEVER have state!
+		Renderer_MemoryAlloc stageUV = Renderer_MemoryAllocate(
+			renderer,
+			stageMem,
+			UVSize);
 
-	void* pUV = Render_MemoryMapAlloc(renderer, *stageMem, stageUV);
-	memcpy(pUV, model->mesh->UVs, UVSize);
-	Render_MemoryUnmapAlloc(renderer, *stageMem);
+		void* pUV = Render_MemoryMapAlloc(renderer, *stageMem, stageUV);
+		memcpy(pUV, model->mesh->UVs, UVSize);
+		Render_MemoryUnmapAlloc(renderer, *stageMem);
 
 
-	Renderer_MemoryAlloc UVGPU = Renderer_MemoryAllocate(
-		renderer,
-		GPUMem,
-		UVSize);
+		Renderer_MemoryAlloc UVGPU = Renderer_MemoryAllocate(
+			renderer,
+			GPUMem,
+			UVSize);
 
-	Renderer_MemoryTransfer(renderer,
-							*GPUMem,
-							UVGPU.offset,
-							*stageMem,
-							stageUV.offset,
-							UVGPU.size);
+		Renderer_MemoryTransfer(renderer,
+								*GPUMem,
+								UVGPU.offset,
+								*stageMem,
+								stageUV.offset,
+								UVGPU.size);
 
-	model->UVs = UVGPU;
+		model->UVs = UVGPU;
+	}
 
 	///////////////
 	/// indices ///

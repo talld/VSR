@@ -27,12 +27,16 @@ VSR_MeshCreate(
 	mesh->vertexCount = vertexCount;
 	memcpy(mesh->vertices, vertices, vertSize);
 
-	size_t UVSize = vertexCount * sizeof(VSR_UV);
-	mesh->UVs = malloc(UVSize);
-	memcpy(mesh->UVs, UVs, UVSize);
+	mesh->UVs = NULL;
+	if(UVs)
+	{
+		size_t UVSize = vertexCount * sizeof(VSR_UV);
+		mesh->UVs = malloc(UVSize);
+		memcpy(mesh->UVs, UVs, UVSize);
+	}
 
-	mesh->indices = indices;
 	mesh->indexCount = 0;
+	mesh->indices = NULL;
 	if(indices)
 	{
 		size_t indicesSize = indexCount * sizeof(VSR_Index);
