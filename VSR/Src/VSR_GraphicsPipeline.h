@@ -29,7 +29,7 @@ struct VSR_GraphicsPipelineCreateInfo
 typedef struct GraphicsPipeline_SubStructs GraphicsPipeline_SubStructs;
 struct GraphicsPipeline_SubStructs
 {
-	GrapicsPipeline_RenderPass         renderPass;
+	GraphicsPipeline_RenderPass        renderPass;
 	GraphicsPipeline_GraphicsPipeline  graphicPipeline;
 	GraphicsPipeline_Framebuffer       framebuffer;
 	GraphicsPipeline_CommandPool       commandPool;

@@ -23,8 +23,8 @@ struct GraphicsPipeline_RenderPassCreateInfo
 	VkRenderPassCreateInfo createInfo;
 };
 
-typedef struct GrapicsPipeline_RenderPass GrapicsPipeline_RenderPass;
-struct GrapicsPipeline_RenderPass
+typedef struct GraphicsPipeline_RenderPass GraphicsPipeline_RenderPass;
+struct GraphicsPipeline_RenderPass
 {
 	VkRenderPass renderPass;
 };
