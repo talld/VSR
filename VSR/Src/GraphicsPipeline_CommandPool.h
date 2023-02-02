@@ -1,5 +1,5 @@
-#ifndef VSR_COMMANDPOOL_H
-#define VSR_COMMANDPOOL_H
+#ifndef VSR_COMMAND_POOL_H
+#define VSR_COMMAND_POOL_H
 
 #include "vulkan/vulkan.h"
 
@@ -73,4 +73,4 @@ GraphicsPipeline_CommandBufferRecordEnd(
 	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer cBuff);
 
-#endif //VSR_COMMANDPOOL_H
+#endif //VSR_COMMAND_POOL_H
