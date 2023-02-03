@@ -22,9 +22,9 @@ struct VSR_GraphicsPipelineCreateInfo;
 typedef struct GraphicsPipeline_GraphicsPipelineCreateInfo GraphicsPipeline_GraphicsPipelineCreateInfo;
 struct GraphicsPipeline_GraphicsPipelineCreateInfo
 {
-	VkPipelineLayoutCreateInfo   graphicsPipelineLayoutCreateInfo;
+	VkPipelineLayoutCreateInfo      graphicsPipelineLayoutCreateInfo;
 	VkPipelineShaderStageCreateInfo shadersStages[2];
-	VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo;
+	VkGraphicsPipelineCreateInfo    graphicsPipelineCreateInfo;
 };
 
 
