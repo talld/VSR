@@ -32,7 +32,7 @@ GraphicsPipeline_DescriptorPoolCreate(
 	VSR_GraphicsPipeline* pipeline,
 	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
-
+	return SDL_FALSE;
 }
 
 void
