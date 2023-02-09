@@ -175,10 +175,10 @@ void
 Renderer_FreeBuffers(
 	VSR_Renderer* renderer)
 {
-	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIGPUBuffer);
-	Renderer_MemoryFree(renderer, renderer->subStructs->VUVIStagingBuffer);
-	Renderer_MemoryFree(renderer, renderer->subStructs->USDGPUBuffer);
-	Renderer_MemoryFree(renderer, renderer->subStructs->USDStagingBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->subStructs->VUVIGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->subStructs->VUVIStagingBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->subStructs->USDGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->subStructs->USDStagingBuffer);
 
 }
 
@@ -490,7 +490,7 @@ VSR_RenderModels(
 			0,
 			1,
 			&renderer->subStructs->VUVIGPUBuffer.buffer,
-			&model->vertices.offset);
+			&model->vertices->offset);
 
 		if(model->mesh->UVs)
 		{
@@ -499,7 +499,7 @@ VSR_RenderModels(
 				1,
 				1,
 				&renderer->subStructs->VUVIGPUBuffer.buffer,
-				&model->UVs.offset);
+				&model->UVs->offset);
 		}
 
 		Renderer_PushConstantsVertex pushConstantsVertex = (Renderer_PushConstantsVertex){0};
@@ -529,7 +529,7 @@ VSR_RenderModels(
 			vkCmdBindIndexBuffer(
 				cBuff,
 				renderer->subStructs->VUVIGPUBuffer.buffer,
-				model->indices.offset,
+				model->indices->offset,
 				VK_INDEX_TYPE_UINT32);
 
 			vkCmdDrawIndexed(

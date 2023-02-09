@@ -17,6 +17,10 @@ VSR_ModelCreate(
 	VSR_Model* model = SDL_malloc(sizeof(VSR_Model));
 	model->mesh = mesh;
 
+	model->vertices = NULL;
+	model->UVs = NULL;
+	model->indices = NULL;
+
 	VSR_ModelUpdate(renderer, model);
 
 	return model;
@@ -35,6 +39,9 @@ VSR_ModelFree(
 	VSR_Model* model)
 {
 	SDL_free(model);
+	Renderer_MemoryFree(renderer, model->vertices);
+	Renderer_MemoryFree(renderer, model->UVs);
+	Renderer_MemoryFree(renderer, model->indices);
 }
 
 
@@ -67,7 +74,7 @@ VSR_ModelUpdate(
 	size_t vertSize = model->mesh->vertexCount * sizeof(VSR_Vertex);
 
 	Renderer_MemoryReset(stageMem); // this should NEVER have state!
-	Renderer_MemoryAlloc stageV = Renderer_MemoryAllocate(
+	Renderer_MemoryAlloc* stageV = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
 			vertSize);
@@ -76,18 +83,18 @@ VSR_ModelUpdate(
 	memcpy(pV, model->mesh->vertices, vertSize);
 	Render_MemoryUnmapAlloc(renderer, *stageMem);
 
-
-	Renderer_MemoryAlloc vertGPU = Renderer_MemoryAllocate(
+	Renderer_MemoryAlloc* vertGPU = Renderer_MemoryAllocate(
 		 renderer,
 		 GPUMem,
 		 vertSize);
 
 	Renderer_MemoryTransfer(renderer,
 							*GPUMem,
-							vertGPU.offset,
+							vertGPU->offset,
 							*stageMem,
-							stageV.offset,
-							vertGPU.size);
+							stageV->offset,
+							vertGPU->size);
+	Renderer_MemoryFree(renderer, stageV);
 
 	model->vertices = vertGPU;
 
@@ -99,7 +106,7 @@ VSR_ModelUpdate(
 		size_t UVSize = model->mesh->vertexCount * sizeof(VSR_UV);
 
 		Renderer_MemoryReset(stageMem); // this should NEVER have state!
-		Renderer_MemoryAlloc stageUV = Renderer_MemoryAllocate(
+		Renderer_MemoryAlloc* stageUV = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
 			UVSize);
@@ -109,17 +116,18 @@ VSR_ModelUpdate(
 		Render_MemoryUnmapAlloc(renderer, *stageMem);
 
 
-		Renderer_MemoryAlloc UVGPU = Renderer_MemoryAllocate(
+		Renderer_MemoryAlloc* UVGPU = Renderer_MemoryAllocate(
 			renderer,
 			GPUMem,
 			UVSize);
 
 		Renderer_MemoryTransfer(renderer,
 								*GPUMem,
-								UVGPU.offset,
+								UVGPU->offset,
 								*stageMem,
-								stageUV.offset,
-								UVGPU.size);
+								stageUV->offset,
+								UVGPU->size);
+		Renderer_MemoryFree(renderer, stageUV);
 
 		model->UVs = UVGPU;
 	}
@@ -132,7 +140,7 @@ VSR_ModelUpdate(
 		size_t indSize = model->mesh->indexCount * sizeof(VSR_Index);
 
 		Renderer_MemoryReset(stageMem); // reset for indices use
-		Renderer_MemoryAlloc stageI = Renderer_MemoryAllocate(
+		Renderer_MemoryAlloc* stageI = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
 			indSize);
@@ -142,17 +150,18 @@ VSR_ModelUpdate(
 		Render_MemoryUnmapAlloc(renderer, *stageMem);
 
 		// create GPU index buffer
-		Renderer_MemoryAlloc indGPU = Renderer_MemoryAllocate(
+		Renderer_MemoryAlloc* indGPU = Renderer_MemoryAllocate(
 			renderer,
 			GPUMem,
 			indSize);
 
 		Renderer_MemoryTransfer(renderer,
 								*GPUMem,
-								indGPU.offset,
+								indGPU->offset,
 								*stageMem,
-								stageI.offset,
-								indGPU.size);
+								stageI->offset,
+								indGPU->size);
+		Renderer_MemoryFree(renderer, stageI);
 
 		model->indices = indGPU;
 	}

@@ -103,6 +103,7 @@ Renderer_MemoryCreate(
 	VkBufferUsageFlagBits use,
 	VkMemoryPropertyFlags flags)
 {
+	// this will be copied out so alloc on stack
 	Renderer_Memory rendererMemory = (Renderer_Memory){0};
 
 	createBuffer(
@@ -114,8 +115,7 @@ Renderer_MemoryCreate(
 		&rendererMemory.memory);
 
 	rendererMemory.bufferSize = size;
-	rendererMemory.lastUsed = 0;
-
+	rendererMemory.root = NULL;
 
 	return rendererMemory;
 }
@@ -128,7 +128,7 @@ Renderer_MemoryCreate(
 // Renderer_MemoryFree
 //------------------------------------------------------------------------------
 void
-Renderer_MemoryFree(
+Renderer_MemoryDestroy(
 	VSR_Renderer* renderer,
 	Renderer_Memory memory)
 {
@@ -154,7 +154,7 @@ void
 Renderer_MemoryReset(
 	Renderer_Memory* memory)
 {
-	memory->lastUsed = 0;
+	memory->root = NULL;
 }
 
 
@@ -235,24 +235,91 @@ Renderer_MemoryTransfer(
 //==============================================================================
 // Renderer_MemoryAllocate
 //------------------------------------------------------------------------------
-Renderer_MemoryAlloc
+Renderer_MemoryAlloc*
 Renderer_MemoryAllocate(
 	VSR_Renderer* renderer,
 	Renderer_Memory* memory,
 	VkDeviceSize size)
 {
-	Renderer_MemoryAlloc alloc = (Renderer_MemoryAlloc){0};
+	Renderer_MemoryAlloc* alloc = NULL;
 
-	alloc.offset = memory->lastUsed;
-	alloc.size = size;
+	// get the root allocation
+	Renderer_MemoryAlloc* runner = memory->root;
 
-	memory->lastUsed += size;
+	// no alloc in mem
+	if(!runner)
+	{ // init with this alloc as the root (first alloc)
+		memory->root = alloc;
+		runner = memory->root;
+	}
+
+	// track how much memory we'd free after a defrag
+	VkDeviceSize possibleContiguous = 0;
+	while (runner)
+	{
+		VkDeviceSize endOfRunnerOffset = runner->offset + runner->size;
+		VkDeviceSize spaceTillNext;
+
+		if (!runner->next)
+		{
+			spaceTillNext = memory->bufferSize - endOfRunnerOffset;
+		} else
+		{
+			spaceTillNext = runner->next->offset - endOfRunnerOffset;
+		}
+
+		// we got one
+		if (spaceTillNext >= size)
+		{
+			// un-null the alloc
+			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
+
+			// if there was a next
+			if (runner->next)
+			{ // set their prev to alloc
+				runner->next->prev = alloc;
+			}
+			// join allloc to runner next
+			runner->next = alloc;
+
+			alloc->prev   = runner;
+			alloc->next   = runner->next;
+			alloc->offset = endOfRunnerOffset;
+			alloc->size   = size;
+			break;
+		}
+
+		// otherwise continue and track any space found
+		possibleContiguous += spaceTillNext;
+		runner = runner->next;
+
+	}
+
+	if(!alloc 	// if no valid block was found
+	   && possibleContiguous >= size) // BUT - we can make one
+	{
+		// TODO: defrag
+
+	}
 
 	return alloc;
 }
 
+//==============================================================================
+// Renderer_MemoryFree
+//------------------------------------------------------------------------------
+void
+Renderer_MemoryFree(
+	VSR_Renderer* renderer,
+	Renderer_MemoryAlloc* alloc)
+{
+	if(alloc)
+	{
+		SDL_free(alloc);
+	}
 
-
+	// TODO: reattached and defrag
+}
 
 
 //==============================================================================
@@ -262,7 +329,7 @@ void*
 Render_MemoryMapAlloc(
 	VSR_Renderer* renderer,
 	Renderer_Memory mem,
-	Renderer_MemoryAlloc alloc)
+	Renderer_MemoryAlloc* alloc)
 {
 	void* p = NULL;
 
@@ -271,8 +338,8 @@ Render_MemoryMapAlloc(
 	vkMapMemory(
 		renderer->subStructs->logicalDevice.device,
 		mem.memory,
-		alloc.offset,
-		alloc.size,
+		alloc->offset,
+		alloc->size,
 		flags,
 		&p);
 
