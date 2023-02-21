@@ -249,8 +249,18 @@ Renderer_MemoryAllocate(
 	// no alloc in mem
 	if(!runner)
 	{ // init with this alloc as the root (first alloc)
-		memory->root = alloc;
-		runner = memory->root;
+
+		if(memory->bufferSize >= size)
+		{
+			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
+			alloc->prev = NULL;
+			alloc->next = NULL;
+			alloc->offset = 0;
+			alloc->size = size;
+
+			memory->root = alloc;
+			// don't set runner so we can skip the find as we've found one
+		}
 	}
 
 	// track how much memory we'd free after a defrag
@@ -315,10 +325,18 @@ Renderer_MemoryFree(
 {
 	if(alloc)
 	{
+		if (alloc->prev)
+		{
+			alloc->prev->next = alloc->next;
+		}
+
+		if (alloc->next)
+		{
+			alloc->next->prev = alloc->prev;
+		}
+
 		SDL_free(alloc);
 	}
-
-	// TODO: reattached and defrag
 }
 
 
