@@ -59,6 +59,13 @@ GraphicsPipeline_CommandPoolAllocateTransferBuffer(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline);
 
+void
+GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
+	VkCommandBuffer buff
+	);
+
 int
 GraphicsPipeline_CommandBufferRecordStart(
 	VSR_Renderer* renderer,
