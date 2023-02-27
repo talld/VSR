@@ -207,5 +207,11 @@ VSR_SwapchainDestroy(
 			VSR_ImageViewDestroy(renderer, pView);
 	}
 
+	vkDestroySwapchainKHR(
+		renderer->subStructs->logicalDevice.device,
+		renderer->subStructs->swapchain.swapchain,
+		VSR_GetAllocator()
+		);
+
 	SDL_free(renderer->subStructs->swapchain.imageViews);
 }
