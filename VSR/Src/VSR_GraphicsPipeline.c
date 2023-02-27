@@ -18,7 +18,17 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	VSR_GraphicsPipelineCreateInfo* createInfo = SDL_calloc(1, sizeof(VSR_GraphicsPipelineCreateInfo));
 	createInfo->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_CreateInfoSubStructs));
 
+	/////////////////////
+	/// init defaults ///
+	/////////////////////
 
+	createInfo->texturePoolSize = 256;
+
+	//////////////////////
+	/// populate infos ///
+	//////////////////////
+
+	GraphicsPipeline_DescriptorPoolPopulateCreateInfo(renderer, createInfo);
 	GraphicsPipeline_RenderPassPopulateCreateInfo(renderer, createInfo);
 	GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(renderer, createInfo);
 	GraphicsPipeline_FramebufferPopulateCreateInfo(renderer, createInfo);
@@ -57,6 +67,7 @@ VSR_GraphicsPipelineCreate(
 	VSR_GraphicsPipeline* pipeline = SDL_calloc(1, sizeof(VSR_GraphicsPipeline));
 	pipeline->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_SubStructs));
 
+	GraphicsPipeline_DescriptorPoolCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_RenderPassCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo);
@@ -83,6 +94,7 @@ VSR_GraphicsPipelineFree(
 	GraphicsPipeline_FramebufferDestroy(renderer, pipeline);
 	GraphicsPipeline_GraphicPipelineDestroy(renderer, pipeline);
 	GraphicsPipeline_RenderPassDestroy(renderer, pipeline);
+	GraphicsPipeline_DescriptorPoolDestroy(renderer, pipeline);
 
 	SDL_free(pipeline->subStructs);
 	SDL_free(pipeline);

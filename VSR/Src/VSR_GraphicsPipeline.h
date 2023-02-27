@@ -23,6 +23,8 @@ struct GraphicsPipeline_CreateInfoSubStructs
 typedef struct VSR_GraphicsPipelineCreateInfo VSR_GraphicsPipelineCreateInfo;
 struct VSR_GraphicsPipelineCreateInfo
 {
+	size_t                                  texturePoolSize;
+
 	VSR_Shader*                             vertexShader;
 	VSR_Shader*                             fragmentShader;
 	GraphicsPipeline_CreateInfoSubStructs*  subStructs;
