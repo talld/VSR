@@ -2,7 +2,7 @@
 #define VSR_SWAPCHAIN_H
 
 #include <vulkan/vulkan.h>
-#include "Renderer_ImageView.h"
+#include "VSR_Image.h"
 
 
 ////////////////////////////////
