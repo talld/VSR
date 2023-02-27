@@ -32,17 +32,21 @@ GraphicsPipeline_FramebufferCreate(
 	framebufferCreateInfo->pNext = NULL;
 	framebufferCreateInfo->flags = 0L;
 	framebufferCreateInfo->renderPass = pipeline->subStructs->renderPass.renderPass;
-	framebufferCreateInfo->attachmentCount = 1; // just colour for now
+	framebufferCreateInfo->attachmentCount = 2; // colour, depth
+	VkImageView attachments[2] = {
+		renderer->subStructs->swapchain.imageViews[0].imageView,
+		pipeline->subStructs->depthView.imageView
+		};
+
 	framebufferCreateInfo->height = renderer->subStructs->surface.surfaceHeight;
 	framebufferCreateInfo->width = renderer->subStructs->surface.surfaceWidth;
 	framebufferCreateInfo->layers = 1;
 
 	for(size_t i = 0; i < frameCount; i++)
 	{
-		VSR_ImageView swapchainImageView =
-			renderer->subStructs->swapchain.imageViews[i];
-
-		framebufferCreateInfo->pAttachments = &swapchainImageView.imageView;
+		attachments[0] = renderer->subStructs->swapchain.imageViews[i].imageView;
+		// depth stencil doesn't change from image to image here
+		framebufferCreateInfo->pAttachments = attachments;
 
 		err = vkCreateFramebuffer(renderer->subStructs->logicalDevice.device,
 								  framebufferCreateInfo,

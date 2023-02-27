@@ -257,6 +257,21 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	blendInfo.pAttachments = &colourInfo;
 
 	/////////////////////
+	/// depth stencil ///
+	/////////////////////
+	VkPipelineDepthStencilStateCreateInfo stencilCreateInfo
+		= (VkPipelineDepthStencilStateCreateInfo){0};
+
+	stencilCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	stencilCreateInfo.pNext = NULL;
+	stencilCreateInfo.flags = 0L;
+	stencilCreateInfo.depthTestEnable = VK_TRUE;
+	stencilCreateInfo.depthWriteEnable = VK_TRUE;
+	stencilCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+	stencilCreateInfo.depthBoundsTestEnable = VK_FALSE;
+	stencilCreateInfo.stencilTestEnable = VK_FALSE;
+
+	/////////////////////
 	/// Dynamic sates ///
 	/////////////////////
 	VkPipelineDynamicStateCreateInfo dynamicInfo =
@@ -321,6 +336,8 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pipelineCreateInfo->pRasterizationState = &rasterInfo;
 	pipelineCreateInfo->pMultisampleState = &sampleInfo;
 	pipelineCreateInfo->pColorBlendState = &blendInfo;
+	pipelineCreateInfo->pDepthStencilState = &stencilCreateInfo;
+	pipelineCreateInfo->pDynamicState = &dynamicInfo;
 	pipelineCreateInfo->pDynamicState = &dynamicInfo;
 	pipelineCreateInfo->basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo->basePipelineIndex = 0;

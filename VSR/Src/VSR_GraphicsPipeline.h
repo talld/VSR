@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 
 #include "VSR_Shader.h"
+#include "VSR_Image.h"
 #include "GraphicsPipeline_DescriptorPool.h"
 #include "GraphicsPipeline_RenderPass.h"
 #include "GraphicsPipeline_GraphicsPipeline.h"
@@ -33,6 +34,9 @@ struct VSR_GraphicsPipelineCreateInfo
 typedef struct GraphicsPipeline_SubStructs GraphicsPipeline_SubStructs;
 struct GraphicsPipeline_SubStructs
 {
+	VSR_Image*                         depthImage;
+	VSR_ImageView                      depthView;
+
 	GraphicsPipeline_DescriptorPool    descriptorPool;
 	GraphicsPipeline_RenderPass        renderPass;
 	GraphicsPipeline_GraphicsPipeline  graphicPipeline;

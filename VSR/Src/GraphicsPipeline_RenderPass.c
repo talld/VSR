@@ -32,9 +32,10 @@ GraphicsPipeline_RenderPassCreate(
 	VSR_GraphicsPipeline* pipeline,
 	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
-	///////////////////
-	/// colour pass ///
-	///////////////////
+
+	//////////////////////////
+	/// colour attachments ///
+	//////////////////////////
 
 	VkAttachmentDescription colourAttachment = (VkAttachmentDescription){0};
 	colourAttachment.flags = 0L;
@@ -53,11 +54,32 @@ GraphicsPipeline_RenderPassCreate(
 	colourAttachmentRef.attachment = 0;
 	colourAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+
+	/////////////////////////
+	/// depth attachments ///
+	/////////////////////////
+
+	VkAttachmentDescription depthAttachment = (VkAttachmentDescription){0};
+	depthAttachment.flags = 0L;
+	depthAttachment.format = pipeline->subStructs->depthView.format;
+	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference depthAttachmentRef;
+	depthAttachmentRef.attachment = 1;
+	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 	VkSubpassDescription subpass = (VkSubpassDescription){0};
 	subpass.flags = 0L;
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colourAttachmentRef;
+	subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
 	/////////////////////////////
 	/// sub-pass dependencies ///
@@ -91,10 +113,16 @@ GraphicsPipeline_RenderPassCreate(
 	/// render-pass ///
 	///////////////////
 
+
+
+
 	VkRenderPassCreateInfo passInfo = (VkRenderPassCreateInfo){0};
 	passInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	passInfo.attachmentCount = 1;
-	passInfo.pAttachments = &colourAttachment;
+
+	passInfo.attachmentCount = 2;
+	VkAttachmentDescription refs[] = {colourAttachment, depthAttachment};
+	passInfo.pAttachments = refs;
+
 	passInfo.subpassCount = 1;
 	passInfo.pSubpasses = &subpass;
 	passInfo.dependencyCount = 2;

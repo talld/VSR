@@ -150,9 +150,12 @@ GraphicsPipeline_CommandBufferRecordStart(
 	passBeginInfo.renderArea.offset.y = 0;
 	passBeginInfo.renderArea.extent.width = renderer->subStructs->surface.surfaceWidth;
 	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
-	passBeginInfo.clearValueCount = 1;
-	VkClearValue clearValues = {{{0.1f,0.1f,0.f, 1.0f}}};
-	passBeginInfo.pClearValues = &clearValues;
+	passBeginInfo.clearValueCount = 2;
+	VkClearValue clearValues[2] = {
+		{ .color = {{0.1f,0.1f,0.f, 1.0f}} },
+		{ .depthStencil = {1.0f} }
+	};
+	passBeginInfo.pClearValues = clearValues;
 
 
 	/////////////////////////
