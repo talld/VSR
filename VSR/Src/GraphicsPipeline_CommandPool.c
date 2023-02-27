@@ -126,7 +126,57 @@ GraphicsPipeline_CommandPoolAllocateTransferBuffer(
 							 &allocInfo,
 							 &buff);
 
+	VkCommandBufferBeginInfo beginInfo = (VkCommandBufferBeginInfo){0};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(buff, &beginInfo);
+
 	return buff;
+}
+
+void
+GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
+	VkCommandBuffer buff)
+{
+	vkEndCommandBuffer(buff);
+
+	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &buff;
+
+	VkFence transferFence;
+	VkFenceCreateInfo fenceInfo;
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.pNext = NULL;
+	fenceInfo.flags = 0;
+
+	vkCreateFence(
+		renderer->subStructs->logicalDevice.device,
+		&fenceInfo,
+		VSR_GetAllocator(),
+		&transferFence);
+
+	vkQueueSubmit(
+		renderer->subStructs->deviceQueues.transferQueue,
+		1,
+		&submitInfo,
+		transferFence);
+
+	vkWaitForFences(
+		renderer->subStructs->logicalDevice.device,
+		1,
+		&transferFence,
+		VK_TRUE,
+		-1);
+
+	vkDestroyFence(
+		renderer->subStructs->logicalDevice.device,
+		transferFence,
+		VSR_GetAllocator());
 }
 
 int

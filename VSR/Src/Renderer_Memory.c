@@ -177,53 +177,15 @@ Renderer_MemoryTransfer(
 		renderer,
 		renderer->subStructs->pipeline);
 
-	VkCommandBufferBeginInfo beginInfo = (VkCommandBufferBeginInfo){0};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(buff, &beginInfo);
 	VkBufferCopy copyRegion = (VkBufferCopy){0};
 	copyRegion.dstOffset = dstOffset;
 	copyRegion.srcOffset = srcOffset;
 	copyRegion.size = len;
 
 	vkCmdCopyBuffer(buff, src.buffer, dst.buffer, 1, &copyRegion);
-	vkEndCommandBuffer(buff);
 
-	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &buff;
+	GraphicsPipeline_CommandPoolS
 
-	VkFence transferFence;
-	VkFenceCreateInfo fenceInfo;
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.pNext = NULL;
-	fenceInfo.flags = 0;
-
-	vkCreateFence(
-		renderer->subStructs->logicalDevice.device,
-		&fenceInfo,
-		VSR_GetAllocator(),
-		&transferFence);
-
-	vkQueueSubmit(
-		renderer->subStructs->deviceQueues.transferQueue,
-		1,
-		&submitInfo,
-		transferFence);
-
-	vkWaitForFences(
-		renderer->subStructs->logicalDevice.device,
-		1,
-		&transferFence,
-		VK_TRUE,
-		-1);
-
-	vkDestroyFence(
-		renderer->subStructs->logicalDevice.device,
-		transferFence,
-		VSR_GetAllocator());
 
 	return 0;
 }
