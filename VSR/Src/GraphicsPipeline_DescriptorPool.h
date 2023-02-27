@@ -20,14 +20,17 @@ struct GraphicsPipeline_CreateInfoSubStructs;
 typedef struct GraphicsPipeline_DescriptorPoolCreateInfo GraphicsPipeline_DescriptorPoolCreateInfo;
 struct GraphicsPipeline_DescriptorPoolCreateInfo
 {
-	VkDescriptorSetLayoutCreateInfo perModelLayout;
-	VkDescriptorSetLayoutCreateInfo perFrameLayout;
+
+	VkDescriptorSetLayoutBinding  textureBinding;
+	VkDescriptorSetLayoutCreateInfo globalLayout;
 };
 
 typedef struct GraphicsPipeline_DescriptorPool GraphicsPipeline_DescriptorPool;
 struct GraphicsPipeline_DescriptorPool
 {
-	VkDescriptorSetLayoutCreateInfo layoutCreateInfo;
+	VkDescriptorSetLayout  globalLayout;
+	VkDescriptorPool  globalPool;
+	VkDescriptorSet globalSet;
 };
 
 

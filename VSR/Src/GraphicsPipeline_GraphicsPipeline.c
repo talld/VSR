@@ -280,8 +280,14 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	//////////////
 	/// layout ///
 	//////////////
-	layoutCreateInfo->setLayoutCount = 0;
-	layoutCreateInfo->pSetLayouts = NULL;
+
+	enum {kLayoutCount = 1};
+	VkDescriptorSetLayout layouts[kLayoutCount] = {
+		pipeline->subStructs->descriptorPool.globalLayout
+	};
+
+	layoutCreateInfo->setLayoutCount = 1;
+	layoutCreateInfo->pSetLayouts = layouts;
 	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
 	layoutCreateInfo->pPushConstantRanges = pushConstants;
 
