@@ -53,10 +53,6 @@ VSR_ImageViewCreate(
 		imageView.format    = imageFormat;
 		imageView.imageView = view;
 	}
-	else
-	{
-		printf("HERE!");
-	}
 
 	return imageView;
 }
