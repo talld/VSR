@@ -25,6 +25,8 @@ GraphicsPipeline_DescriptorPoolPopulateCreateInfo(
 	textureBinding->binding = 0;
 	textureBinding->descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	textureBinding->descriptorCount = renderer->subStructs->texturePoolSize;
+	textureBinding->pImmutableSamplers = NULL;
+	textureBinding->stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	globalLayoutCreateInfo->sType =
 		VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -48,10 +50,10 @@ GraphicsPipeline_DescriptorPoolCreate(
 	///////////////
 	/// aliases ///
 	///////////////
-	VkDescriptorSetLayoutCreateInfo* perSceneCreateInfo =
+	VkDescriptorSetLayoutCreateInfo* globalLayoutCreateInfo =
 		&createInfo->subStructs->descriptorPoolCreateInfo.globalLayout;
 
-	VkDescriptorSetLayout* perSceneLayout =
+	VkDescriptorSetLayout* globalLayout =
 		&pipeline->subStructs->descriptorPool.globalLayout;
 
 	//////////////////////
@@ -60,9 +62,9 @@ GraphicsPipeline_DescriptorPoolCreate(
 
 	VkResult err = vkCreateDescriptorSetLayout(
 		renderer->subStructs->logicalDevice.device,
-		perSceneCreateInfo,
+		globalLayoutCreateInfo,
 		VSR_GetAllocator(),
-		perSceneLayout
+		globalLayout
 		);
 
 	if(err != VK_SUCCESS)
@@ -108,7 +110,7 @@ GraphicsPipeline_DescriptorPoolCreate(
 	allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocateInfo.pNext = NULL;
 	allocateInfo.descriptorPool = pipeline->subStructs->descriptorPool.globalPool;
-	allocateInfo.pSetLayouts = &pipeline->subStructs->descriptorPool.globalLayout;
+	allocateInfo.pSetLayouts = globalLayout;
 	allocateInfo.descriptorSetCount = 1;
 
 	err = vkAllocateDescriptorSets(

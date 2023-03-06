@@ -301,7 +301,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 		pipeline->subStructs->descriptorPool.globalLayout
 	};
 
-	layoutCreateInfo->setLayoutCount = 1;
+	layoutCreateInfo->setLayoutCount = kLayoutCount;
 	layoutCreateInfo->pSetLayouts = layouts;
 	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
 	layoutCreateInfo->pPushConstantRanges = pushConstants;
