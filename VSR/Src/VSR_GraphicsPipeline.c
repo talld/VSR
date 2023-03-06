@@ -22,7 +22,7 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	/// init defaults ///
 	/////////////////////
 
-	createInfo->texturePoolSize = 256;
+	renderer->subStructs->texturePoolSize = 256;
 
 	//////////////////////
 	/// populate infos ///

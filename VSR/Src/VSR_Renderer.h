@@ -86,6 +86,7 @@ struct Renderer_SubStructs
 	VkFence*                imageFinished;
 
 	/// memory ///
+	size_t texturePoolSize;
 
 	// Vertex UV Index:
 	Renderer_Memory VUVIStagingBuffer;
