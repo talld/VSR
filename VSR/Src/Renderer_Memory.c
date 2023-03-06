@@ -263,6 +263,7 @@ Renderer_MemoryAllocate(
 			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
 			alloc->prev = NULL;
 			alloc->next = NULL;
+			alloc->src = memory;
 			alloc->offset = 0;
 			alloc->size = size;
 

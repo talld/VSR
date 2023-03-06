@@ -15,17 +15,23 @@ struct Renderer_CreateInfoSubStructs;
 typedef struct VSR_Image VSR_Image;
 struct VSR_Image;
 
+///////////////////////////////////////
+/// Renderer_Memory pre-declaration ///
+///////////////////////////////////////
+typedef struct Renderer_Memory Renderer_Memory;
+
 typedef struct Renderer_MemoryAlloc Renderer_MemoryAlloc;
 struct Renderer_MemoryAlloc
 {
 	Renderer_MemoryAlloc* prev;
 	Renderer_MemoryAlloc* next;
 
+	Renderer_Memory* src;
 	VkDeviceSize   offset;
 	VkDeviceSize   size;
 };
 
-typedef struct Renderer_Memory Renderer_Memory;
+
 struct Renderer_Memory
 {
 	VkDeviceMemory memory;
