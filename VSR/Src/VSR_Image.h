@@ -32,6 +32,14 @@ VSR_ImageCreate(
 	VkImageTiling tiling,
 	VkImageUsageFlags useFlags);
 
+void
+VSR_ImageTransition(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
+	VSR_Image* img,
+	VkImageLayout from,
+	VkImageLayout to);
+
 VSR_ImageView
 VSR_ImageViewCreate(
 	VSR_Renderer* renderer,
