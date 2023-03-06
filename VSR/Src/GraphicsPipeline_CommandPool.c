@@ -202,7 +202,7 @@ GraphicsPipeline_CommandBufferRecordStart(
 	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
 	passBeginInfo.clearValueCount = 2;
 	VkClearValue clearValues[2] = {
-		{ .color = {{0.1f,0.1f,0.f, 1.0f}} },
+		{ .color = {{0.0f,0.0f,0.f, 1.0f}} },
 		{ .depthStencil = {1.0f} }
 	};
 	passBeginInfo.pClearValues = clearValues;
@@ -227,6 +227,15 @@ GraphicsPipeline_CommandBufferRecordStart(
 		vkCmdBindPipeline(cBuff,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,
 						  pipeline->subStructs->graphicPipeline.pipeline);
+
+		vkCmdBindDescriptorSets(
+			cBuff,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			pipeline->subStructs->graphicPipeline
+			.pipelineLayout,0,
+			1, &pipeline->subStructs->descriptorPool.globalSet,
+			0 ,NULL
+		);
 
 	}
 

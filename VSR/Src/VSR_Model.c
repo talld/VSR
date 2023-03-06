@@ -79,9 +79,9 @@ VSR_ModelUpdate(
 			stageMem,
 			vertSize);
 
-	void* pV = Render_MemoryMapAlloc(renderer, *stageMem, stageV);
+	void* pV = Render_MemoryMapAlloc(renderer, stageV);
 	memcpy(pV, model->mesh->vertices, vertSize);
-	Render_MemoryUnmapAlloc(renderer, *stageMem);
+	Render_MemoryUnmapAlloc(renderer, stageV);
 
 	Renderer_MemoryAlloc* vertGPU = Renderer_MemoryAllocate(
 		 renderer,
@@ -111,9 +111,9 @@ VSR_ModelUpdate(
 			stageMem,
 			UVSize);
 
-		void* pUV = Render_MemoryMapAlloc(renderer, *stageMem, stageUV);
+		void* pUV = Render_MemoryMapAlloc(renderer, stageUV);
 		memcpy(pUV, model->mesh->UVs, UVSize);
-		Render_MemoryUnmapAlloc(renderer, *stageMem);
+		Render_MemoryUnmapAlloc(renderer, stageUV);
 
 
 		Renderer_MemoryAlloc* UVGPU = Renderer_MemoryAllocate(
@@ -145,9 +145,9 @@ VSR_ModelUpdate(
 			stageMem,
 			indSize);
 
-		void* pI = Render_MemoryMapAlloc(renderer, *stageMem, stageI);
+		void* pI = Render_MemoryMapAlloc(renderer, stageI);
 		memcpy(pI, model->mesh->indices, indSize);
-		Render_MemoryUnmapAlloc(renderer, *stageMem);
+		Render_MemoryUnmapAlloc(renderer, stageI);
 
 		// create GPU index buffer
 		Renderer_MemoryAlloc* indGPU = Renderer_MemoryAllocate(

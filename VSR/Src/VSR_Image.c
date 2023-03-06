@@ -48,6 +48,7 @@ VkImage createImage(VSR_Renderer* renderer,
 VSR_Image*
 VSR_ImageCreate(
 	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
 	SDL_Surface* surface,
 	VkFormat format,
 	VkImageTiling tiling,
@@ -57,42 +58,105 @@ VSR_ImageCreate(
 
 	image->src = *surface;
 	size_t surfaceExtent = (surface->w * surface->h);
+	size_t imageBufferSize;
 
 	// it's possible we've just passed the surface only fo wh
 	if(surface->pixels)
 	{
-		surface = SDL_ConvertSurfaceFormat(surface,SDL_PIXELFORMAT_RGBA8888, 0);
-		image->imageBufferSize = surface->format->BytesPerPixel * surfaceExtent;
+		// make sure surface is in a usable format before getting size
+		surface = SDL_ConvertSurfaceFormat(
+			surface,
+			SDL_PIXELFORMAT_ABGR8888,
+			0);
+
+		imageBufferSize = surface->format->BytesPerPixel * surfaceExtent;
 	}
 	else
 	{
-
-		image->imageBufferSize = 4 * surfaceExtent;
+		imageBufferSize = 4 * surfaceExtent;
 	}
 
+	///////////////////////////////
+	/// create memory for image ///
+	///////////////////////////////
+
+	image->alloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->USDGPUBuffer,
+		imageBufferSize
+	);
+
+	image->format = format;
 	image->image = createImage(
 		renderer,
 		surface->w,
 		surface->h,
-		format,
+		image->format,
 		tiling,
 		useFlags
-		);
-
-	image->format = format;
-
-	image->alloc = 	Renderer_MemoryAllocate(
-		renderer,
-		&renderer->subStructs->USDGPUBuffer,
-		image->imageBufferSize
-		);
+	);
 
 	vkBindImageMemory(
 		renderer->subStructs->logicalDevice.device,
 		image->image,
-		renderer->subStructs->USDGPUBuffer.memory,
+		image->alloc->src->memory,
 		image->alloc->offset
 	);
+
+	// if there is surface data, copy it to the image
+	if(surface->pixels)
+	{
+		//////////////////////////////////////////
+		/// transition image ready for writing ///
+		//////////////////////////////////////////
+		VSR_ImageTransition(
+			renderer,
+			pipeline,
+			image,
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+		);
+
+		/////////////////////////////////
+		/// write pixel data to stage ///
+		/////////////////////////////////
+
+		// grab a staging buffer
+		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+			renderer,
+			&renderer->subStructs->USDStagingBuffer,
+			image->alloc->size
+		);
+
+		void* p = Render_MemoryMapAlloc(
+			renderer,
+			alloc
+		);
+
+		SDL_LockSurface(surface);
+		memcpy(p, surface->pixels, alloc->size);
+		SDL_UnlockSurface(surface);
+
+		Render_MemoryUnmapAlloc(
+			renderer,
+			alloc
+		);
+
+		///////////////////////////////
+		/// blit stage to dst image ///
+		///////////////////////////////
+		Renderer_MemoryTransferToImage(
+			renderer,
+			alloc,
+			image
+		);
+
+		///////////////////////////
+		/// free staging buffer ///
+		///////////////////////////
+	//	Renderer_MemoryFree(renderer, alloc);
+
+	}
 
 	return image;
 }

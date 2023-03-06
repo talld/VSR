@@ -163,7 +163,9 @@ void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Sh
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, size_t batchCount);
 
-VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex* vertices, VSR_UV* UVs, size_t indexCount, VSR_Index* indices);
+VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices,
+						 VSR_UV const* UVs, size_t indexCount, VSR_Index const*
+						 indices);
 
 void VSR_MeshFree(VSR_Mesh* model);
 
@@ -173,7 +175,7 @@ void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 
 void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
-VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
+VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, SDL_Surface* sur);
 
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 

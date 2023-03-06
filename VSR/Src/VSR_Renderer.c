@@ -114,7 +114,7 @@ Renderer_AllocateBuffers(
 
 	renderer->subStructs->VUVIStagingBuffer = Renderer_MemoryCreate(
 		renderer,
-		64 * 1024,
+		1024 * 1024 * 1024,
 		VUVIStageBufferBits,
 		VUVIstagingProps);
 
@@ -128,14 +128,14 @@ Renderer_AllocateBuffers(
 
 	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		128 * 1024 * 1024,
+		1024 * 1024 * 1024,
 		VUVIGPUBufferBits,
 		VUVIGPUProps);
 
 	VkBufferUsageFlagBits USDStageBufferBits =
 							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+							  | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
 	VkMemoryPropertyFlagBits USDStageProps =
 								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
@@ -143,7 +143,7 @@ Renderer_AllocateBuffers(
 
 	renderer->subStructs->USDStagingBuffer = Renderer_MemoryCreate(
 		renderer,
-		64 * 1024,
+		1024 * 1024 * 1024,
 		USDStageBufferBits,
 		USDStageProps);
 

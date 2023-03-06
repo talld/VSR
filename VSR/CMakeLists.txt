@@ -23,7 +23,7 @@ set(VSR_SRC
         Src/Renderer_DeviceQueues.c
         Src/Renderer_Surface.c
         Src/Renderer_Swapchain.c
-        Src/VSR_Image.c
+
 
         # GraphicsPipeline
         Src/VSR_GraphicsPipeline.c
@@ -34,6 +34,8 @@ set(VSR_SRC
         Src/GraphicsPipeline_CommandPool.c
         Src/GraphicsPipeline_DescriptorPool.c
 
+        Src/VSR_Image.c
+        Src/VSR_Sampler.c
         Src/VSR_Mesh.c
         Src/VSR_Model.c
         )

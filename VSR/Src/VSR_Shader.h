@@ -21,5 +21,4 @@ VSR_ShaderDestroy(
 	VSR_Renderer* renderer,
 	VSR_Shader* shader);
 
-
 #endif //VSR_SUITE_VSR_SHADER_H

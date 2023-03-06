@@ -87,13 +87,12 @@ Renderer_MemoryFree(
 void*
 Render_MemoryMapAlloc(
 	VSR_Renderer* renderer,
-	Renderer_Memory mem,
 	Renderer_MemoryAlloc* alloc);
 
 void
 Render_MemoryUnmapAlloc(
 	VSR_Renderer* renderer,
-	Renderer_Memory mem);
+	Renderer_MemoryAlloc* alloc);
 
 
 #endif //RENDERER_MEMORY_H

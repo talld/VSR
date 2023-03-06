@@ -1,6 +1,7 @@
 #include <VSR.h>
 #include <cglm/cglm.h>
-#include "stdio.h"
+#include <stdio.h>
+#include <math.h>
 
 #include "teapot.h"
 #include "cube.h"
@@ -80,6 +81,7 @@ int main(int argc, char* argv[])
 	// config pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
 
+	// setup shaders
 	size_t n;
 	uint8_t* vertBytes = loadShader("vert.spv", &n);
 	VSR_Shader* vertShader = VSR_ShaderCreate(renderer, n, vertBytes);
@@ -99,28 +101,67 @@ int main(int argc, char* argv[])
 	// create models
 	VSR_Mesh* cubeMesh = VSR_MeshCreate(
 		kCubeVertexCount,
-		cubeVerts,
-		cubeUVs,
+		kCubeVertices,
+		kCubeUVs,
 		kCubeIndexCount,
-		cubeIndices	);
+		kCubeIndices
+	);
 
 	VSR_Mesh* teapotMesh = VSR_MeshCreate(
 		kTeapotVertexCount,
-		(VSR_Vertex*)teapotVerts,
-		(VSR_UV*)teapotVerts,
+		kTeapotVertices,
+		kTeapotUVs,
 		0,
-		NULL);
+		NULL
+	);
 
 	VSR_Model* cubeModel = VSR_ModelCreate(renderer, cubeMesh);
-	VSR_Model* teaModel = VSR_ModelCreate(renderer, teapotMesh);
+
+	enum {kTeaPotCount = 0};
+	VSR_Model* teaModel[kTeaPotCount];
+
+	for(int i = 0; i < kTeaPotCount; ++i)
+	{
+		teaModel[i] = VSR_ModelCreate(renderer, teapotMesh);
+	}
+	// set images
+	SDL_Surface* sur = SDL_LoadBMP("red.bmp");
+	VSR_SamplerCreate(renderer, pipeline, sur);
 
 	// Maths for MVP
 	mat4 cubePos;
-	mat4 teaPos;
+
+
+	mat4 teaPos[kTeaPotCount];
+
+	int root = cbrt((double)kTeaPotCount);
+
+
+	for(int k = 0; k < root; ++k)
+	{
+		for(int j = 0; j < root; ++j)
+		{
+			for(int i = 0; i < root; ++i)
+			{
+				vec3 pos = {
+					-0 + (float) 5 * i,
+					-0 + (float) 5 * j,
+					-0.1 //- (float) 5 * k
+				};
+
+				size_t index = i + (j * root) + (k * root * root);
+
+				glm_mat4_identity(teaPos[index]);
+
+				glm_translate(teaPos[index], pos);
+
+
+			}
+		}
+	}
+
 	glm_mat4_identity(cubePos);
-	glm_mat4_identity(teaPos);
-	glm_translate(cubePos, (vec3){-1.5f,0.f,0.f});
-	glm_translate(teaPos, (vec3){1.5f,0.f,0.f});
+	glm_translate(cubePos, (vec3){1.3f,0.f,-2.f});
 
 
 	mat4 view;
@@ -148,6 +189,7 @@ int main(int argc, char* argv[])
 		projection);
 
 	glm_mat4_mul(projection, view, view);
+
 	// renderloop
 
 	int shouldQuit = 0;
@@ -158,18 +200,26 @@ int main(int argc, char* argv[])
 
 		VSR_RendererBeginPass(renderer);
 
-		glm_mat4_mul(view, cubePos, transform);
 		VSR_RenderModels(renderer, cubeModel, (VSR_Mat4*)&transform, 1);
 
-		glm_mat4_mul(view, teaPos, transform);
-		VSR_RenderModels(renderer, teaModel, (VSR_Mat4*)&transform, 1);
+		for(int i = 0; i < kTeaPotCount; i++)
+		{
+			glm_mat4_mul(view, teaPos[i], transform);
+			VSR_RenderModels(renderer, teaModel[i], (VSR_Mat4*) &transform, 1);
+		}
 
 		VSR_RendererEndPass(renderer);
 
+		for(int i = 0; i < kTeaPotCount; i++)
+		{
+			glm_rotate(teaPos[i], 0.01f, (vec3) {0.0f, 1.f, 0.f});
+		}
+
+		glm_mat4_mul(view, cubePos, transform);
 		glm_rotate(cubePos, 0.01f, (vec3){0.0f, 1.f, 0.f});
 		glm_rotate(cubePos, 0.01f, (vec3){1.0f, 0.f, 0.f});
 
-		glm_rotate(teaPos, 0.01f, (vec3){0.0f, 1.f, 0.f});
+
 
 		SDL_PollEvent(&event);
 		if(event.type == SDL_QUIT)
@@ -182,7 +232,11 @@ int main(int argc, char* argv[])
 	VSR_MeshFree(cubeMesh);
 	VSR_MeshFree(teapotMesh);
 	VSR_ModelFree(renderer, cubeModel);
-	VSR_ModelFree(renderer, teaModel);
+
+	for(int i = 0; i < kTeaPotCount; i++)
+	{
+		VSR_ModelFree(renderer, teaModel[i]);
+	}
 
 	VSR_ShaderDestroy(renderer, vertShader);
 	VSR_ShaderDestroy(renderer, fragShader);

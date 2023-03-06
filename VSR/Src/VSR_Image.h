@@ -12,7 +12,6 @@ struct VSR_Image
 	SDL_Surface src;
 	VkImage image;
 	VkFormat format;
-	VkDeviceSize imageBufferSize;
 	Renderer_MemoryAlloc* alloc;
 };
 
@@ -27,6 +26,7 @@ struct VSR_ImageView
 VSR_Image*
 VSR_ImageCreate(
 	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
 	SDL_Surface* surface,
 	VkFormat format,
 	VkImageTiling tiling,

@@ -1,67 +1,12 @@
 #version 450
+layout(set = 0, binding = 0) uniform sampler2D textures[1];
 
 layout(location = 0) in  vec2 inUV;
 layout(location = 0) out vec4 outColor;
 
-
-vec3 convertHSV2RGB(vec3 HSV)
-{
-    float H = abs( HSV.x * 360 );
-    float S = abs( HSV.y * 100 );
-    float V = 100;
-
-    float s = S/100;
-    float v = V/100;
-    float C = s*v;
-    float X = C*(1-abs(mod(H/60.0, 2)-1));
-    float m = v-C;
-
-    float r,g,b;
-
-    if(H >= 0 && H < 60)
-    {
-        r = C;
-        g = X;
-        b = 0;
-    }
-    else if(H >= 60 && H < 120)
-    {
-        r = X;
-        g = C;
-        b = 0;
-    }
-    else if(H >= 120 && H < 180)
-    {
-        r = 0;
-        g = C;
-        b = X;
-    }
-    else if(H >= 180 && H < 240)
-    {
-        r = 0;
-        g = X;
-        b = C;
-    }
-    else if(H >= 240 && H < 300)
-    {
-        r = X;
-        g = 0;
-        b = C;
-    }
-    else
-    {
-        r = C;
-        g = 0;
-        b = X;
-    }
-
-    return vec3((r+m),(g+m),(b+m));
-}
-
 void main()
 {
-    vec3 HSV = vec3(inUV,1);
-    vec3 fragColour = convertHSV2RGB(HSV);
-    vec3 col = fragColour * gl_FragCoord.z;
-    outColor = vec4(col, 1.f);
+    vec2 newUV = vec2(inUV.x, 1 - inUV.y);
+
+    outColor = texture(textures[0], newUV);
 }

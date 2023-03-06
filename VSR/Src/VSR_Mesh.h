@@ -4,10 +4,10 @@
 VSR_Mesh*
 VSR_MeshCreate(
 	size_t vertexCount,
-	VSR_Vertex* vertices,
-	VSR_UV* UVs,
+	VSR_Vertex const* vertices,
+	VSR_UV const* UVs,
 	size_t indexCount,
-	VSR_Index* indices);
+	VSR_Index const* indices);
 
 void
 VSR_MeshFree(

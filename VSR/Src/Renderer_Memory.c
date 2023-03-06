@@ -210,8 +210,8 @@ Renderer_MemoryTransferToImage(
 
 	VkBufferImageCopy imageCopy;
 	imageCopy.bufferOffset = src->offset;
-	imageCopy.bufferImageHeight = 0;
-	imageCopy.bufferRowLength = 0;
+	imageCopy.bufferImageHeight =  dist->src.h;
+	imageCopy.bufferRowLength = dist->src.w;
 	imageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	imageCopy.imageSubresource.mipLevel = 0;
 	imageCopy.imageSubresource.baseArrayLayer = 0;
@@ -263,7 +263,6 @@ Renderer_MemoryAllocate(
 			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
 			alloc->prev = NULL;
 			alloc->next = NULL;
-			alloc->src = memory;
 			alloc->offset = 0;
 			alloc->size = size;
 
@@ -298,13 +297,16 @@ Renderer_MemoryAllocate(
 			{ // set their prev to alloc
 				runner->next->prev = alloc;
 			}
-			// join allloc to runner next
-			runner->next = alloc;
+
 
 			alloc->prev   = runner;
 			alloc->next   = runner->next;
 			alloc->offset = endOfRunnerOffset;
 			alloc->size   = size;
+
+			// join allloc to runner next
+			runner->next = alloc;
+
 			break;
 		}
 
@@ -321,6 +323,8 @@ Renderer_MemoryAllocate(
 
 	}
 
+	// remember where you came from
+	alloc->src = memory;
 	return alloc;
 }
 
@@ -355,7 +359,6 @@ Renderer_MemoryFree(
 void*
 Render_MemoryMapAlloc(
 	VSR_Renderer* renderer,
-	Renderer_Memory mem,
 	Renderer_MemoryAlloc* alloc)
 {
 	void* p = NULL;
@@ -364,7 +367,7 @@ Render_MemoryMapAlloc(
 
 	vkMapMemory(
 		renderer->subStructs->logicalDevice.device,
-		mem.memory,
+		alloc->src->memory,
 		alloc->offset,
 		alloc->size,
 		flags,
@@ -383,9 +386,9 @@ Render_MemoryMapAlloc(
 void
 Render_MemoryUnmapAlloc(
 	VSR_Renderer* renderer,
-	Renderer_Memory mem)
+	Renderer_MemoryAlloc* alloc)
 {
 	vkUnmapMemory(
 		renderer->subStructs->logicalDevice.device,
-		mem.memory);
+		alloc->src->memory);
 }

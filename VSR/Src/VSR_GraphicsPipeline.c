@@ -3,7 +3,8 @@
 #include <vulkan/vulkan.h>
 #include "VSR_Renderer.h"
 
-
+#include "VSR_Image.h"
+#include "Renderer_Memory.h"
 
 
 
@@ -22,7 +23,7 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	/// init defaults ///
 	/////////////////////
 
-	renderer->subStructs->texturePoolSize = 256;
+	renderer->subStructs->texturePoolSize = 1;
 
 	//////////////////////
 	/// populate infos ///
@@ -70,8 +71,11 @@ VSR_GraphicsPipelineCreate(
 	SDL_Surface sur = (SDL_Surface){0};
 	sur.w = 640;
 	sur.h = 480;
+
 	pipeline->subStructs->depthImage = VSR_ImageCreate(
-		renderer, &sur,
+		renderer,
+		pipeline,
+		&sur,
 		VK_FORMAT_D24_UNORM_S8_UINT,
 		VK_IMAGE_TILING_OPTIMAL,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -83,7 +87,6 @@ VSR_GraphicsPipelineCreate(
 		pipeline->subStructs->depthImage->format,
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
-
 
 	GraphicsPipeline_DescriptorPoolCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_RenderPassCreate(renderer, pipeline, createInfo);
