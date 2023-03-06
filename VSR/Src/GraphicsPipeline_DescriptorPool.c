@@ -24,7 +24,7 @@ GraphicsPipeline_DescriptorPoolPopulateCreateInfo(
 
 	textureBinding->binding = 0;
 	textureBinding->descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	textureBinding->descriptorCount = createInfo->texturePoolSize;
+	textureBinding->descriptorCount = renderer->subStructs->texturePoolSize;
 
 	globalLayoutCreateInfo->sType =
 		VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
