@@ -196,7 +196,48 @@ Renderer_MemoryTransfer(
 }
 
 
+int
+Renderer_MemoryTransferToImage(
+	VSR_Renderer* renderer,
+	const Renderer_MemoryAlloc* src,
+	VSR_Image* dist
+)
+{
+	VkCommandBuffer buff = GraphicsPipeline_CommandPoolAllocateTransferBuffer(
+		renderer,
+		renderer->subStructs->pipeline
+	);
 
+	VkBufferImageCopy imageCopy;
+	imageCopy.bufferOffset = src->offset;
+	imageCopy.bufferImageHeight = 0;
+	imageCopy.bufferRowLength = 0;
+	imageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	imageCopy.imageSubresource.mipLevel = 0;
+	imageCopy.imageSubresource.baseArrayLayer = 0;
+	imageCopy.imageSubresource.layerCount = 1;
+	imageCopy.imageOffset = (VkOffset3D){0,0,0};
+	imageCopy.imageExtent.width = dist->src.w;
+	imageCopy.imageExtent.height = dist->src.h;
+	imageCopy.imageExtent.depth = 1;
+
+	vkCmdCopyBufferToImage(
+		buff,
+		renderer->subStructs->USDStagingBuffer.buffer,
+		dist->image,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1,
+		&imageCopy
+	);
+
+	GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+		renderer,
+		renderer->subStructs->pipeline,
+		buff
+	);
+
+	return SDL_TRUE;
+}
 
 
 //==============================================================================
