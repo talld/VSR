@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 		teaModel[i] = VSR_ModelCreate(renderer, teapotMesh);
 	}
 	// set images
-	SDL_Surface* sur = SDL_LoadBMP("red.bmp");
+	SDL_Surface* sur = SDL_LoadBMP("wall.bmp");
 	VSR_SamplerCreate(renderer, pipeline, sur);
 
 	// Maths for MVP
