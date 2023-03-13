@@ -1,0 +1,3 @@
+[submodule "Examples/Externel/cglm"]
+	path = Examples/Externel/cglm
+	url = https://github.com/recp/cglm.git
