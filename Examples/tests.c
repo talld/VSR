@@ -26,7 +26,7 @@ void writeSPIRVToFile(const char* fNameIn, const char* fNameOut)
 	FILE* fOut = fopen(fNameOut, "w");
 
 	char buf[256];
-	sprintf(buf, "#define kShaderBytecodeSize %lu\n", fInSize);
+	sprintf(buf, "#define kShaderBytecodeSize %lu\n", (long unsigned int)fInSize);
 	fputs(buf, fOut);
 	fputs("const uint8_t kShaderByteCode[kShaderBytecodeSize] = {\n", fOut);
 

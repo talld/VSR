@@ -69,11 +69,8 @@ GraphicsPipeline_DescriptorPoolCreate(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create descriptor layout: %s",
+        VSR_Error("Failed to create descriptor layout: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 
@@ -98,11 +95,8 @@ GraphicsPipeline_DescriptorPoolCreate(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create descriptor pool: %s",
+        VSR_Error("Failed to create descriptor pool: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 

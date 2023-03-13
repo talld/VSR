@@ -59,11 +59,8 @@ GraphicsPipeline_CommandPoolCreate(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create command pool: %s",
+        VSR_Error("Failed to create command pool: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 
@@ -215,11 +212,8 @@ GraphicsPipeline_CommandBufferRecordStart(
 		VkResult err = vkBeginCommandBuffer(cBuff, &bufferBeginInfo);
 		if(err != VK_SUCCESS)
 		{
-			char errMsg[255];
-			sprintf(errMsg, "Failed to start command recording: %s",
+            VSR_Error("Failed to start command recording: %s",
 					VSR_VkErrorToString(err));
-
-			VSR_SetErr(errMsg);
 			goto FAIL;
 		}
 		vkCmdBeginRenderPass(cBuff, &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -266,12 +260,9 @@ GraphicsPipeline_CommandBufferRecordEnd(
 		VkResult err = vkEndCommandBuffer(cBuff);
 		if (err != VK_SUCCESS)
 		{
-			char errMsg[255];
-			sprintf(errMsg, "Failed to end command recording: %s",
+            VSR_Error("Failed to end command recording: %s",
 					VSR_VkErrorToString(err));
-
-			VSR_SetErr(errMsg);
-			goto FAIL;
+            goto FAIL;
 		}
 	}
 

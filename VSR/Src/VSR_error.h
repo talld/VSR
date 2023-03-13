@@ -2,6 +2,9 @@
 #define VSR_ERROR_H
 
 #include <vulkan/vulkan.h>
+#include <stdio.h>
+
+void VSR_Error(const char* fmt, ...);
 
 void VSR_SetErr(char* errMsg);
 

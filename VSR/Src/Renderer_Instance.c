@@ -1,6 +1,7 @@
 #include "Renderer_Instance.h"
 
 #include <SDL_vulkan.h>
+#include <stdio.h>
 
 #include "VSR_Renderer.h"
 #include "VSR_error.h"
@@ -165,7 +166,9 @@ VSR_InstanceCreate(
 	// list of availableProperties no longer required
 	SDL_free((void*)availableProperties);
 
-	VSR_LOG("REQUIRED EXTENSIONS: %lu, FOUND %lu", requiredExtensions, foundExtensions);
+	VSR_LOG("REQUIRED EXTENSIONS: %lu, FOUND %lu",
+            (unsigned long int) requiredExtensions,
+            (unsigned long int)foundExtensions);
 	if(foundExtensions != requiredExtensions)
 	{
 		VSR_SetErr("Could not find all required extensions");
@@ -226,7 +229,9 @@ VSR_InstanceCreate(
 	// list of availableProperties no longer required
 	SDL_free((void*)availableLayers);
 
-	VSR_LOG("REQUIRED LAYERS: %lu, FOUND %lu", requiredLayers, foundLayers);
+	VSR_LOG("REQUIRED LAYERS: %lu, FOUND %lu",
+            (unsigned long int)requiredLayers,
+            (unsigned long int)foundLayers);
 	if(foundLayers != requiredLayers)
 	{
 		VSR_SetErr("Could not find all required layers");

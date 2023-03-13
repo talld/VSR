@@ -55,11 +55,8 @@ GraphicsPipeline_FramebufferCreate(
 
 		if(err != VK_SUCCESS)
 		{
-			char errMsg[255];
-			sprintf(errMsg, "Failed to create framebuffer: %s",
+            VSR_Error("Failed to create framebuffer: %s",
 					VSR_VkErrorToString(err));
-
-			VSR_SetErr(errMsg);
 			goto FAIL;
 		}
 	}

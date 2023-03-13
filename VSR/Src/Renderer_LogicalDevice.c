@@ -107,11 +107,8 @@ VSR_LogicalDeviceCreate(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create logical device: %s",
+        VSR_Error("Failed to create logical device: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 

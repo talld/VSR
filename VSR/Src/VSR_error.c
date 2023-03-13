@@ -1,7 +1,20 @@
 #include "VSR_error.h"
 
-static char* sErrorMessage;
+#include <stdio.h>
 
+void VSR_Error(const char* fmt, ...)
+{
+    va_list myargs;
+    va_start(myargs, fmt);
+
+    char errMsg[255];
+    sprintf(errMsg, fmt,
+            myargs);
+
+    VSR_SetErr(errMsg);
+}
+
+static char* sErrorMessage;
 const char* VSR_getErr()
 {
 	return sErrorMessage;

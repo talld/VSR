@@ -24,11 +24,8 @@ VSR_SurfaceCreate(
 
 	if(err != SDL_TRUE)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create window surface: %s",
+        VSR_Error("Failed to create window surface: %s",
 				SDL_GetError());
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 

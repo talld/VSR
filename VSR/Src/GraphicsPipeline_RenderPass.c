@@ -136,12 +136,9 @@ GraphicsPipeline_RenderPassCreate(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to create renderpass: %s",
+		VSR_Error("Failed to create renderpass: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
-		goto FAIL;
+        goto FAIL;
 	}
 
 SUCCESS:

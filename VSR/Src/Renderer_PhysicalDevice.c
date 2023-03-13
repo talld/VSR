@@ -1,5 +1,7 @@
 #include "Renderer_PhysicalDevice.h"
 
+#include <stdio.h>
+
 #include "VSR_Renderer.h"
 #include "Renderer_DeviceQueues.h"
 #include "Renderer_Surface.h"
@@ -33,11 +35,8 @@ VSR_PhysicalDeviceSelect(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to enumerate physical devices: %s",
+        VSR_Error("Failed to enumerate physical devices: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 
@@ -50,11 +49,8 @@ VSR_PhysicalDeviceSelect(
 
 	if(err != VK_SUCCESS)
 	{
-		char errMsg[255];
-		sprintf(errMsg, "Failed to enumerate physical devices: %s",
+        VSR_Error("Failed to enumerate physical devices: %s",
 				VSR_VkErrorToString(err));
-
-		VSR_SetErr(errMsg);
 		goto FAIL;
 	}
 
