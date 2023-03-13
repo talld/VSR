@@ -61,19 +61,21 @@ VSR_ImageCreate(
 	size_t imageBufferSize;
 
 	// it's possible we've just passed the surface only fo wh
-	if(surface->pixels)
+	if(surface->format)
 	{
-		// make sure surface is in a usable format before getting size
-		surface = SDL_ConvertSurfaceFormat(
-			surface,
-			SDL_PIXELFORMAT_ABGR8888,
-			0);
-
 		imageBufferSize = surface->format->BytesPerPixel * surfaceExtent;
 	}
 	else
 	{
 		imageBufferSize = 4 * surfaceExtent;
+	}
+
+	if(surface->pixels)
+	{
+		surface = SDL_ConvertSurfaceFormat(
+			surface,
+			SDL_PIXELFORMAT_ABGR8888,
+			0);
 	}
 
 	///////////////////////////////

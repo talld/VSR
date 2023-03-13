@@ -4,6 +4,7 @@
 #include "VSR_Renderer.h"
 
 #include "VSR_Image.h"
+#include "VSR_Sampler.h"
 #include "Renderer_Memory.h"
 
 
@@ -23,7 +24,7 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	/// init defaults ///
 	/////////////////////
 
-	renderer->subStructs->texturePoolSize = 1;
+	renderer->subStructs->texturePoolSize = 256;
 
 	//////////////////////
 	/// populate infos ///
@@ -68,14 +69,22 @@ VSR_GraphicsPipelineCreate(
 	VSR_GraphicsPipeline* pipeline = SDL_calloc(1, sizeof(VSR_GraphicsPipeline));
 	pipeline->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_SubStructs));
 
-	SDL_Surface sur = (SDL_Surface){0};
-	sur.w = 640;
-	sur.h = 480;
+	// TODO: refactor this into a function that will gauge depthsize
+	//  and create a surface with those requirements ( keep alignment! )
+	SDL_Surface* depthSur = SDL_CreateRGBSurfaceWithFormat(
+		0,
+		renderer->subStructs->surface.surfaceWidth,
+		renderer->subStructs->surface.surfaceHeight,
+		24,
+		SDL_PIXELFORMAT_BGR888
+	);
+	depthSur->format->BytesPerPixel = 5;
+	depthSur->pixels = NULL;
 
 	pipeline->subStructs->depthImage = VSR_ImageCreate(
 		renderer,
 		pipeline,
-		&sur,
+		depthSur,
 		VK_FORMAT_D24_UNORM_S8_UINT,
 		VK_IMAGE_TILING_OPTIMAL,
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
@@ -93,6 +102,9 @@ VSR_GraphicsPipelineCreate(
 	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_CommandPoolCreate(renderer, pipeline, createInfo);
+
+	renderer->subStructs->pipeline = pipeline;
+	VSR_PopulateDefaultSamplers(renderer, pipeline);
 
 	return pipeline;
 }

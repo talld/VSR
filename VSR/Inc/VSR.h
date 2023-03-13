@@ -175,7 +175,9 @@ void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 
 void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
-VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, SDL_Surface* sur);
+void VSR_ModelSetSampler(VSR_Renderer* renderer, VSR_Model* model, VSR_Sampler* sampler);
+
+VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, size_t index, SDL_Surface* sur);
 
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 
