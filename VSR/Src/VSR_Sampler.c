@@ -1,10 +1,12 @@
 #include "VSR_Sampler.h"
 
 #include "VSR_Renderer.h"
+#include "fallbackTexture.h"
 
 void VSR_SamplerWriteToDescriptor(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
+	size_t index,
 	VSR_Sampler* sampler
 	)
 {
@@ -20,21 +22,20 @@ void VSR_SamplerWriteToDescriptor(
 	imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	imageWrite.dstSet = pipeline->subStructs->descriptorPool.globalSet;
 	imageWrite.dstBinding = 0;
-	imageWrite.dstArrayElement = 0;
+	imageWrite.dstArrayElement = index;
 	imageWrite.descriptorCount = 1;
 	imageWrite.pImageInfo = &imageInfo;
 
 	vkUpdateDescriptorSets(renderer->subStructs->logicalDevice.device,
 						   1, &imageWrite,
 						   0, NULL);
-
-
 }
 
 VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
+	size_t index,
 	SDL_Surface* sur)
 {
 	VSR_Sampler* sampler = SDL_malloc(sizeof(VSR_Sampler));
@@ -69,11 +70,12 @@ VSR_SamplerCreate(
 	///////////////////////////////////
 	/// populate and return sampler ///
 	///////////////////////////////////
+	sampler->index = index;
 	sampler->image = img;
 	sampler->view = imgView;
 	sampler->sampler = VSR_GetTextureSampler(renderer);
 
-	VSR_SamplerWriteToDescriptor(renderer,pipeline,sampler);
+	VSR_SamplerWriteToDescriptor(renderer,pipeline, index, sampler);
 
 	return sampler;
 }
@@ -92,9 +94,9 @@ VSR_GetTextureSampler(
 		textureSamplerInfo.flags = 0L;
 		textureSamplerInfo.magFilter = VK_FILTER_LINEAR;
 		textureSamplerInfo.minFilter = VK_FILTER_LINEAR;
-		textureSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		textureSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		textureSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		textureSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		textureSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		textureSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 		textureSamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
 
 		textureSamplerInfo.unnormalizedCoordinates = VK_FALSE;
@@ -113,4 +115,25 @@ VSR_GetTextureSampler(
 	}
 
 	return sTextureSampler;
+}
+
+void
+VSR_PopulateDefaultSamplers(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline)
+{
+	SDL_Surface* sur = SDL_CreateRGBSurfaceWithFormat(
+		0,
+		kFallBackTextureWidth,
+		kFallBackTextureHeight,
+		kFallBackTextureDepth,
+		kFallBackTextureFormat);
+	sur->pixels = kFallBackTexturePixels;
+
+	VSR_Sampler* sampler = VSR_SamplerCreate(renderer, pipeline, 0, sur);
+
+	for(size_t i = 0; i < renderer->subStructs->texturePoolSize; i++)
+	{
+		VSR_SamplerWriteToDescriptor(renderer,pipeline, i, sampler);
+	}
 }

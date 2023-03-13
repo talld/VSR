@@ -25,6 +25,7 @@ typedef struct Renderer_PushConstantsVertex Renderer_PushConstantsVertex;
 struct Renderer_PushConstantsVertex
 {
 	VSR_Mat4 MVP;
+	uint16_t imageIndex;
 };
 
 typedef struct Renderer_PushConstantsFragment Renderer_PushConstantsFragment;

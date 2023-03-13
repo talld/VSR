@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include <VSR_error.h>
 #include <VSR_Model.h>
+#include <VSR_Sampler.h>
 
 
 
@@ -476,7 +477,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 }
 
 int
-VSR_RenderModels(
+	VSR_RenderModels(
 	VSR_Renderer* renderer,
 	VSR_Model* model,
 	VSR_Mat4* transforms,
@@ -514,6 +515,15 @@ VSR_RenderModels(
 			pushConstantsVertex.MVP.m5 = 1;
 			pushConstantsVertex.MVP.m10 = 1;
 			pushConstantsVertex.MVP.m15 = 1;
+		}
+
+		if(model->sampler)
+		{
+			pushConstantsVertex.imageIndex = model->sampler->index;
+		}
+		else
+		{
+			pushConstantsVertex.imageIndex = 0;
 		}
 
 		vkCmdPushConstants(
