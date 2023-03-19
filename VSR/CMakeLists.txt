@@ -59,10 +59,10 @@ target_link_options(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${VSR_INC})
 
-find_package(Vulkan REQUIRED FATAL_ERROR)
+find_package(Vulkan REQUIRED)
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
 target_include_directories(${PROJECT_NAME} PRIVATE ${VULKAN_INCLUDE_DIRS})
 
-find_package(SDL2 REQUIRED FATAL_ERROR)
+find_package(SDL2 REQUIRED)
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
