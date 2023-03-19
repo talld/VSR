@@ -1,8 +1,10 @@
 #ifndef VSR_DEVICEQUEUES_H
 #define VSR_DEVICEQUEUES_H
 
-#include <vulkan/vulkan.h>
+#include <VSR.h>
 
+#include <vulkan/vulkan.h>
+#include <SDL2/SDL.h>
 
 ////////////////////////////////
 /// Renderer pre-declaration ///

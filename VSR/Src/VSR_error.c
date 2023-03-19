@@ -1,6 +1,7 @@
 #include "VSR_error.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 
 void VSR_Error(const char* fmt, ...)
 {

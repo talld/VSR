@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_C_STANDARD 99)
 
 set(VSR_INC
-        Src)
+        Inc)
 
 set(VSR_PCH
         Inc/VSR.h)
@@ -57,7 +57,6 @@ target_link_options(${PROJECT_NAME} PRIVATE
         -fsanitize=leak      -static-liblsan
         )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${VSR_PCH})
 target_include_directories(${PROJECT_NAME} PRIVATE ${VSR_INC})
 
 find_package(Vulkan REQUIRED FATAL_ERROR)

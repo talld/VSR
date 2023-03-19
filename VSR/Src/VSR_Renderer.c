@@ -1,14 +1,5 @@
 #include "VSR_Renderer.h"
 
-#include <vulkan/vulkan.h>
-#include <VSR_error.h>
-#include <VSR_Model.h>
-#include <VSR_Sampler.h>
-
-
-
-
-
 //==============================================================================
 // Renderer_CreateSyncObjects
 //------------------------------------------------------------------------------

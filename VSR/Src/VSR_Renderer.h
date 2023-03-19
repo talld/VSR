@@ -1,8 +1,10 @@
 #ifndef VSR_RENDERER_H
 #define VSR_RENDERER_H
 
+#include <VSR.h>
+
 #include <vulkan/vulkan.h>
-#include "VSR_GraphicsPipeline.h"
+#include <SDL2/SDL.h>
 
 #include "Renderer_Instance.h"
 #include "Renderer_Surface.h"
@@ -11,6 +13,11 @@
 #include "Renderer_DeviceQueues.h"
 #include "Renderer_Swapchain.h"
 #include "Renderer_Memory.h"
+
+#include "VSR_GraphicsPipeline.h"
+#include "VSR_Model.h"
+#include "VSR_Mesh.h"
+#include "VSR_Sampler.h"
 
 
 typedef enum Renderer_ResourceType Renderer_ResourceType;

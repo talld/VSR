@@ -1,7 +1,10 @@
 #ifndef RENDERER_MEMORY_H
 #define RENDERER_MEMORY_H
 
+#include <VSR.h>
+
 #include <vulkan/vulkan.h>
+#include <SDL2/SDL.h>
 
 ////////////////////////////////
 /// Renderer pre-declaration ///

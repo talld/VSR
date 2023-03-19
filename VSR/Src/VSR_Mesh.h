@@ -1,6 +1,12 @@
 #ifndef VSR_MODEL_H
 #define VSR_MODEL_H
 
+#include <VSR.h>
+
+#include <vulkan/vulkan.h>
+#include <SDL2/SDL.h>
+
+
 VSR_Mesh*
 VSR_MeshCreate(
 	size_t vertexCount,

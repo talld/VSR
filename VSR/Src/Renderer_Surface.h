@@ -1,7 +1,10 @@
 #ifndef VSR_SURFACE_H
 #define VSR_SURFACE_H
 
+#include <VSR.h>
+
 #include <vulkan/vulkan.h>
+#include <SDL2/SDL.h>
 
 
 ////////////////////////////////
