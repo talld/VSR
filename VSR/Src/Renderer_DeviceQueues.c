@@ -23,12 +23,12 @@ SDL_bool VSR_DeviceQueuesPopulateCreateInfo(
 	// 1 transfer queue
 	// 2 graphics queue
 	// 3 compute queue
-	// managing queuePriority individually may be to complex, fix it for now
+	// managing queuePriority individually may be too complex, fix it for now
 	static const float globalQueuePriority[3] = {1.0f,1.0f,1.0f};
 
-	deviceQueuesCreateInfo->transferQueueCreateInfoIndex = 2;
-	deviceQueuesCreateInfo->computeQueueCreateInfoIndex = 1;
-	deviceQueuesCreateInfo->graphicsQueueCreateInfoIndex = 0;
+    deviceQueuesCreateInfo->graphicsQueueCreateInfoIndex = 0;
+    deviceQueuesCreateInfo->computeQueueCreateInfoIndex = 1;
+    deviceQueuesCreateInfo->transferQueueCreateInfoIndex = 2;
 
 
 	VkDeviceQueueCreateInfo* graphicsQueueCreateInfo =
