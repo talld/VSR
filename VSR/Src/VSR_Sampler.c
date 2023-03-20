@@ -20,7 +20,7 @@ void VSR_SamplerWriteToDescriptor(
 
 	imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	imageWrite.dstSet = pipeline->subStructs->descriptorPool.globalSet;
+	imageWrite.dstSet = renderer->subStructs->descriptorPool.globalSet;
 	imageWrite.dstBinding = 0;
 	imageWrite.dstArrayElement = index;
 	imageWrite.descriptorCount = 1;

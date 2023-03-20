@@ -173,9 +173,8 @@ Renderer_MemoryTransfer(
 	VkDeviceSize srcOffset,
 	VkDeviceSize len)
 {
-	VkCommandBuffer buff = GraphicsPipeline_CommandPoolAllocateTransferBuffer(
-		renderer,
-		renderer->subStructs->pipeline
+	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
+		renderer
 	);
 
 	VkBufferCopy copyRegion = (VkBufferCopy){0};
@@ -185,9 +184,8 @@ Renderer_MemoryTransfer(
 
 	vkCmdCopyBuffer(buff, src.buffer, dst.buffer, 1, &copyRegion);
 
-	GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		renderer->subStructs->pipeline,
 		buff
 	);
 
@@ -203,9 +201,8 @@ Renderer_MemoryTransferToImage(
 	VSR_Image* dist
 )
 {
-	VkCommandBuffer buff = GraphicsPipeline_CommandPoolAllocateTransferBuffer(
-		renderer,
-		renderer->subStructs->pipeline
+	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
+		renderer
 	);
 
 	VkBufferImageCopy imageCopy;
@@ -230,9 +227,8 @@ Renderer_MemoryTransferToImage(
 		&imageCopy
 	);
 
-	GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		renderer->subStructs->pipeline,
 		buff
 	);
 

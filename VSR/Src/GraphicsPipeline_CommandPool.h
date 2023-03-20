@@ -19,14 +19,14 @@ typedef struct GraphicsPipeline_CreateInfoSubStructs GraphicsPipeline_CreateInfo
 struct GraphicsPipeline_CreateInfoSubStructs;
 
 
-typedef struct GraphicsPipeline_CommandPoolCreateInfo GraphicsPipeline_CommandPoolCreateInfo;
-struct GraphicsPipeline_CommandPoolCreateInfo
+typedef struct Renderer_CommandPoolCreateInfo Renderer_CommandPoolCreateInfo;
+struct Renderer_CommandPoolCreateInfo
 {
 	VkCommandPoolCreateInfo commandPoolCreateInfo;
 };
 
-typedef struct GraphicsPipeline_CommandPool GraphicsPipeline_CommandPool;
-struct GraphicsPipeline_CommandPool
+typedef struct Renderer_CommandPool Renderer_CommandPool;
+struct Renderer_CommandPool
 {
 	VkCommandPool graphicsPool;
 	VkCommandPool transferPool;
@@ -34,50 +34,42 @@ struct GraphicsPipeline_CommandPool
 
 
 SDL_bool
-GraphicsPipeline_CommandPoolPopulateCreateInfo(
+Renderer_CommandPoolPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo);
+	VSR_RendererCreateInfo* createInfo);
 
 
 SDL_bool
-GraphicsPipeline_CommandPoolCreate(
+Renderer_CommandPoolCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VSR_GraphicsPipelineCreateInfo* createInfo);
+	VSR_RendererCreateInfo* createInfo);
 
 void
-GraphicsPipeline_CommandPoolDestroy(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline
-);
+Renderer_CommandPoolDestroy(
+	VSR_Renderer* renderer);
 
 VkCommandBuffer
-GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline);
+Renderer_CommandPoolAllocateGraphicsBuffer(
+	VSR_Renderer* renderer);
 
 VkCommandBuffer
-GraphicsPipeline_CommandPoolAllocateTransferBuffer(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline);
+Renderer_CommandPoolAllocateTransferBuffer(
+	VSR_Renderer* renderer);
 
 void
-GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+Renderer_CommandPoolSubmitTransferBuffer(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VkCommandBuffer buff
-	);
+	VkCommandBuffer buff);
 
 int
-GraphicsPipeline_CommandBufferRecordStart(
+Renderer_CommandBufferRecordStart(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
-	VkCommandBuffer cBuff
-	);
+	VkCommandBuffer cBuff);
 
 
 int
-GraphicsPipeline_CommandBufferRecordEnd(
+Renderer_CommandBufferRecordEnd(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer cBuff);

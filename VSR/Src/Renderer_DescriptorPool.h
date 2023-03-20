@@ -19,16 +19,16 @@ typedef struct GraphicsPipeline_CreateInfoSubStructs GraphicsPipeline_CreateInfo
 struct GraphicsPipeline_CreateInfoSubStructs;
 
 
-typedef struct GraphicsPipeline_DescriptorPoolCreateInfo GraphicsPipeline_DescriptorPoolCreateInfo;
-struct GraphicsPipeline_DescriptorPoolCreateInfo
+typedef struct Renderer_DescriptorPoolCreateInfo Renderer_DescriptorPoolCreateInfo;
+struct Renderer_DescriptorPoolCreateInfo
 {
 
 	VkDescriptorSetLayoutBinding  textureBinding;
 	VkDescriptorSetLayoutCreateInfo globalLayout;
 };
 
-typedef struct GraphicsPipeline_DescriptorPool GraphicsPipeline_DescriptorPool;
-struct GraphicsPipeline_DescriptorPool
+typedef struct Renderer_DescriptorPool Renderer_DescriptorPool;
+struct Renderer_DescriptorPool
 {
 	VkDescriptorSetLayout  globalLayout;
 	VkDescriptorPool  globalPool;
@@ -37,22 +37,19 @@ struct GraphicsPipeline_DescriptorPool
 
 
 SDL_bool
-GraphicsPipeline_DescriptorPoolPopulateCreateInfo(
+Renderer_DescriptorPoolPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo);
+	VSR_RendererCreateInfo* createInfo);
 
 
 SDL_bool
-GraphicsPipeline_DescriptorPoolCreate(
+Renderer_DescriptorPoolCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VSR_GraphicsPipelineCreateInfo* createInfo);
+	VSR_RendererCreateInfo* createInfo);
 
 void
-GraphicsPipeline_DescriptorPoolDestroy(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline
-);
+Renderer_DescriptorPoolDestroy(
+	VSR_Renderer* renderer);
 
 
 #endif //VSR_DESCRIPTOR_POOL_H

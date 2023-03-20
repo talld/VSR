@@ -173,9 +173,8 @@ VSR_ImageTransition(
 	VkImageLayout from,
 	VkImageLayout to)
 {
-	VkCommandBuffer buff = GraphicsPipeline_CommandPoolAllocateTransferBuffer(
-		renderer,
-		pipeline);
+	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
+		renderer);
 
 	VkImageMemoryBarrier imageBarrier = (VkImageMemoryBarrier){0};
 	imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -220,7 +219,7 @@ VSR_ImageTransition(
 		1, &imageBarrier
 	);
 
-	GraphicsPipeline_CommandPoolSubmitTransferBuffer(renderer,pipeline,buff);
+	Renderer_CommandPoolSubmitTransferBuffer(renderer, buff);
 }
 
 

@@ -131,7 +131,11 @@ enum VSR_CreateInfoFlags
 const char* VSR_getErr();
 
 // Renderer
-VSR_RendererCreateInfo* VSR_RendererGenerateCreateInfo(SDL_Window* window, VSR_CreateInfoFlags flags);
+VSR_RendererCreateInfo* VSR_RendererGenerateCreateInfo(SDL_Window* window);
+
+VSR_RendererCreateInfo* VSR_RendererRequestTextureCount(VSR_RendererCreateInfo* createInfo, size_t count);
+
+VSR_RendererCreateInfo* VSR_RendererRequestDescriptor(VSR_RendererCreateInfo* createInfo, size_t index, size_t size);
 
 void VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo);
 

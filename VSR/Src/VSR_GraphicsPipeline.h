@@ -5,7 +5,7 @@
 
 #include "VSR_Shader.h"
 #include "VSR_Image.h"
-#include "GraphicsPipeline_DescriptorPool.h"
+#include "Renderer_DescriptorPool.h"
 #include "GraphicsPipeline_RenderPass.h"
 #include "GraphicsPipeline_GraphicsPipeline.h"
 #include "GraphicsPipeline_Framebuffer.h"
@@ -14,18 +14,14 @@
 typedef struct GraphicsPipeline_CreateInfoSubStructs GraphicsPipeline_CreateInfoSubStructs;
 struct GraphicsPipeline_CreateInfoSubStructs
 {
-	GraphicsPipeline_RenderPassCreateInfo      renderPassCreateInfo;
+	GraphicsPipeline_RenderPassCreateInfo       renderPassCreateInfo;
+	GraphicsPipeline_FramebufferCreateInfo      framebufferCreateInfo;
 	GraphicsPipeline_GraphicsPipelineCreateInfo graphicsPipelineCreateInfo;
-	GraphicsPipeline_FramebufferCreateInfo     framebufferCreateInfo;
-	GraphicsPipeline_CommandPoolCreateInfo     commandPoolCreateInfo;
-	GraphicsPipeline_DescriptorPoolCreateInfo  descriptorPoolCreateInfo;
 };
 
 typedef struct VSR_GraphicsPipelineCreateInfo VSR_GraphicsPipelineCreateInfo;
 struct VSR_GraphicsPipelineCreateInfo
 {
-
-
 	VSR_Shader*                             vertexShader;
 	VSR_Shader*                             fragmentShader;
 	GraphicsPipeline_CreateInfoSubStructs*  subStructs;
@@ -37,11 +33,9 @@ struct GraphicsPipeline_SubStructs
 	VSR_Image*                         depthImage;
 	VSR_ImageView                      depthView;
 
-	GraphicsPipeline_DescriptorPool    descriptorPool;
 	GraphicsPipeline_RenderPass        renderPass;
-	GraphicsPipeline_GraphicsPipeline  graphicPipeline;
 	GraphicsPipeline_Framebuffer       framebuffer;
-	GraphicsPipeline_CommandPool       commandPool;
+	GraphicsPipeline_GraphicsPipeline  graphicPipeline;
 };
 
 typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;

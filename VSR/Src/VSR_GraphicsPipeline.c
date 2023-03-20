@@ -24,17 +24,14 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	/// init defaults ///
 	/////////////////////
 
-	renderer->subStructs->texturePoolSize = 256;
-
 	//////////////////////
 	/// populate infos ///
 	//////////////////////
 
-	GraphicsPipeline_DescriptorPoolPopulateCreateInfo(renderer, createInfo);
+
 	GraphicsPipeline_RenderPassPopulateCreateInfo(renderer, createInfo);
 	GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(renderer, createInfo);
 	GraphicsPipeline_FramebufferPopulateCreateInfo(renderer, createInfo);
-	GraphicsPipeline_CommandPoolPopulateCreateInfo(renderer, createInfo);
 
 	return createInfo;
 }
@@ -96,11 +93,9 @@ VSR_GraphicsPipelineCreate(
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
 
-	GraphicsPipeline_DescriptorPoolCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_RenderPassCreate(renderer, pipeline, createInfo);
-	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo);
-	GraphicsPipeline_CommandPoolCreate(renderer, pipeline, createInfo);
+	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 
 	renderer->subStructs->pipeline = pipeline;
 	VSR_PopulateDefaultSamplers(renderer, pipeline);
@@ -127,11 +122,9 @@ VSR_GraphicsPipelineFree(
 
 	vkDeviceWaitIdle(renderer->subStructs->logicalDevice.device);
 
-	GraphicsPipeline_CommandPoolDestroy(renderer, pipeline);
 	GraphicsPipeline_FramebufferDestroy(renderer, pipeline);
 	GraphicsPipeline_GraphicPipelineDestroy(renderer, pipeline);
 	GraphicsPipeline_RenderPassDestroy(renderer, pipeline);
-	GraphicsPipeline_DescriptorPoolDestroy(renderer, pipeline);
 
 	SDL_free(pipeline->subStructs);
 	SDL_free(pipeline);

@@ -11,9 +11,9 @@
 // VSR_SwapchainPopulateCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-GraphicsPipeline_CommandPoolPopulateCreateInfo(
+Renderer_CommandPoolPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo)
+	VSR_RendererCreateInfo* createInfo)
 {
 	return SDL_TRUE;
 }
@@ -26,10 +26,9 @@ GraphicsPipeline_CommandPoolPopulateCreateInfo(
 // VSR_SwapchainPopulateCreateInfo
 //------------------------------------------------------------------------------
 SDL_bool
-GraphicsPipeline_CommandPoolCreate(
+Renderer_CommandPoolCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VSR_GraphicsPipelineCreateInfo* createInfo)
+	VSR_RendererCreateInfo* createInfo)
 {
 	/////////////////////
 	/// command pools ///
@@ -48,13 +47,13 @@ GraphicsPipeline_CommandPoolCreate(
 	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
 						poolCreateInfo,
 						VSR_GetAllocator(),
-						&pipeline->subStructs->commandPool.graphicsPool);
+						&renderer->subStructs->commandPool.graphicsPool);
 
 	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.QFamilyIndexes[kTransferQueueIndex];
 	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
 							  poolCreateInfo,
 							  VSR_GetAllocator(),
-							  &pipeline->subStructs->commandPool.transferPool);
+							  &renderer->subStructs->commandPool.transferPool);
 
 
 	if(err != VK_SUCCESS)
@@ -77,9 +76,8 @@ GraphicsPipeline_CommandPoolCreate(
 }
 
 VkCommandBuffer
-GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline)
+Renderer_CommandPoolAllocateGraphicsBuffer(
+	VSR_Renderer* renderer)
 {
 	///////////////////////
 	/// command buffers ///
@@ -89,7 +87,7 @@ GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(
 	VkCommandBufferAllocateInfo commandBufInfo = (VkCommandBufferAllocateInfo){0};
 	commandBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	commandBufInfo.pNext = NULL;
-	commandBufInfo.commandPool = pipeline->subStructs->commandPool.graphicsPool;
+	commandBufInfo.commandPool = renderer->subStructs->commandPool.graphicsPool;
 	commandBufInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufInfo.commandBufferCount = 1;
 
@@ -106,16 +104,15 @@ GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(
 }
 
 VkCommandBuffer
-GraphicsPipeline_CommandPoolAllocateTransferBuffer(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline)
+Renderer_CommandPoolAllocateTransferBuffer(
+	VSR_Renderer* renderer)
 {
 	VkCommandBuffer buff;
 
 	VkCommandBufferAllocateInfo allocInfo = (VkCommandBufferAllocateInfo){0};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = pipeline->subStructs->commandPool.transferPool;
+	allocInfo.commandPool = renderer->subStructs->commandPool.transferPool;
 	allocInfo.commandBufferCount = 1;
 
 	vkAllocateCommandBuffers(
@@ -133,9 +130,8 @@ GraphicsPipeline_CommandPoolAllocateTransferBuffer(
 }
 
 void
-GraphicsPipeline_CommandPoolSubmitTransferBuffer(
+Renderer_CommandPoolSubmitTransferBuffer(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer buff)
 {
 	vkEndCommandBuffer(buff);
@@ -177,7 +173,7 @@ GraphicsPipeline_CommandPoolSubmitTransferBuffer(
 }
 
 int
-GraphicsPipeline_CommandBufferRecordStart(
+Renderer_CommandBufferRecordStart(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer cBuff)
@@ -227,7 +223,7 @@ GraphicsPipeline_CommandBufferRecordStart(
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			pipeline->subStructs->graphicPipeline
 			.pipelineLayout,0,
-			1, &pipeline->subStructs->descriptorPool.globalSet,
+			1, &renderer->subStructs->descriptorPool.globalSet,
 			0 ,NULL
 		);
 
@@ -245,7 +241,7 @@ GraphicsPipeline_CommandBufferRecordStart(
 }
 
 int
-GraphicsPipeline_CommandBufferRecordEnd(
+Renderer_CommandBufferRecordEnd(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer cBuff)
@@ -281,16 +277,14 @@ GraphicsPipeline_CommandBufferRecordEnd(
 // VSR_SwapchainPopulateCreateInfo
 //------------------------------------------------------------------------------
 void
-GraphicsPipeline_CommandPoolDestroy(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline
-)
+Renderer_CommandPoolDestroy(
+	VSR_Renderer* renderer)
 {
 	vkDestroyCommandPool(renderer->subStructs->logicalDevice.device,
-						 pipeline->subStructs->commandPool.graphicsPool,
+						 renderer->subStructs->commandPool.graphicsPool,
 						 VSR_GetAllocator());
 
 	vkDestroyCommandPool(renderer->subStructs->logicalDevice.device,
-						 pipeline->subStructs->commandPool.transferPool,
+	                     renderer->subStructs->commandPool.transferPool,
 						 VSR_GetAllocator());
 }

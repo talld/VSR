@@ -46,7 +46,6 @@ GraphicsPipeline_RenderPassCreate(
 void
 GraphicsPipeline_RenderPassDestroy(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline
-	);
+	VSR_GraphicsPipeline* pipeline);
 
 #endif //VSR_RENDERPASS_H

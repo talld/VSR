@@ -60,9 +60,14 @@ struct Renderer_CreateInfoSubStructs
 	Renderer_LogicalDeviceCreateInfo    logicalDeviceCreateInfo;
 	Renderer_DeviceQueuesCreateInfo     deviceQueuesCreateInfo;
 	Renderer_SwapchainCreateInfo        swapchainCreateInfo;
+
+
+
+	Renderer_CommandPoolCreateInfo     commandPoolCreateInfo;
+	Renderer_DescriptorPoolCreateInfo  descriptorPoolCreateInfo;
 };
 
-
+enum {kMaxSupportedStorageBuffers = 4};
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo
 {
@@ -70,6 +75,10 @@ struct VSR_RendererCreateInfo
 
 	SDL_bool   geometryShaderRequested;
 	SDL_bool   tessellationShaderRequested;
+
+	size_t texturePoolSize;
+
+	size_t extraDescriptorSizes[kMaxSupportedStorageBuffers];
 
 	Renderer_CreateInfoSubStructs*  subStructs;
 };
@@ -84,6 +93,9 @@ struct Renderer_SubStructs
 	Renderer_DeviceQueues   deviceQueues;
 	Renderer_LogicalDevice  logicalDevice;
 	Renderer_Swapchain      swapchain;
+
+	Renderer_DescriptorPool    descriptorPool;
+	Renderer_CommandPool       commandPool;
 
 	/// pipeline ( subject to change at runtime! ) ///
 	VSR_GraphicsPipeline*   pipeline;

@@ -1,13 +1,13 @@
-#include "GraphicsPipeline_DescriptorPool.h"
+#include "Renderer_DescriptorPool.h"
 
 #include "VSR_Renderer.h"
 #include "VSR_GraphicsPipeline.h"
 #include "VSR_error.h"
 
 SDL_bool
-GraphicsPipeline_DescriptorPoolPopulateCreateInfo(
+Renderer_DescriptorPoolPopulateCreateInfo(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo)
+	VSR_RendererCreateInfo* createInfo)
 {
 	///////////////
 	/// aliases ///
@@ -42,10 +42,9 @@ GraphicsPipeline_DescriptorPoolPopulateCreateInfo(
 
 
 SDL_bool
-GraphicsPipeline_DescriptorPoolCreate(
+Renderer_DescriptorPoolCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VSR_GraphicsPipelineCreateInfo* createInfo)
+	VSR_RendererCreateInfo * createInfo)
 {
 	///////////////
 	/// aliases ///
@@ -54,7 +53,7 @@ GraphicsPipeline_DescriptorPoolCreate(
 		&createInfo->subStructs->descriptorPoolCreateInfo.globalLayout;
 
 	VkDescriptorSetLayout* globalLayout =
-		&pipeline->subStructs->descriptorPool.globalLayout;
+		&renderer->subStructs->descriptorPool.globalLayout;
 
 	//////////////////////
 	/// create layouts ///
@@ -91,7 +90,7 @@ GraphicsPipeline_DescriptorPoolCreate(
 		renderer->subStructs->logicalDevice.device,
 		&poolCreateInfo,
 		VSR_GetAllocator(),
-		&pipeline->subStructs->descriptorPool.globalPool);
+		&renderer->subStructs->descriptorPool.globalPool);
 
 	if(err != VK_SUCCESS)
 	{
@@ -103,14 +102,14 @@ GraphicsPipeline_DescriptorPoolCreate(
 	VkDescriptorSetAllocateInfo allocateInfo;
 	allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocateInfo.pNext = NULL;
-	allocateInfo.descriptorPool = pipeline->subStructs->descriptorPool.globalPool;
+	allocateInfo.descriptorPool = renderer->subStructs->descriptorPool.globalPool;
 	allocateInfo.pSetLayouts = globalLayout;
 	allocateInfo.descriptorSetCount = 1;
 
 	err = vkAllocateDescriptorSets(
 		renderer->subStructs->logicalDevice.device,
 		&allocateInfo,
-		&pipeline->subStructs->descriptorPool.globalSet
+		&renderer->subStructs->descriptorPool.globalSet
 	);
 
 	if(err != VK_SUCCESS)
@@ -127,20 +126,19 @@ GraphicsPipeline_DescriptorPoolCreate(
 }
 
 void
-GraphicsPipeline_DescriptorPoolDestroy(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline)
+Renderer_DescriptorPoolDestroy(
+	VSR_Renderer* renderer)
 {
 
 	vkDestroyDescriptorPool(
 		renderer->subStructs->logicalDevice.device,
-		pipeline->subStructs->descriptorPool.globalPool,
+		renderer->subStructs->descriptorPool.globalPool,
 		VSR_GetAllocator()
 	);
 
 	vkDestroyDescriptorSetLayout(
 		renderer->subStructs->logicalDevice.device,
-		pipeline->subStructs->descriptorPool.globalLayout,
+		renderer->subStructs->descriptorPool.globalLayout,
 		VSR_GetAllocator()
 	);
 

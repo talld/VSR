@@ -298,7 +298,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 
 	enum {kLayoutCount = 1};
 	VkDescriptorSetLayout layouts[kLayoutCount] = {
-		pipeline->subStructs->descriptorPool.globalLayout
+		renderer->subStructs->descriptorPool.globalLayout
 	};
 
 	layoutCreateInfo->setLayoutCount = kLayoutCount;

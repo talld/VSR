@@ -175,7 +175,24 @@ Renderer_FreeBuffers(
 }
 
 
+VSR_RendererCreateInfo*
+VSR_RendererRequestTextureCount(
+	VSR_RendererCreateInfo* createInfo,
+	size_t count)
+{
+	createInfo->texturePoolSize = count;
+	return createInfo;
+}
 
+VSR_RendererCreateInfo*
+VSR_RendererRequestDescriptor(
+	VSR_RendererCreateInfo* createInfo,
+	size_t index,
+	size_t size)
+{
+	createInfo->extraDescriptorSizes[index] = size;
+	return createInfo;
+}
 
 
 //==============================================================================
@@ -183,8 +200,7 @@ Renderer_FreeBuffers(
 //------------------------------------------------------------------------------
 VSR_RendererCreateInfo*
 VSR_RendererGenerateCreateInfo(
-	SDL_Window* window,
-	VSR_CreateInfoFlags flags)
+	SDL_Window* window)
 {
 	// TODO: at a later stage function call for vulkan should be gotten by
 	// pulling functions pointers from these functions
@@ -206,18 +222,13 @@ VSR_RendererGenerateCreateInfo(
 
 	createInfo->SDLWindow = window;
 
-	////////////////////////////
-	/// Process passed flags ///
-	////////////////////////////
-	if(flags & VSR_CREATE_INFO_GEOMETRY_SHADER)
-	{
-		createInfo->geometryShaderRequested = SDL_TRUE;
-	}
-	
-	if(flags & VSR_CREATE_INFO_TESSELATION_SHADER)
-	{
-		createInfo->tessellationShaderRequested = SDL_TRUE;
-	}
+	//////////////////////
+	/// setup defaults ///
+	//////////////////////
+	createInfo->texturePoolSize = 256;
+	createInfo->geometryShaderRequested = SDL_FALSE;
+	createInfo->tessellationShaderRequested = SDL_FALSE;
+
 
 	////////////////////////////////////////////////////////////////////////////
 	/// populate vk create info structs as much as can be done at the moment ///
@@ -227,7 +238,7 @@ VSR_RendererGenerateCreateInfo(
     VSR_LogicalDevicePopulateCreateInfo(createInfo, createInfo->subStructs);
 	VSR_SwapchainPopulateCreateInfo(createInfo, createInfo->subStructs);
 
-	SUCCESS:
+SUCCESS:
 	{
 		return createInfo;
 	}
@@ -285,6 +296,9 @@ VSR_RendererCreate(
 	/// pass info to new structure ///
 	//////////////////////////////////
 	renderer->SDLWindow = rendererCreateInfo->SDLWindow;
+
+	// TODO: check
+	renderer->subStructs->texturePoolSize = rendererCreateInfo->texturePoolSize;
 	
 	VSR_InstanceCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_SurfaceCreate(renderer, rendererCreateInfo->subStructs);
@@ -298,6 +312,14 @@ VSR_RendererCreate(
 	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
 
 	Renderer_CreateSyncObjects(renderer);
+
+	// stage 2
+	Renderer_DescriptorPoolPopulateCreateInfo(renderer, rendererCreateInfo);
+	Renderer_CommandPoolPopulateCreateInfo(renderer, rendererCreateInfo);
+
+	Renderer_DescriptorPoolCreate(renderer, rendererCreateInfo);
+	Renderer_CommandPoolCreate(renderer, rendererCreateInfo);
+
 
 	return renderer;
 }
@@ -322,6 +344,9 @@ VSR_RendererFree(
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
+	Renderer_CommandPoolDestroy(renderer);
+	Renderer_DescriptorPoolDestroy(renderer);
+
 	Renderer_DestroySyncObjects(renderer);
 	Renderer_FreeBuffers(renderer);
 
@@ -392,11 +417,11 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 						  VK_NULL_HANDLE,
 						  &renderer->subStructs->imageIndex);
 
-	cBuff = GraphicsPipeline_CommandPoolAllocateGraphicsBuffer(renderer,
-															   renderer->subStructs->pipeline);
+	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
+		renderer);
 
 	/// step 1 command record
-	GraphicsPipeline_CommandBufferRecordStart(
+	Renderer_CommandBufferRecordStart(
 		renderer,
 		renderer->subStructs->pipeline,
 		cBuff);
@@ -423,7 +448,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 
 
 	/// step2 command record
-	GraphicsPipeline_CommandBufferRecordEnd(
+	Renderer_CommandBufferRecordEnd(
 		renderer,
 		renderer->subStructs->pipeline,
 		cBuff);
