@@ -11,7 +11,7 @@ void writeSPIRVToFile(const char* fNameIn, const char* fNameOut)
 	////////////////////////////////////
 	/// Dump spir-v shader to buffer ///
 	////////////////////////////////////
-	FILE* fIn = fopen(fNameIn, "r");
+	FILE* fIn = fopen(fNameIn, "rb");
 	fseek(fIn, 0, SEEK_END);
 	size_t fInSize = ftell(fIn);
 	fseek(fIn, 0, SEEK_SET);
@@ -23,7 +23,7 @@ void writeSPIRVToFile(const char* fNameIn, const char* fNameOut)
 	////////////////////////////
 	/// write buffer to file ///
 	////////////////////////////
-	FILE* fOut = fopen(fNameOut, "w");
+	FILE* fOut = fopen(fNameOut, "wb");
 
 	char buf[256];
 	sprintf(buf, "#define kShaderBytecodeSize %lu\n", (long unsigned int)fInSize);
@@ -55,7 +55,7 @@ uint8_t* loadShader(const char* fName, size_t* n)
 	////////////////////////////////////
 	/// Dump spir-v shader to buffer ///
 	////////////////////////////////////
-	FILE* fIn = fopen(fName, "r");
+	FILE* fIn = fopen(fName, "rb");
 	fseek(fIn, 0, SEEK_END);
 	size_t fSize = ftell(fIn);
 	fseek(fIn, 0, SEEK_SET);
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 	}
 	// set images
 	SDL_Surface* sur = SDL_LoadBMP("wall.bmp");
-	VSR_SamplerCreate(renderer, pipeline, sur);
+	VSR_SamplerCreate(renderer, pipeline, 0, sur);
 
 	// Maths for MVP
 	mat4 cubePos;
