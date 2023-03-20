@@ -64,9 +64,9 @@ Renderer_MemoryReset(
 int
 Renderer_MemoryTransfer(
 	VSR_Renderer* renderer,
-	Renderer_Memory dst,
+	Renderer_Memory* dst,
 	VkDeviceSize dstOffset,
-	Renderer_Memory src,
+	Renderer_Memory* src,
 	VkDeviceSize srcOffset,
 	VkDeviceSize len);
 

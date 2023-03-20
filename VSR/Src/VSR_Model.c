@@ -92,9 +92,9 @@ VSR_ModelUpdate(
 		 0);
 
 	Renderer_MemoryTransfer(renderer,
-							*GPUMem,
+							GPUMem,
 							vertGPU->offset,
-							*stageMem,
+							stageMem,
 							stageV->offset,
 							vertGPU->size);
 	Renderer_MemoryFree(renderer, stageV);
@@ -127,9 +127,9 @@ VSR_ModelUpdate(
 			0);
 
 		Renderer_MemoryTransfer(renderer,
-								*GPUMem,
+								GPUMem,
 								UVGPU->offset,
-								*stageMem,
+								stageMem,
 								stageUV->offset,
 								UVGPU->size);
 		Renderer_MemoryFree(renderer, stageUV);
@@ -163,9 +163,9 @@ VSR_ModelUpdate(
 			0);
 
 		Renderer_MemoryTransfer(renderer,
-								*GPUMem,
+								GPUMem,
 								indGPU->offset,
-								*stageMem,
+								stageMem,
 								stageI->offset,
 								indGPU->size);
 		Renderer_MemoryFree(renderer, stageI);

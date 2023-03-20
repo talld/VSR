@@ -167,9 +167,9 @@ Renderer_MemoryReset(
 int
 Renderer_MemoryTransfer(
 	VSR_Renderer* renderer,
-	Renderer_Memory dst,
+	Renderer_Memory* dst,
 	VkDeviceSize dstOffset,
-	Renderer_Memory src,
+	Renderer_Memory* src,
 	VkDeviceSize srcOffset,
 	VkDeviceSize len)
 {
@@ -182,7 +182,7 @@ Renderer_MemoryTransfer(
 	copyRegion.srcOffset = srcOffset;
 	copyRegion.size = len;
 
-	vkCmdCopyBuffer(buff, src.buffer, dst.buffer, 1, &copyRegion);
+	vkCmdCopyBuffer(buff, src->buffer, dst->buffer, 1, &copyRegion);
 
 	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
