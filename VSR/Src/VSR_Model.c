@@ -78,7 +78,8 @@ VSR_ModelUpdate(
 	Renderer_MemoryAlloc* stageV = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
-			vertSize);
+			vertSize,
+			0);
 
 	void* pV = Render_MemoryMapAlloc(renderer, stageV);
 	memcpy(pV, model->mesh->vertices, vertSize);
@@ -87,7 +88,8 @@ VSR_ModelUpdate(
 	Renderer_MemoryAlloc* vertGPU = Renderer_MemoryAllocate(
 		 renderer,
 		 GPUMem,
-		 vertSize);
+		 vertSize,
+		 0);
 
 	Renderer_MemoryTransfer(renderer,
 							*GPUMem,
@@ -110,7 +112,8 @@ VSR_ModelUpdate(
 		Renderer_MemoryAlloc* stageUV = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
-			UVSize);
+			UVSize,
+			0);
 
 		void* pUV = Render_MemoryMapAlloc(renderer, stageUV);
 		memcpy(pUV, model->mesh->UVs, UVSize);
@@ -120,7 +123,8 @@ VSR_ModelUpdate(
 		Renderer_MemoryAlloc* UVGPU = Renderer_MemoryAllocate(
 			renderer,
 			GPUMem,
-			UVSize);
+			UVSize,
+			0);
 
 		Renderer_MemoryTransfer(renderer,
 								*GPUMem,
@@ -144,7 +148,8 @@ VSR_ModelUpdate(
 		Renderer_MemoryAlloc* stageI = Renderer_MemoryAllocate(
 			renderer,
 			stageMem,
-			indSize);
+			indSize,
+			0);
 
 		void* pI = Render_MemoryMapAlloc(renderer, stageI);
 		memcpy(pI, model->mesh->indices, indSize);
@@ -154,7 +159,8 @@ VSR_ModelUpdate(
 		Renderer_MemoryAlloc* indGPU = Renderer_MemoryAllocate(
 			renderer,
 			GPUMem,
-			indSize);
+			indSize,
+			0);
 
 		Renderer_MemoryTransfer(renderer,
 								*GPUMem,

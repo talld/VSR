@@ -32,6 +32,7 @@ struct Renderer_MemoryAlloc
 	Renderer_Memory* src;
 	VkDeviceSize   offset;
 	VkDeviceSize   size;
+	VkDeviceSize   align;
 };
 
 
@@ -80,7 +81,8 @@ Renderer_MemoryAlloc*
 Renderer_MemoryAllocate(
 	VSR_Renderer* renderer,
 	Renderer_Memory* memory,
-	VkDeviceSize size);
+	VkDeviceSize size,
+	VkDeviceSize align);
 
 void
 Renderer_MemoryFree(

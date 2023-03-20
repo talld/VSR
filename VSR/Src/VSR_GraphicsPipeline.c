@@ -78,7 +78,6 @@ VSR_GraphicsPipelineCreate(
 		24,
 		SDL_PIXELFORMAT_BGR888
 	);
-	depthSur->format->BytesPerPixel = 5;
 	depthSur->pixels = NULL;
 
 	pipeline->subStructs->depthImage = VSR_ImageCreate(

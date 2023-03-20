@@ -247,7 +247,8 @@ Renderer_MemoryAlloc*
 Renderer_MemoryAllocate(
 	VSR_Renderer* renderer,
 	Renderer_Memory* memory,
-	VkDeviceSize size)
+	VkDeviceSize size,
+	VkDeviceSize align)
 {
 	Renderer_MemoryAlloc* alloc = NULL;
 
@@ -257,71 +258,48 @@ Renderer_MemoryAllocate(
 	// no alloc in mem
 	if(!runner)
 	{ // init with this alloc as the root (first alloc)
-
 		if(memory->bufferSize >= size)
-		{
+		{ //
 			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
 			alloc->prev = NULL;
 			alloc->next = NULL;
 			alloc->offset = 0;
 			alloc->size = size;
-
+			alloc->align = align;
 			memory->root = alloc;
 			// don't set runner so we can skip the find as we've found one
 		}
 	}
+	else
+	{ // we have data in this
 
-	// track how much memory we'd free after a defrag
-	VkDeviceSize possibleContiguous = 0;
-	while (runner)
-	{
-		VkDeviceSize endOfRunnerOffset = runner->offset + runner->size;
-		VkDeviceSize spaceTillNext;
-
-		if (!runner->next)
+		while(runner->next != NULL)
 		{
-			spaceTillNext = memory->bufferSize - endOfRunnerOffset;
-		} else
-		{
-			spaceTillNext = runner->next->offset - endOfRunnerOffset;
+			runner = runner->next;
 		}
 
-		// we got one
-		if (spaceTillNext >= size)
+		size_t freeBegin = runner->offset + runner->size;
+		if(align)
 		{
-			// un-null the alloc
+			freeBegin = ((freeBegin + align-1) / align) * align;
+		}
+
+		if((freeBegin + size) <= memory->bufferSize)
+		{
 			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
 
-			// if there was a next
-			if (runner->next)
-			{ // set their prev to alloc
-				runner->next->prev = alloc;
-			}
-
-
-			alloc->prev   = runner;
-			alloc->next   = runner->next;
-			alloc->offset = endOfRunnerOffset;
-			alloc->size   = size;
-
-			// join allloc to runner next
 			runner->next = alloc;
+			alloc->prev = runner;
 
-			break;
+			alloc->next = NULL;
+			alloc->offset = freeBegin;
+			alloc->size = size;
+			alloc->align = align;
+			memory->root = alloc;
 		}
 
-		// otherwise continue and track any space found
-		possibleContiguous += spaceTillNext;
-		runner = runner->next;
-
 	}
 
-	if(!alloc 	// if no valid block was found
-	   && possibleContiguous >= size) // BUT - we can make one
-	{
-		// TODO: defrag
-
-	}
 
 	// remember where you came from
 	alloc->src = memory;

@@ -40,7 +40,6 @@ VSR_SamplerCreate(
 {
 	VSR_Sampler* sampler = SDL_malloc(sizeof(VSR_Sampler));
 
-
 	VSR_Image* img = VSR_ImageCreate(
 		renderer,
 		pipeline,
@@ -130,7 +129,7 @@ VSR_PopulateDefaultSamplers(
 		kFallBackTextureFormat);
 	sur->pixels = kFallBackTexturePixels;
 
-	VSR_Sampler* sampler = VSR_SamplerCreate(renderer, pipeline, 0, sur);
+	 VSR_Sampler* sampler = VSR_SamplerCreate(renderer, pipeline, 0, sur);
 
 	for(size_t i = 0; i < renderer->subStructs->texturePoolSize; i++)
 	{

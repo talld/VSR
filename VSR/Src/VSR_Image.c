@@ -57,18 +57,6 @@ VSR_ImageCreate(
 	VSR_Image* image = SDL_malloc(sizeof(VSR_Image));
 
 	image->src = *surface;
-	size_t surfaceExtent = (surface->w * surface->h);
-	size_t imageBufferSize;
-
-	// it's possible we've just passed the surface only fo wh
-	if(surface->format)
-	{
-		imageBufferSize = surface->format->BytesPerPixel * surfaceExtent;
-	}
-	else
-	{
-		imageBufferSize = 4 * surfaceExtent;
-	}
 
 	if(surface->pixels)
 	{
@@ -81,13 +69,6 @@ VSR_ImageCreate(
 	///////////////////////////////
 	/// create memory for image ///
 	///////////////////////////////
-
-	image->alloc = Renderer_MemoryAllocate(
-		renderer,
-		&renderer->subStructs->USDGPUBuffer,
-		imageBufferSize
-	);
-
 	image->format = format;
 	image->image = createImage(
 		renderer,
@@ -96,6 +77,19 @@ VSR_ImageCreate(
 		image->format,
 		tiling,
 		useFlags
+	);
+
+
+	VkMemoryRequirements memoryRequirementsInfo;
+	vkGetImageMemoryRequirements(renderer->subStructs->logicalDevice.device,
+	                             image->image,
+	                             &memoryRequirementsInfo);
+
+	image->alloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->USDGPUBuffer,
+		memoryRequirementsInfo.size,
+		memoryRequirementsInfo.alignment
 	);
 
 	vkBindImageMemory(
@@ -127,7 +121,8 @@ VSR_ImageCreate(
 		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
 			renderer,
 			&renderer->subStructs->USDStagingBuffer,
-			image->alloc->size
+			image->alloc->size,
+			image->alloc->align
 		);
 
 		void* p = Render_MemoryMapAlloc(
