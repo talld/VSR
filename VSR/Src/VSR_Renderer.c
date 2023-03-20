@@ -444,7 +444,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &cBuff;
 
-	vkQueueSubmit(renderer->subStructs->deviceQueues.graphicsQueue,
+	vkQueueSubmit(renderer->subStructs->deviceQueues.QList[kGraphicsQueueIndex],
 				  1,
 				  &submitInfo,
 				  renderer->subStructs->imageFinished[*frameIndex]);
@@ -461,7 +461,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	presentInfo.pSwapchains = &renderer->subStructs->swapchain.swapchain;
 	presentInfo.pImageIndices = &renderer->subStructs->imageIndex;
 
-	vkQueuePresentKHR(renderer->subStructs->deviceQueues.presentQueue,
+	vkQueuePresentKHR(renderer->subStructs->deviceQueues.QList[kGraphicsQueueIndex],
 					  &presentInfo);
 
 	*frameIndex = (*frameIndex + 1) % renderer->subStructs->swapchain.imageViewCount;

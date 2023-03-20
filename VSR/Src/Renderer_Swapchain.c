@@ -86,7 +86,7 @@ VSR_SwapchainCreate(
 	/////////////////////////////////////////////////////////////////
 	/// Set the weather the swapchain may have to be moved around ///
 	/////////////////////////////////////////////////////////////////
-	if(renderer->subStructs->deviceQueues.graphicsCanPresent)
+	if(renderer->subStructs->deviceQueues.QCanPresent[kGraphicsQueueIndex])
 	{ // Fast
 		subStructs->swapchainCreateInfo.createInfo.imageSharingMode =
 			VK_SHARING_MODE_EXCLUSIVE;
@@ -99,8 +99,8 @@ VSR_SwapchainCreate(
 		uint32_t graphicsAndPresentQueues[2] = {
 			// compute is the only queue that can support present
 			// ( I'm choosing to ignore transport present it's too awkward...)
-			subStructs->deviceQueuesCreateInfo.graphicsQueueCreateInfoIndex,
-			subStructs->deviceQueuesCreateInfo.computeQueueCreateInfoIndex,
+			renderer->subStructs->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex],
+			renderer->subStructs->deviceQueues.QFamilyIndexes[kComputeQueueIndex],
 		};
 
 		subStructs->swapchainCreateInfo.createInfo.imageSharingMode =

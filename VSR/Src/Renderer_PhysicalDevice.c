@@ -128,7 +128,7 @@ VSR_PhysicalDeviceSelect(
 							  & VK_SHADER_STAGE_VERTEX_BIT;
 
 		VkBool32 canPresent =
-			(deviceQueues.computeCanPresent || deviceQueues.graphicsCanPresent);
+			(deviceQueues.QCanPresent[kComputeQueueIndex] || deviceQueues.QCanPresent[kGraphicsQueueIndex]);
 
 		VkBool32 canSwapchain = deviceSurface.surfaceFormat !=
 			VK_FORMAT_UNDEFINED;

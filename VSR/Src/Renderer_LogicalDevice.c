@@ -21,9 +21,6 @@ VSR_LogicalDevicePopulateCreateInfo(
 	Renderer_LogicalDeviceCreateInfo * logicalDeviceCreateInfo =
 		&subStructs->logicalDeviceCreateInfo;
 
-	Renderer_DeviceQueuesCreateInfo * deviceQueuesCreateInfo =
-		&subStructs->deviceQueuesCreateInfo;
-
 	VkDeviceCreateInfo* deviceCreateInfo =
 		&logicalDeviceCreateInfo->createInfo;
 
@@ -63,14 +60,6 @@ VSR_LogicalDevicePopulateCreateInfo(
 	deviceCreateInfo->enabledLayerCount = 0;
 	deviceCreateInfo->ppEnabledLayerNames = NULL;
 
-	// load the queue list
-	deviceCreateInfo->queueCreateInfoCount = 3; // number MAY change in creation
-
-	deviceCreateInfo->pQueueCreateInfos =
-		deviceQueuesCreateInfo->queueCreateInfoList;
-
-
-
 	SUCCESS:
 	{
 		return SDL_TRUE;
@@ -97,11 +86,69 @@ VSR_LogicalDeviceCreate(
 	VkResult err;
 	VkDevice logicalDevice;
 
+	///////////////
+	/// aliases ///
+	///////////////
+	Renderer_LogicalDeviceCreateInfo * logicalDeviceCreateInfo =
+		&subStructs->logicalDeviceCreateInfo;
+
+	VkDeviceCreateInfo* deviceCreateInfo =
+		&logicalDeviceCreateInfo->createInfo;
+
+	Renderer_DeviceQueues* deviceQueues =
+		&renderer->subStructs->deviceQueues;
+
 	/////////////////////////////
 	/// Create logical device ///
 	/////////////////////////////
+	VkDeviceQueueCreateInfo queueCreateInfos[kMaxUniqueQFamilies];
+
+	for(size_t i = 0; i < kMaxUniqueQFamilies; i++)
+	{
+
+		// sort queues
+		int isInUnique = 0;
+		for (size_t j = 0; j < deviceQueues->uniqueQFamilyCount; j++)
+		{
+			if(deviceQueues->uniqueQFamilies[j] == deviceQueues->QFamilyIndexes[i])
+			{
+				isInUnique = 1;
+			}
+		}
+
+		if(isInUnique == 0)
+		{
+			deviceQueues->uniqueQFamilies[deviceQueues->uniqueQFamilyCount] =
+				deviceQueues->QFamilyIndexes[i];
+
+			queueCreateInfos[deviceQueues->uniqueQFamilyCount].sType =
+				VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+
+			queueCreateInfos[deviceQueues->uniqueQFamilyCount].pNext =
+				NULL;
+
+			queueCreateInfos[deviceQueues->uniqueQFamilyCount].flags =
+				0L;
+
+			queueCreateInfos[deviceQueues->uniqueQFamilyCount].pQueuePriorities =
+				deviceQueues->queuePriorities;
+
+			queueCreateInfos[deviceQueues->uniqueQFamilyCount].queueCount =
+				1;
+
+			queueCreateInfos[deviceQueues->uniqueQFamilyCount].queueFamilyIndex =
+				deviceQueues->QFamilyIndexes[i];
+
+			deviceQueues->uniqueQFamilyCount++;
+		}
+	}
+
+
+	deviceCreateInfo->pQueueCreateInfos = queueCreateInfos;
+	deviceCreateInfo->queueCreateInfoCount = deviceQueues->uniqueQFamilyCount;
+
 	err = vkCreateDevice(renderer->subStructs->physicalDevice.device,
-						 &subStructs->logicalDeviceCreateInfo.createInfo,
+	                     deviceCreateInfo,
 						 VSR_GetAllocator(),
 						 &logicalDevice);
 
@@ -117,31 +164,37 @@ VSR_LogicalDeviceCreate(
 	////////////////////
 	/// Fetch queues ///
 	////////////////////
-	// FIXME: this is broken, handle queues better!
 
 	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
-					 renderer->subStructs->deviceQueues.graphicsQueueFamilyIndex,
-					 renderer->subStructs->deviceQueues.graphicsQueueIndex,
-					 &renderer->subStructs->deviceQueues.graphicsQueue);
-
-	// FIXME: this won't always be the case!
-	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
-					 renderer->subStructs->deviceQueues.graphicsQueueFamilyIndex,
-					 renderer->subStructs->deviceQueues.graphicsQueueIndex,
-					 &renderer->subStructs->deviceQueues.presentQueue);
+	                 deviceQueues->QFamilies[kGraphicsQueueIndex],
+	                 deviceQueues->QFamilyIndexes[kGraphicsQueueIndex],
+					 &renderer->subStructs->deviceQueues.QList[kGraphicsQueueIndex]);
 
 	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
-					 renderer->subStructs->deviceQueues.transferQueueFamilyIndex,
-					 renderer->subStructs->deviceQueues.transferQueueIndex,
-					 &renderer->subStructs->deviceQueues.transferQueue);
+	                 deviceQueues->QFamilies[kTransferQueueIndex],
+	                 deviceQueues->QFamilyIndexes[kTransferQueueIndex],
+					 &renderer->subStructs->deviceQueues.QList[kTransferQueueIndex]);
 
 
 	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
-					 renderer->subStructs->deviceQueues.computeQueueFamilyIndex,
-					 renderer->subStructs->deviceQueues.computeQueueIndex,
-					 &renderer->subStructs->deviceQueues.computeQueue);
+	                 deviceQueues->QFamilies[kComputeQueueIndex],
+	                 deviceQueues->QFamilyIndexes[kComputeQueueIndex],
+					 &renderer->subStructs->deviceQueues.QList[kComputeQueueIndex]);
 
-	///
+	if(renderer->subStructs->deviceQueues.QCanPresent[kGraphicsQueueIndex])
+	{
+		vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+		                 deviceQueues->QFamilies[kPresentQueueIndex],
+		                 deviceQueues->QFamilyIndexes[kPresentQueueIndex],
+		                 &renderer->subStructs->deviceQueues.QList[kPresentQueueIndex]);
+	}
+	else if(renderer->subStructs->deviceQueues.QCanPresent[kComputeQueueIndex])
+	{
+		vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+		                 deviceQueues->QFamilies[kGraphicsQueueIndex],
+		                 deviceQueues->QFamilyIndexes[kComputeQueueIndex],
+		                 &renderer->subStructs->deviceQueues.QList[kPresentQueueIndex]);
+	}
 
 	SUCCESS:
 	{

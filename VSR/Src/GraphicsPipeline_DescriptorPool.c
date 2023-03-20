@@ -77,7 +77,7 @@ GraphicsPipeline_DescriptorPoolCreate(
 	// size of big texture buffer no need for one per image as it read only
 	VkDescriptorPoolSize poolSize[1];
 	poolSize[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSize[0].descriptorCount = 1;
+	poolSize[0].descriptorCount = renderer->subStructs->texturePoolSize;
 
 	VkDescriptorPoolCreateInfo poolCreateInfo;
 	poolCreateInfo.flags = 0L;
@@ -112,6 +112,13 @@ GraphicsPipeline_DescriptorPoolCreate(
 		&allocateInfo,
 		&pipeline->subStructs->descriptorPool.globalSet
 	);
+
+	if(err != VK_SUCCESS)
+	{
+		VSR_Error("Failed to create descriptor pool: %s",
+		          VSR_VkErrorToString(err));
+		goto FAIL;
+	}
 
 	SUCCESS:
 	return SDL_TRUE;

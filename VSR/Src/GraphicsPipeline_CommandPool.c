@@ -44,13 +44,13 @@ GraphicsPipeline_CommandPoolCreate(
 	poolCreateInfo->flags = 0L;
 
 
-	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.graphicsQueueFamilyIndex;
+	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex];
 	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
 						poolCreateInfo,
 						VSR_GetAllocator(),
 						&pipeline->subStructs->commandPool.graphicsPool);
 
-	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.transferQueueFamilyIndex;
+	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.QFamilyIndexes[kTransferQueueIndex];
 	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
 							  poolCreateInfo,
 							  VSR_GetAllocator(),
@@ -158,7 +158,7 @@ GraphicsPipeline_CommandPoolSubmitTransferBuffer(
 		&transferFence);
 
 	vkQueueSubmit(
-		renderer->subStructs->deviceQueues.transferQueue,
+		renderer->subStructs->deviceQueues.QList[kTransferQueueIndex],
 		1,
 		&submitInfo,
 		transferFence);
