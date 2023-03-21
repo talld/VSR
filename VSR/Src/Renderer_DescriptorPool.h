@@ -25,14 +25,23 @@ struct Renderer_DescriptorPoolCreateInfo
 
 	VkDescriptorSetLayoutBinding  textureBinding;
 	VkDescriptorSetLayoutCreateInfo globalLayout;
+
+
+	VkDescriptorSetLayoutBinding  userBindings[4];
+	VkDescriptorSetLayoutCreateInfo userLayout;
 };
 
 typedef struct Renderer_DescriptorPool Renderer_DescriptorPool;
 struct Renderer_DescriptorPool
 {
-	VkDescriptorSetLayout  globalLayout;
 	VkDescriptorPool  globalPool;
+
+	VkDescriptorSetLayout  globalLayout;
 	VkDescriptorSet globalSet;
+
+	VkDescriptorSetLayout userLayout;
+	VkDescriptorSet userSet;
+
 };
 
 

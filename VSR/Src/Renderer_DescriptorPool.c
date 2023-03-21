@@ -18,24 +18,45 @@ Renderer_DescriptorPoolPopulateCreateInfo(
 	VkDescriptorSetLayoutCreateInfo* globalLayoutCreateInfo =
 		&createInfo->subStructs->descriptorPoolCreateInfo.globalLayout;
 
+	VkDescriptorSetLayoutBinding* userBindings =
+		createInfo->subStructs->descriptorPoolCreateInfo.userBindings;
+
+	VkDescriptorSetLayoutCreateInfo* userLayoutCreateInfo =
+		&createInfo->subStructs->descriptorPoolCreateInfo.userLayout;
+
 	/////////////////////////////
 	/// global descriptors ///
 	/////////////////////////////
-
 	textureBinding->binding = 0;
 	textureBinding->descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	textureBinding->descriptorCount = renderer->subStructs->texturePoolSize;
 	textureBinding->pImmutableSamplers = NULL;
 	textureBinding->stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-	globalLayoutCreateInfo->sType =
-		VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-
+	globalLayoutCreateInfo->sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	globalLayoutCreateInfo->flags = 0L;
 	globalLayoutCreateInfo->pNext = NULL;
-
 	globalLayoutCreateInfo->pBindings = textureBinding;
 	globalLayoutCreateInfo->bindingCount = 1;
+
+	////////////////////////
+	/// user descriptors ///
+	////////////////////////
+	size_t userDescriptorCount = renderer->subStructs->extraDescriptorCount;
+	for(size_t i = 0; i < userDescriptorCount; i++)
+	{
+		userBindings[i].binding = 0;
+		userBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		userBindings[i].descriptorCount = 1;
+		userBindings[i].pImmutableSamplers = NULL;
+		userBindings[i].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+	}
+
+	userLayoutCreateInfo->sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	userLayoutCreateInfo->flags = 0L;
+	userLayoutCreateInfo->pNext = NULL;
+	userLayoutCreateInfo->pBindings = userBindings;
+	userLayoutCreateInfo->bindingCount = userDescriptorCount;
 
 	return SDL_TRUE;
 }
@@ -52,8 +73,14 @@ Renderer_DescriptorPoolCreate(
 	VkDescriptorSetLayoutCreateInfo* globalLayoutCreateInfo =
 		&createInfo->subStructs->descriptorPoolCreateInfo.globalLayout;
 
+	VkDescriptorSetLayoutCreateInfo* userLayoutCreateInfo =
+		&createInfo->subStructs->descriptorPoolCreateInfo.userLayout;
+
 	VkDescriptorSetLayout* globalLayout =
 		&renderer->subStructs->descriptorPool.globalLayout;
+
+	VkDescriptorSetLayout* userLayout =
+		&renderer->subStructs->descriptorPool.userLayout;
 
 	//////////////////////
 	/// create layouts ///
@@ -73,18 +100,35 @@ Renderer_DescriptorPoolCreate(
 		goto FAIL;
 	}
 
+	err = vkCreateDescriptorSetLayout(
+		renderer->subStructs->logicalDevice.device,
+		userLayoutCreateInfo,
+		VSR_GetAllocator(),
+		userLayout
+	);
+
+	if(err != VK_SUCCESS)
+	{
+		VSR_Error("Failed to create descriptor layout: %s",
+		          VSR_VkErrorToString(err));
+		goto FAIL;
+	}
+
 	// size of big texture buffer no need for one per image as it read only
-	VkDescriptorPoolSize poolSize[1];
-	poolSize[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSize[0].descriptorCount = renderer->subStructs->texturePoolSize;
+	VkDescriptorPoolSize poolSizes[2];
+	poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	poolSizes[0].descriptorCount = renderer->subStructs->texturePoolSize;
+
+	poolSizes[1].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	poolSizes[1].descriptorCount = renderer->subStructs->extraDescriptorCount;
 
 	VkDescriptorPoolCreateInfo poolCreateInfo;
 	poolCreateInfo.flags = 0L;
 	poolCreateInfo.pNext = NULL;
 	poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolCreateInfo.maxSets = 1;
-	poolCreateInfo.poolSizeCount = 1;
-	poolCreateInfo.pPoolSizes = poolSize;
+	poolCreateInfo.maxSets = 1 + renderer->subStructs->extraDescriptorCount + 1;
+	poolCreateInfo.poolSizeCount = 1 + (renderer->subStructs->extraDescriptorCount > 0);
+	poolCreateInfo.pPoolSizes = poolSizes;
 
 	err = vkCreateDescriptorPool(
 		renderer->subStructs->logicalDevice.device,
@@ -99,17 +143,22 @@ Renderer_DescriptorPoolCreate(
 		goto FAIL;
 	}
 
+	VkDescriptorSetLayout layouts[2] = {*globalLayout, *userLayout};
+
 	VkDescriptorSetAllocateInfo allocateInfo;
 	allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocateInfo.pNext = NULL;
 	allocateInfo.descriptorPool = renderer->subStructs->descriptorPool.globalPool;
-	allocateInfo.pSetLayouts = globalLayout;
-	allocateInfo.descriptorSetCount = 1;
+	allocateInfo.descriptorSetCount = 2; //(renderer->subStructs->extraDescriptorCount > 0);
+	allocateInfo.pSetLayouts = layouts;
+
+	VkDescriptorSet sets[2];
+
 
 	err = vkAllocateDescriptorSets(
 		renderer->subStructs->logicalDevice.device,
 		&allocateInfo,
-		&renderer->subStructs->descriptorPool.globalSet
+		sets
 	);
 
 	if(err != VK_SUCCESS)
@@ -118,6 +167,9 @@ Renderer_DescriptorPoolCreate(
 		          VSR_VkErrorToString(err));
 		goto FAIL;
 	}
+
+	renderer->subStructs->descriptorPool.globalSet = sets[0];
+	renderer->subStructs->descriptorPool.userSet = sets[1];
 
 	SUCCESS:
 	return SDL_TRUE;
