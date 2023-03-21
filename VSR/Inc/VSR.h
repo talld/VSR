@@ -43,6 +43,7 @@ typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
 
 typedef struct VSR_Mat4 VSR_Mat4;
+__attribute__((packed))
 struct VSR_Mat4
 {
 	float m0;
@@ -165,11 +166,9 @@ void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
 
 void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Shader* shader);
 
-int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, size_t batchCount);
+int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, VSR_Sampler* samplers, size_t batchCount);
 
-VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices,
-						 VSR_UV const* UVs, size_t indexCount, VSR_Index const*
-						 indices);
+VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices, VSR_UV const* UVs, size_t indexCount, VSR_Index const* indices);
 
 void VSR_MeshFree(VSR_Mesh* model);
 
