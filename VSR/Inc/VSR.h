@@ -64,6 +64,13 @@ struct VSR_Mat4
 	float m15;
 };
 
+typedef struct VSR_PushConstants VSR_PushConstants;
+struct VSR_PushConstants
+{
+	VSR_Mat4 Projection;
+	uint8_t bytes[64];
+};
+
 typedef struct VSR_Vertex VSR_Vertex;
 __attribute__((packed))
 struct VSR_Vertex
@@ -149,6 +156,12 @@ void VSR_RendererSetPipeline(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipel
 void VSR_RendererBeginPass(VSR_Renderer* renderer);
 
 void VSR_RendererEndPass(VSR_Renderer* renderer);
+
+void VSR_RendererSetVertexConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
+
+void VSR_RendererSetFragmentConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
+
+void VSR_RendererWriteDescriptor(VSR_Renderer* renderer, size_t index, size_t offset, void* data, size_t len);
 
 VSR_GraphicsPipelineCreateInfo* VSR_GraphicsPipelineGenerateCreateInfo(VSR_Renderer* renderer);
 

@@ -579,3 +579,67 @@ int
 	}
 	return 0;
 }
+
+void
+VSR_RendererSetVertexConstants(
+	VSR_Renderer* renderer,
+	VSR_PushConstants const* pushConstants)
+{
+	renderer->subStructs->pushConstantsVertex = *pushConstants;
+}
+
+void
+VSR_RendererSetFragmentConstants(
+	VSR_Renderer* renderer,
+	VSR_PushConstants const* pushConstants)
+{
+	renderer->subStructs->pushConstantsFragment = *pushConstants;
+}
+
+void
+VSR_RendererWriteDescriptor(
+	VSR_Renderer* renderer,
+	size_t index,
+	size_t offset,
+	void* data,
+	size_t len)
+{
+	Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->USDStagingBuffer,
+		len,
+		0);
+
+	void* p = Render_MemoryMapAlloc(renderer, alloc);
+	memcpy(p, data, len);
+	Render_MemoryUnmapAlloc(renderer, alloc);
+
+	Renderer_MemoryTransfer(
+		renderer,
+		renderer->subStructs->extraDescriptorAllocs[index]->src,
+		renderer->subStructs->extraDescriptorAllocs[index]->offset + offset,
+		alloc->src,
+		alloc->offset,
+		len
+		);
+
+	VkDescriptorBufferInfo bufferInfo = (VkDescriptorBufferInfo){0};
+	bufferInfo.offset = renderer->subStructs->extraDescriptorAllocs[index]->offset;
+	bufferInfo.buffer = renderer->subStructs->extraDescriptorAllocs[index]->src->buffer;
+	bufferInfo.range = renderer->subStructs->extraDescriptorAllocs[index]->size;
+
+	VkWriteDescriptorSet bufferWrite = (VkWriteDescriptorSet){0};
+	bufferWrite.pNext = NULL;
+	bufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	bufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	bufferWrite.dstSet = renderer->subStructs->descriptorPool.userSet;
+	bufferWrite.dstBinding = index;
+	bufferWrite.dstArrayElement =0;
+	bufferWrite.descriptorCount = 1;
+	bufferWrite.pBufferInfo = &bufferInfo;
+
+	vkUpdateDescriptorSets(renderer->subStructs->logicalDevice.device,
+	                       1, &bufferWrite,
+	                       0, NULL);
+	
+}
