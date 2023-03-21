@@ -16,7 +16,6 @@ VSR_ModelCreate(
 {
 	VSR_Model* model = SDL_malloc(sizeof(VSR_Model));
 	model->mesh = mesh;
-	model->sampler = NULL;
 
 	model->vertices = NULL;
 	model->UVs = NULL;
@@ -173,20 +172,4 @@ VSR_ModelUpdate(
 		model->indices = indGPU;
 	}
 
-}
-
-
-
-
-
-//==============================================================================
-// VSR_ModelSetSampler
-//------------------------------------------------------------------------------
-void
-VSR_ModelSetSampler(
-	VSR_Renderer* renderer,
-	VSR_Model* model,
-	VSR_Sampler* sampler)
-{
-	model->sampler = sampler;
 }

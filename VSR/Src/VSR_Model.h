@@ -32,10 +32,4 @@ VSR_ModelUpdate(
 	VSR_Renderer* renderer,
 	VSR_Model* model);
 
-void
-VSR_ModelSetSampler(
-	VSR_Renderer* renderer,
-	VSR_Model* model,
-	VSR_Sampler* sampler);
-
 #endif //VSR_MODEL_H
