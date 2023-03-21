@@ -9,7 +9,7 @@
 #include "GraphicsPipeline_RenderPass.h"
 #include "GraphicsPipeline_GraphicsPipeline.h"
 #include "GraphicsPipeline_Framebuffer.h"
-#include "GraphicsPipeline_CommandPool.h"
+#include "Renderer_CommandPool.h"
 
 typedef struct GraphicsPipeline_CreateInfoSubStructs GraphicsPipeline_CreateInfoSubStructs;
 struct GraphicsPipeline_CreateInfoSubStructs
