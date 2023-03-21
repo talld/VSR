@@ -71,6 +71,12 @@ Renderer_MemoryTransfer(
 	VkDeviceSize len);
 
 int
+Renderer_MemoryTransferAlloc(
+	VSR_Renderer* renderer,
+	Renderer_MemoryAlloc* dst,
+	Renderer_MemoryAlloc* src);
+
+int
 Renderer_MemoryTransferToImage(
 	VSR_Renderer* renderer,
 	const Renderer_MemoryAlloc* src,

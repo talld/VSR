@@ -194,6 +194,50 @@ Renderer_MemoryTransfer(
 }
 
 
+
+
+
+//==============================================================================
+// Renderer_MemoryTransferAlloc
+//------------------------------------------------------------------------------
+int
+Renderer_MemoryTransferAlloc(
+	VSR_Renderer* renderer,
+	Renderer_MemoryAlloc*dst,
+	Renderer_MemoryAlloc* src)
+{
+	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
+		renderer
+	);
+
+	VkBufferCopy copyRegion = (VkBufferCopy){0};
+	copyRegion.dstOffset = dst->offset;
+	copyRegion.srcOffset = src->offset;
+	copyRegion.size = src->size;
+
+	vkCmdCopyBuffer(
+		buff,
+		src->src->buffer,
+		dst->src->buffer,
+		1,
+		&copyRegion
+	);
+
+	Renderer_CommandPoolSubmitTransferBuffer(
+		renderer,
+		buff
+	);
+
+	return 0;
+}
+
+
+
+
+
+//==============================================================================
+// Renderer_MemoryTransferToImage
+//------------------------------------------------------------------------------
 int
 Renderer_MemoryTransferToImage(
 	VSR_Renderer* renderer,
@@ -234,6 +278,9 @@ Renderer_MemoryTransferToImage(
 
 	return SDL_TRUE;
 }
+
+
+
 
 
 //==============================================================================
