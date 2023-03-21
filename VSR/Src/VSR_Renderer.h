@@ -28,13 +28,6 @@ enum Renderer_ResourceType
 	RESOURCE_TYPE_UV,
 };
 
-typedef struct Renderer_PushConstantsVertex Renderer_PushConstantsVertex;
-struct Renderer_PushConstantsVertex
-{
-	VSR_Mat4 MVP;
-	uint16_t imageIndex;
-};
-
 typedef struct Renderer_PushConstantsFragment Renderer_PushConstantsFragment;
 struct Renderer_PushConstantsFragment
 {
@@ -79,6 +72,7 @@ struct VSR_RendererCreateInfo
 	size_t texturePoolSize;
 
 	size_t extraDescriptorSizes[kMaxSupportedStorageBuffers];
+	size_t extraDescriptorCount;
 
 	Renderer_CreateInfoSubStructs*  subStructs;
 };
@@ -106,7 +100,14 @@ struct Renderer_SubStructs
 	VkFence*                imageFinished;
 
 	/// memory ///
+	VSR_PushConstants pushConstantsVertex;
+	VSR_PushConstants pushConstantsFragment;
+
 	size_t texturePoolSize;
+
+	size_t* extraDescriptorSizes;
+	Renderer_MemoryAlloc* extraDescriptorAllocs[kMaxSupportedStorageBuffers];
+	size_t extraDescriptorCount;
 
 	// Vertex UV Index:
 	Renderer_Memory VUVIStagingBuffer;

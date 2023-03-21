@@ -154,6 +154,17 @@ Renderer_AllocateBuffers(
 		128 * 1024 * 1024,
 		USDGPUBufferBits,
 		USDGPUProps);
+
+	for(size_t i = 0; i < renderer->subStructs->extraDescriptorCount; i++)
+	{
+		renderer->subStructs->extraDescriptorAllocs[i] =
+			Renderer_MemoryAllocate(
+				renderer,
+				&renderer->subStructs->USDGPUBuffer,
+				renderer->subStructs->extraDescriptorSizes[i],
+				0
+				);
+	}
 }
 
 
@@ -190,7 +201,14 @@ VSR_RendererRequestDescriptor(
 	size_t index,
 	size_t size)
 {
-	createInfo->extraDescriptorSizes[index] = size;
+	if(index < kMaxSupportedStorageBuffers)
+	{
+		createInfo->extraDescriptorSizes[index] = size;
+		if(index+1 > createInfo->extraDescriptorCount)
+		{
+			createInfo->extraDescriptorCount = index+1;
+		}
+	}
 	return createInfo;
 }
 
@@ -299,7 +317,10 @@ VSR_RendererCreate(
 
 	// TODO: check
 	renderer->subStructs->texturePoolSize = rendererCreateInfo->texturePoolSize;
-	
+
+	renderer->subStructs->extraDescriptorSizes = rendererCreateInfo->extraDescriptorSizes;
+	renderer->subStructs->extraDescriptorCount = rendererCreateInfo->extraDescriptorCount;
+
 	VSR_InstanceCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_SurfaceCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_PhysicalDeviceSelect(renderer, rendererCreateInfo->subStructs);
@@ -440,6 +461,25 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	/// Bouncers ///
 	////////////////
 	if(!renderer->subStructs->pipeline) return;
+
+	//////////////////////
+	/// push constants ///
+	//////////////////////
+	vkCmdPushConstants(
+		cBuff,
+		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		VK_SHADER_STAGE_VERTEX_BIT,
+		0,
+		sizeof(VSR_PushConstants),
+		&renderer->subStructs->pushConstantsVertex);
+
+	vkCmdPushConstants(
+		cBuff,
+		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		0,
+		sizeof(VSR_PushConstants),
+		&renderer->subStructs->pushConstantsFragment);
 
 	///////////////
 	/// aliases ///
