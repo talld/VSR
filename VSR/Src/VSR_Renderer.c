@@ -364,6 +364,14 @@ VSR_RendererCreate(
 	renderer->subStructs->extraDescriptorSizes = rendererCreateInfo->extraDescriptorSizes;
 	renderer->subStructs->extraDescriptorCount = rendererCreateInfo->extraDescriptorCount;
 
+	renderer->subStructs->pushConstantsVertex = (VSR_PushConstants){0};
+	renderer->subStructs->pushConstantsVertex.Projection.m0 = -1.81066f;
+	renderer->subStructs->pushConstantsVertex.Projection.m5 = 2.41421342f;
+	renderer->subStructs->pushConstantsVertex.Projection.m10 = -1.002002f;
+	renderer->subStructs->pushConstantsVertex.Projection.m11 = -1.f;
+	renderer->subStructs->pushConstantsVertex.Projection.m14 = 4.f;
+	renderer->subStructs->pushConstantsVertex.Projection.m15 = 4.f;
+
 	VSR_InstanceCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_SurfaceCreate(renderer, rendererCreateInfo->subStructs);
 	VSR_PhysicalDeviceSelect(renderer, rendererCreateInfo->subStructs);
@@ -564,7 +572,7 @@ int
 	VSR_Renderer* renderer,
 	VSR_Model* model,
 	VSR_Mat4* transforms,
-	VSR_Sampler* samplers,
+	VSR_Sampler** samplers,
 	size_t batchCount)
 {
 	//////////////////////
@@ -637,7 +645,7 @@ int
 	uint32_t* ip = Renderer_MemoryAllocMap(renderer, samplerStageAlloc);
 	for(size_t i = 0; i < batchCount; i++)
 	{
-		ip[i] = (int32_t)samplers[i].index;
+		ip[i] = (int32_t)samplers[i]->index;
 	}
 	Renderer_MemoryAllocUnmap(renderer, samplerStageAlloc);
 	Renderer_MemoryTransferAlloc(renderer, samplerAlloc, samplerStageAlloc);
