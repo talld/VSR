@@ -32,7 +32,7 @@ VkImage createImage(VSR_Renderer* renderer,
 	VkImage image;
 
 	vkCreateImage(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&imageCreateInfo,
 		VSR_GetAllocator(),
 		&image
@@ -81,19 +81,19 @@ VSR_ImageCreate(
 
 
 	VkMemoryRequirements memoryRequirementsInfo;
-	vkGetImageMemoryRequirements(renderer->subStructs->logicalDevice.device,
+	vkGetImageMemoryRequirements(renderer->logicalDevice.device,
 	                             image->image,
 	                             &memoryRequirementsInfo);
 
 	image->alloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->subStructs->USDGPUBuffer,
+		&renderer->USDGPUBuffer,
 		memoryRequirementsInfo.size,
 		memoryRequirementsInfo.alignment
 	);
 
 	vkBindImageMemory(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		image->image,
 		image->alloc->src->memory,
 		image->alloc->offset
@@ -120,7 +120,7 @@ VSR_ImageCreate(
 		// grab a staging buffer
 		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
 			renderer,
-			&renderer->subStructs->USDStagingBuffer,
+			&renderer->USDStagingBuffer,
 			image->alloc->size,
 			image->alloc->align
 		);
@@ -258,7 +258,7 @@ VSR_ImageViewCreate(
 	VkImageView view;
 
 	err = vkCreateImageView(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&viewCreateInfo,
 		VSR_GetAllocator(),
 		&view
@@ -287,7 +287,7 @@ VSR_ImageViewDestroy(
 	VSR_Renderer* renderer,
 	VSR_ImageView* imageView)
 {
-	vkDestroyImageView(renderer->subStructs->logicalDevice.device,
+	vkDestroyImageView(renderer->logicalDevice.device,
 					   imageView->imageView, VSR_GetAllocator());
 
 	VSR_ImageView blank = {.image = VK_NULL_HANDLE,

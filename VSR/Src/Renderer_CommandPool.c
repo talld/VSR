@@ -36,24 +36,24 @@ Renderer_CommandPoolCreate(
 	VkResult err;
 
 	VkCommandPoolCreateInfo* poolCreateInfo =
-		&createInfo->subStructs->commandPoolCreateInfo.commandPoolCreateInfo;
+		&createInfo->commandPoolCreateInfo.commandPoolCreateInfo;
 
 	poolCreateInfo->sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolCreateInfo->pNext = NULL;
 	poolCreateInfo->flags = 0L;
 
 
-	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex];
-	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
+	poolCreateInfo->queueFamilyIndex = renderer->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex];
+	err = vkCreateCommandPool(renderer->logicalDevice.device,
 						poolCreateInfo,
 						VSR_GetAllocator(),
-						&renderer->subStructs->commandPool.graphicsPool);
+						&renderer->commandPool.graphicsPool);
 
-	poolCreateInfo->queueFamilyIndex = renderer->subStructs->deviceQueues.QFamilyIndexes[kTransferQueueIndex];
-	err = vkCreateCommandPool(renderer->subStructs->logicalDevice.device,
+	poolCreateInfo->queueFamilyIndex = renderer->deviceQueues.QFamilyIndexes[kTransferQueueIndex];
+	err = vkCreateCommandPool(renderer->logicalDevice.device,
 							  poolCreateInfo,
 							  VSR_GetAllocator(),
-							  &renderer->subStructs->commandPool.transferPool);
+							  &renderer->commandPool.transferPool);
 
 
 	if(err != VK_SUCCESS)
@@ -87,11 +87,11 @@ Renderer_CommandPoolAllocateGraphicsBuffer(
 	VkCommandBufferAllocateInfo commandBufInfo = (VkCommandBufferAllocateInfo){0};
 	commandBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	commandBufInfo.pNext = NULL;
-	commandBufInfo.commandPool = renderer->subStructs->commandPool.graphicsPool;
+	commandBufInfo.commandPool = renderer->commandPool.graphicsPool;
 	commandBufInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBufInfo.commandBufferCount = 1;
 
-	VkResult err = vkAllocateCommandBuffers(renderer->subStructs->logicalDevice.device,
+	VkResult err = vkAllocateCommandBuffers(renderer->logicalDevice.device,
 								   &commandBufInfo,
 								   &buff);
 
@@ -112,11 +112,11 @@ Renderer_CommandPoolAllocateTransferBuffer(
 	VkCommandBufferAllocateInfo allocInfo = (VkCommandBufferAllocateInfo){0};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = renderer->subStructs->commandPool.transferPool;
+	allocInfo.commandPool = renderer->commandPool.transferPool;
 	allocInfo.commandBufferCount = 1;
 
 	vkAllocateCommandBuffers(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 							 &allocInfo,
 							 &buff);
 
@@ -148,26 +148,26 @@ Renderer_CommandPoolSubmitTransferBuffer(
 	fenceInfo.flags = 0;
 
 	vkCreateFence(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&fenceInfo,
 		VSR_GetAllocator(),
 		&transferFence);
 
 	vkQueueSubmit(
-		renderer->subStructs->deviceQueues.QList[kTransferQueueIndex],
+		renderer->deviceQueues.QList[kTransferQueueIndex],
 		1,
 		&submitInfo,
 		transferFence);
 
 	vkWaitForFences(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		1,
 		&transferFence,
 		VK_TRUE,
 		-1);
 
 	vkDestroyFence(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		transferFence,
 		VSR_GetAllocator());
 }
@@ -187,12 +187,12 @@ Renderer_CommandBufferRecordStart(
 	VkRenderPassBeginInfo passBeginInfo = (VkRenderPassBeginInfo){0};
 	passBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	passBeginInfo.pNext = NULL;
-	passBeginInfo.renderPass = pipeline->subStructs->renderPass.renderPass;
-	passBeginInfo.framebuffer = pipeline->subStructs->framebuffer.framebuffers[renderer->subStructs->imageIndex];
+	passBeginInfo.renderPass = pipeline->renderPass.renderPass;
+	passBeginInfo.framebuffer = pipeline->framebuffer.framebuffers[renderer->imageIndex];
 	passBeginInfo.renderArea.offset.x = 0;
 	passBeginInfo.renderArea.offset.y = 0;
-	passBeginInfo.renderArea.extent.width = renderer->subStructs->surface.surfaceWidth;
-	passBeginInfo.renderArea.extent.height = renderer->subStructs->surface.surfaceHeight;
+	passBeginInfo.renderArea.extent.width = renderer->surface.surfaceWidth;
+	passBeginInfo.renderArea.extent.height = renderer->surface.surfaceHeight;
 	passBeginInfo.clearValueCount = 2;
 	VkClearValue clearValues[2] = {
 		{ .color = {{0.0f,0.0f,0.f, 1.0f}} },
@@ -216,14 +216,14 @@ Renderer_CommandBufferRecordStart(
 
 		vkCmdBindPipeline(cBuff,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,
-						  pipeline->subStructs->graphicPipeline.pipeline);
+						  pipeline->graphicPipeline.pipeline);
 
 		vkCmdBindDescriptorSets(
 			cBuff,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			pipeline->subStructs->graphicPipeline
+			pipeline->graphicPipeline
 			.pipelineLayout,0,
-			1, &renderer->subStructs->descriptorPool.globalSet,
+			1, &renderer->descriptorPool.globalSet,
 			0 ,NULL
 		);
 
@@ -280,11 +280,11 @@ void
 Renderer_CommandPoolDestroy(
 	VSR_Renderer* renderer)
 {
-	vkDestroyCommandPool(renderer->subStructs->logicalDevice.device,
-						 renderer->subStructs->commandPool.graphicsPool,
+	vkDestroyCommandPool(renderer->logicalDevice.device,
+						 renderer->commandPool.graphicsPool,
 						 VSR_GetAllocator());
 
-	vkDestroyCommandPool(renderer->subStructs->logicalDevice.device,
-	                     renderer->subStructs->commandPool.transferPool,
+	vkDestroyCommandPool(renderer->logicalDevice.device,
+	                     renderer->commandPool.transferPool,
 						 VSR_GetAllocator());
 }

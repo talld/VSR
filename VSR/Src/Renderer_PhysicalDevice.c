@@ -13,14 +13,14 @@
 SDL_bool
 VSR_PhysicalDeviceSelect(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* vkStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 	///////////////
 	/// Aliases ///
 	///////////////
-	VkInstance* instance = &renderer->subStructs->instance.instance;
+	VkInstance* instance = &renderer->instance.instance;
 
-	Renderer_PhysicalDevice* physicalDevice = &renderer->subStructs->physicalDevice;
+	Renderer_PhysicalDevice* physicalDevice = &renderer->physicalDevice;
 
 
 	///////////////////////////////////////
@@ -168,8 +168,8 @@ VSR_PhysicalDeviceSelect(
 	physicalDevice->deviceVulkan13Properties =
 		chosenDeviceVulkan13Properties;
 
-	renderer->subStructs->deviceQueues = chosenDeviceQueues;
-	renderer->subStructs->surface = chosenDeviceSurface;
+	renderer->deviceQueues = chosenDeviceQueues;
+	renderer->surface = chosenDeviceSurface;
 
 	physicalDevice->device =
 		chosenDevice;

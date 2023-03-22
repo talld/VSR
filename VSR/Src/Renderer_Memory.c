@@ -16,7 +16,7 @@ uint32_t findMemoryType(
 	VkPhysicalDeviceMemoryProperties memProperties;
 
 	vkGetPhysicalDeviceMemoryProperties(
-		renderer->subStructs->physicalDevice.device,
+		renderer->physicalDevice.device,
 		&memProperties);
 
 	uint32_t index = -1;
@@ -57,14 +57,14 @@ createBuffer(
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	vkCreateBuffer(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&bufferInfo,
 		VSR_GetAllocator(),
 		buffer);
 
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		*buffer,
 		&memRequirements);
 
@@ -77,13 +77,13 @@ createBuffer(
 		properties);
 
 	vkAllocateMemory(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&allocInfo,
 		VSR_GetAllocator(),
 		bufferMemory);
 
 	vkBindBufferMemory(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		*buffer,
 		*bufferMemory,
 		0);
@@ -133,12 +133,12 @@ Renderer_MemoryDestroy(
 	Renderer_Memory memory)
 {
 	vkDestroyBuffer(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		memory.buffer,
 		VSR_GetAllocator());
 
 	vkFreeMemory(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		memory.memory,
 		VSR_GetAllocator());
 }
@@ -397,7 +397,7 @@ Renderer_MemoryAllocMap(
 	VkMemoryMapFlags flags = 0L; // currently unimp'd
 
 	vkMapMemory(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		alloc->src->memory,
 		alloc->offset,
 		alloc->size,
@@ -420,6 +420,6 @@ Renderer_MemoryAllocUnmap(
 	Renderer_MemoryAlloc* alloc)
 {
 	vkUnmapMemory(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		alloc->src->memory);
 }

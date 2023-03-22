@@ -22,7 +22,7 @@ GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 	/// Layout Create Info ///
 	//////////////////////////
 	VkPipelineLayoutCreateInfo* layoutCreateInfo =
-		&createInfo->subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
+		&createInfo->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
 
 	layoutCreateInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	layoutCreateInfo->pNext = NULL;
@@ -34,7 +34,7 @@ GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 	const char* shaderEntryPoint = "main";
 
 	VkPipelineShaderStageCreateInfo* fragStageInfo =
-		&createInfo->subStructs->graphicsPipelineCreateInfo
+		&createInfo->graphicsPipelineCreateInfo
 			.shadersStages[SHADER_STAGE_FRAGMENT];
 
 	fragStageInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -45,7 +45,7 @@ GraphicsPipeline_GraphicsPipelinePopulateCreateInfo(
 
 
 	VkPipelineShaderStageCreateInfo* vertStageInfo =
-		&createInfo->subStructs->graphicsPipelineCreateInfo
+		&createInfo->graphicsPipelineCreateInfo
 			.shadersStages[SHADER_STAGE_VERTEX];
 
 	vertStageInfo->sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -81,16 +81,16 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/// aliases ///
 	///////////////
 
-	GraphicsPipeline_GraphicsPipeline* gp = &pipeline->subStructs->graphicPipeline;
+	GraphicsPipeline_GraphicsPipeline* gp = &pipeline->graphicPipeline;
 
 	VkPipelineLayoutCreateInfo* layoutCreateInfo =
-		&createInfo->subStructs->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
+		&createInfo->graphicsPipelineCreateInfo.graphicsPipelineLayoutCreateInfo;
 
 	VkPipelineShaderStageCreateInfo* shadersStages =
-		createInfo->subStructs->graphicsPipelineCreateInfo.shadersStages;
+		createInfo->graphicsPipelineCreateInfo.shadersStages;
 
 	VkGraphicsPipelineCreateInfo* pipelineCreateInfo =
-		&createInfo->subStructs->graphicsPipelineCreateInfo.graphicsPipelineCreateInfo;
+		&createInfo->graphicsPipelineCreateInfo.graphicsPipelineCreateInfo;
 
 	/////////////////////
 	/// Shader stages ///
@@ -253,16 +253,16 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	VkViewport viewport = (VkViewport){0};
 	viewport.x = 0;
 	viewport.y = 0;
-	viewport.width = renderer->subStructs->surface.surfaceWidth;
-	viewport.height = renderer->subStructs->surface.surfaceHeight;
+	viewport.width = renderer->surface.surfaceWidth;
+	viewport.height = renderer->surface.surfaceHeight;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor = (VkRect2D){0};
 	scissor.offset.x = 0;
 	scissor.offset.y = 0;
-	scissor.extent.width = renderer->subStructs->surface.surfaceWidth;
-	scissor.extent.height = renderer->subStructs->surface.surfaceHeight;
+	scissor.extent.width = renderer->surface.surfaceWidth;
+	scissor.extent.height = renderer->surface.surfaceHeight;
 
 	VkPipelineViewportStateCreateInfo viewInfo =
 		(VkPipelineViewportStateCreateInfo){0};
@@ -383,18 +383,18 @@ GraphicsPipeline_GraphicsPipelineCreate(
 
 	enum {kLayoutCount = 2};
 	VkDescriptorSetLayout layouts[kLayoutCount] = {
-		renderer->subStructs->descriptorPool.globalLayout,
-		renderer->subStructs->descriptorPool.userLayout
+		renderer->descriptorPool.globalLayout,
+		renderer->descriptorPool.userLayout
 	};
 
-	layoutCreateInfo->setLayoutCount = 1 + (renderer->subStructs->extraDescriptorCount > 0);
+	layoutCreateInfo->setLayoutCount = 1 + (renderer->extraDescriptorCount > 0);
 	layoutCreateInfo->pSetLayouts = layouts;
 
 	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
 	layoutCreateInfo->pPushConstantRanges = pushConstants;
 
 	VkResult err =
-		vkCreatePipelineLayout(renderer->subStructs->logicalDevice.device,
+		vkCreatePipelineLayout(renderer->logicalDevice.device,
 							   layoutCreateInfo,
 							   VSR_GetAllocator(),
 							   &gp->pipelineLayout);
@@ -413,7 +413,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pipelineCreateInfo->pNext = NULL;
 	pipelineCreateInfo->flags = 0;
 	pipelineCreateInfo->stageCount = 2;
-	pipelineCreateInfo->pStages = createInfo->subStructs->graphicsPipelineCreateInfo.shadersStages;
+	pipelineCreateInfo->pStages = createInfo->graphicsPipelineCreateInfo.shadersStages;
 	pipelineCreateInfo->pVertexInputState = &vertInfo;
 	pipelineCreateInfo->pInputAssemblyState = &inputInfo;
 	pipelineCreateInfo->pViewportState = &viewInfo;
@@ -425,12 +425,12 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pipelineCreateInfo->pDynamicState = &dynamicInfo;
 	pipelineCreateInfo->basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo->basePipelineIndex = 0;
-	pipelineCreateInfo->renderPass = pipeline->subStructs->renderPass.renderPass;
+	pipelineCreateInfo->renderPass = pipeline->renderPass.renderPass;
 	pipelineCreateInfo->subpass = 0;
 	pipelineCreateInfo->layout = gp->pipelineLayout;
 
 
-	vkCreateGraphicsPipelines(renderer->subStructs->logicalDevice.device,
+	vkCreateGraphicsPipelines(renderer->logicalDevice.device,
 							  NULL,
 							  1,
 							  pipelineCreateInfo,
@@ -464,11 +464,11 @@ GraphicsPipeline_GraphicPipelineDestroy(
 	VSR_GraphicsPipeline* pipeline
 )
 {
-	vkDestroyPipeline(renderer->subStructs->logicalDevice.device,
-					  pipeline->subStructs->graphicPipeline.pipeline,
+	vkDestroyPipeline(renderer->logicalDevice.device,
+					  pipeline->graphicPipeline.pipeline,
 					  VSR_GetAllocator());
 
-	vkDestroyPipelineLayout(renderer->subStructs->logicalDevice.device,
-							pipeline->subStructs->graphicPipeline.pipelineLayout,
+	vkDestroyPipelineLayout(renderer->logicalDevice.device,
+							pipeline->graphicPipeline.pipelineLayout,
 							VSR_GetAllocator());
 }

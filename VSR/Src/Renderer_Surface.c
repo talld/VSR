@@ -11,7 +11,7 @@
 SDL_bool
 VSR_SurfaceCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 	SDL_bool err;
 
@@ -19,8 +19,8 @@ VSR_SurfaceCreate(
 	/// Create the surface ///
 	//////////////////////////
 	err = SDL_Vulkan_CreateSurface(renderer->SDLWindow,
-							 renderer->subStructs->instance.instance,
-							 &renderer->subStructs->surface.surface);
+							 renderer->instance.instance,
+							 &renderer->surface.surface);
 
 	if(err != SDL_TRUE)
 	{
@@ -46,7 +46,7 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 	VkPhysicalDevice device)
 {
 	Renderer_Surface surface;
-	surface.surface = renderer->subStructs->surface.surface;
+	surface.surface = renderer->surface.surface;
 
 	///////////////////////////
 	/// surfaceCapabilities ///
@@ -61,7 +61,7 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 	uint32_t formatCount = 0;
 	vkGetPhysicalDeviceSurfaceFormatsKHR(
 		device,
-		renderer->subStructs->surface.surface,
+		renderer->surface.surface,
 		&formatCount,
 		NULL);
 
@@ -70,7 +70,7 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 
 	vkGetPhysicalDeviceSurfaceFormatsKHR(
 		device,
-		renderer->subStructs->surface.surface,
+		renderer->surface.surface,
 		&formatCount,
 		formatList);
 
@@ -95,7 +95,7 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 	uint32_t presentModeCount = 0;
 	vkGetPhysicalDeviceSurfacePresentModesKHR(
 		device,
-		renderer->subStructs->surface.surface,
+		renderer->surface.surface,
 		&presentModeCount,
 		NULL
 		);
@@ -105,7 +105,7 @@ VSR_SurfaceGetSurfaceFormatFromDevice(
 
 	vkGetPhysicalDeviceSurfacePresentModesKHR(
 		device,
-		renderer->subStructs->surface.surface,
+		renderer->surface.surface,
 		&presentModeCount,
 		presentModeList
 	);
@@ -147,7 +147,7 @@ void
 VSR_SurfaceDestroy(
 	VSR_Renderer* renderer)
 {
-	vkDestroySurfaceKHR(renderer->subStructs->instance.instance,
-	                    renderer->subStructs->surface.surface,
+	vkDestroySurfaceKHR(renderer->instance.instance,
+	                    renderer->surface.surface,
 	                    VSR_GetAllocator());
 }

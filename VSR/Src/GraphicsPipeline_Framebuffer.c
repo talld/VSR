@@ -20,35 +20,35 @@ GraphicsPipeline_FramebufferCreate(
 {
 	VkResult err;
 
-	size_t frameCount = renderer->subStructs->swapchain.imageViewCount;
+	size_t frameCount = renderer->swapchain.imageViewCount;
 	size_t frameListSize = sizeof(VkFramebuffer) * frameCount;
-	pipeline->subStructs->framebuffer.framebuffers = SDL_malloc(frameListSize);
-	VkFramebuffer* frames = pipeline->subStructs->framebuffer.framebuffers;
+	pipeline->framebuffer.framebuffers = SDL_malloc(frameListSize);
+	VkFramebuffer* frames = pipeline->framebuffer.framebuffers;
 
 	VkFramebufferCreateInfo* framebufferCreateInfo =
-		&createInfo->subStructs->framebufferCreateInfo.framebufferCreateInfo;
+		&createInfo->framebufferCreateInfo.framebufferCreateInfo;
 
 	framebufferCreateInfo->sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferCreateInfo->pNext = NULL;
 	framebufferCreateInfo->flags = 0L;
-	framebufferCreateInfo->renderPass = pipeline->subStructs->renderPass.renderPass;
+	framebufferCreateInfo->renderPass = pipeline->renderPass.renderPass;
 	framebufferCreateInfo->attachmentCount = 2; // colour, depth
 	VkImageView attachments[2] = {
-		renderer->subStructs->swapchain.imageViews[0].imageView,
-		pipeline->subStructs->depthView.imageView
+		renderer->swapchain.imageViews[0].imageView,
+		pipeline->depthView.imageView
 		};
 
-	framebufferCreateInfo->height = renderer->subStructs->surface.surfaceHeight;
-	framebufferCreateInfo->width = renderer->subStructs->surface.surfaceWidth;
+	framebufferCreateInfo->height = renderer->surface.surfaceHeight;
+	framebufferCreateInfo->width = renderer->surface.surfaceWidth;
 	framebufferCreateInfo->layers = 1;
 
 	for(size_t i = 0; i < frameCount; i++)
 	{
-		attachments[0] = renderer->subStructs->swapchain.imageViews[i].imageView;
+		attachments[0] = renderer->swapchain.imageViews[i].imageView;
 		// depth stencil doesn't change from image to image here
 		framebufferCreateInfo->pAttachments = attachments;
 
-		err = vkCreateFramebuffer(renderer->subStructs->logicalDevice.device,
+		err = vkCreateFramebuffer(renderer->logicalDevice.device,
 								  framebufferCreateInfo,
 								  VSR_GetAllocator(),
 								  &frames[i]);
@@ -77,13 +77,13 @@ GraphicsPipeline_FramebufferDestroy(
 	VSR_GraphicsPipeline* pipeline
 )
 {
-	size_t images = renderer->subStructs->swapchain.imageViewCount;
+	size_t images = renderer->swapchain.imageViewCount;
 	for(size_t i = 0; i < images; i++)
 	{
-		vkDestroyFramebuffer(renderer->subStructs->logicalDevice.device,
-							 pipeline->subStructs->framebuffer.framebuffers[i],
+		vkDestroyFramebuffer(renderer->logicalDevice.device,
+							 pipeline->framebuffer.framebuffers[i],
 							 VSR_GetAllocator());
 	}
 
-	SDL_free(pipeline->subStructs->framebuffer.framebuffers);
+	SDL_free(pipeline->framebuffer.framebuffers);
 }

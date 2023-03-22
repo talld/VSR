@@ -29,13 +29,12 @@ struct Renderer_LogicalDevice
 
 SDL_bool
 VSR_LogicalDevicePopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* createInfo);
 
 SDL_bool
 VSR_LogicalDeviceCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* createInfo);
 
 void
 VSR_LogicalDeviceDestroy(

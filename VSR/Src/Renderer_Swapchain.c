@@ -10,8 +10,7 @@
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_SwapchainPopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 
 	SUCCESS:
@@ -35,79 +34,79 @@ VSR_SwapchainPopulateCreateInfo(
 SDL_bool
 VSR_SwapchainCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 	///////////////////////////////////
 	/// Fill missing swapchain data ///
 	///////////////////////////////////
-	subStructs->swapchainCreateInfo.createInfo.sType =
+	createInfo->swapchainCreateInfo.createInfo.sType =
 		VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 
-	subStructs->swapchainCreateInfo.createInfo.pNext = NULL;
-	subStructs->swapchainCreateInfo.createInfo.flags = 0;
+	createInfo->swapchainCreateInfo.createInfo.pNext = NULL;
+	createInfo->swapchainCreateInfo.createInfo.flags = 0;
 
-	subStructs->swapchainCreateInfo.createInfo.surface =
-		renderer->subStructs->surface.surface;
+	createInfo->swapchainCreateInfo.createInfo.surface =
+		renderer->surface.surface;
 
-	subStructs->swapchainCreateInfo.createInfo.imageFormat =
-		renderer->subStructs->surface.surfaceFormat;
+	createInfo->swapchainCreateInfo.createInfo.imageFormat =
+		renderer->surface.surfaceFormat;
 
-	subStructs->swapchainCreateInfo.createInfo.imageColorSpace =
-		renderer->subStructs->surface.surfaceColourSpace;
+	createInfo->swapchainCreateInfo.createInfo.imageColorSpace =
+		renderer->surface.surfaceColourSpace;
 
-	subStructs->swapchainCreateInfo.createInfo.presentMode =
-		renderer->subStructs->surface.surfacePresentMode;
+	createInfo->swapchainCreateInfo.createInfo.presentMode =
+		renderer->surface.surfacePresentMode;
 
-	subStructs->swapchainCreateInfo.createInfo.imageExtent.width =
-		renderer->subStructs->surface.surfaceWidth;
+	createInfo->swapchainCreateInfo.createInfo.imageExtent.width =
+		renderer->surface.surfaceWidth;
 
-	subStructs->swapchainCreateInfo.createInfo.imageExtent.height =
-		renderer->subStructs->surface.surfaceHeight;
+	createInfo->swapchainCreateInfo.createInfo.imageExtent.height =
+		renderer->surface.surfaceHeight;
 
 	// plain old double buffering
-	subStructs->swapchainCreateInfo.createInfo.minImageCount =
-		renderer->subStructs->surface.surfaceCapabilities.minImageCount;
+	createInfo->swapchainCreateInfo.createInfo.minImageCount =
+		renderer->surface.surfaceCapabilities.minImageCount;
 
-	subStructs->swapchainCreateInfo.createInfo.imageArrayLayers = 1;
+	createInfo->swapchainCreateInfo.createInfo.imageArrayLayers = 1;
 
-	subStructs->swapchainCreateInfo.createInfo.imageUsage =
+	createInfo->swapchainCreateInfo.createInfo.imageUsage =
 		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	subStructs->swapchainCreateInfo.createInfo.preTransform =
-		renderer->subStructs->surface.surfaceCapabilities.currentTransform;
+	createInfo->swapchainCreateInfo.createInfo.preTransform =
+		renderer->surface.surfaceCapabilities.currentTransform;
 
-	subStructs->swapchainCreateInfo.createInfo.compositeAlpha =
+	createInfo->swapchainCreateInfo.createInfo.compositeAlpha =
 		VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
-	subStructs->swapchainCreateInfo.createInfo.clipped = VK_TRUE;
+	createInfo->swapchainCreateInfo.createInfo.clipped = VK_TRUE;
 
-	subStructs->swapchainCreateInfo.createInfo.oldSwapchain = VK_NULL_HANDLE;
+	createInfo->swapchainCreateInfo.createInfo.oldSwapchain = VK_NULL_HANDLE;
 
 	/////////////////////////////////////////////////////////////////
 	/// Set the weather the swapchain may have to be moved around ///
 	/////////////////////////////////////////////////////////////////
-	if(renderer->subStructs->deviceQueues.QCanPresent[kGraphicsQueueIndex])
+	if(renderer->deviceQueues.QCanPresent[kGraphicsQueueIndex])
 	{ // Fast
-		subStructs->swapchainCreateInfo.createInfo.imageSharingMode =
+		createInfo->swapchainCreateInfo.createInfo.imageSharingMode =
 			VK_SHARING_MODE_EXCLUSIVE;
 
-		subStructs->swapchainCreateInfo.createInfo.queueFamilyIndexCount = 0;
-		subStructs->swapchainCreateInfo.createInfo.pQueueFamilyIndices = NULL;
+		createInfo->swapchainCreateInfo.createInfo.queueFamilyIndexCount = 0;
+		createInfo->swapchainCreateInfo.createInfo.pQueueFamilyIndices = NULL;
 	}
 	else
 	{ // slow
 		uint32_t graphicsAndPresentQueues[2] = {
 			// compute is the only queue that can support present
 			// ( I'm choosing to ignore transport present it's too awkward...)
-			renderer->subStructs->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex],
-			renderer->subStructs->deviceQueues.QFamilyIndexes[kComputeQueueIndex],
+			renderer->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex],
+			renderer->deviceQueues.QFamilyIndexes[kComputeQueueIndex],
 		};
 
-		subStructs->swapchainCreateInfo.createInfo.imageSharingMode =
+		createInfo->swapchainCreateInfo.createInfo.imageSharingMode =
 			VK_SHARING_MODE_CONCURRENT;
 
-		subStructs->swapchainCreateInfo.createInfo.queueFamilyIndexCount = 2;
-		subStructs->swapchainCreateInfo.createInfo.pQueueFamilyIndices =
+		createInfo->swapchainCreateInfo.createInfo.queueFamilyIndexCount = 2;
+		createInfo->swapchainCreateInfo.createInfo.pQueueFamilyIndices =
 			graphicsAndPresentQueues;
 	}
 
@@ -117,8 +116,8 @@ VSR_SwapchainCreate(
 	VkResult err;
 	VkSwapchainKHR swapchain;
 
-	err = vkCreateSwapchainKHR(renderer->subStructs->logicalDevice.device,
-						 &subStructs->swapchainCreateInfo.createInfo,
+	err = vkCreateSwapchainKHR(renderer->logicalDevice.device,
+						 &createInfo->swapchainCreateInfo.createInfo,
 						 VSR_GetAllocator(),
 						 &swapchain);
 
@@ -129,15 +128,15 @@ VSR_SwapchainCreate(
 		goto FAIL;
 	}
 
-	renderer->subStructs->swapchain.swapchain = swapchain;
+	renderer->swapchain.swapchain = swapchain;
 
 	////////////////////////
 	/// Swapchain images ///
 	////////////////////////
 	uint32_t swapchainImageCount;
 	vkGetSwapchainImagesKHR(
-		renderer->subStructs->logicalDevice.device,
-		renderer->subStructs->swapchain.swapchain,
+		renderer->logicalDevice.device,
+		renderer->swapchain.swapchain,
 		&swapchainImageCount,
 		NULL);
 
@@ -145,15 +144,15 @@ VSR_SwapchainCreate(
 	VkImage* imageList = SDL_malloc(imageListSize);
 
 	vkGetSwapchainImagesKHR(
-		renderer->subStructs->logicalDevice.device,
-		renderer->subStructs->swapchain.swapchain,
+		renderer->logicalDevice.device,
+		renderer->swapchain.swapchain,
 		&swapchainImageCount,
 		imageList);
 
-	renderer->subStructs->swapchain.imageViewCount = swapchainImageCount;
+	renderer->swapchain.imageViewCount = swapchainImageCount;
 
 	size_t imageViewsListSize = swapchainImageCount * sizeof(VSR_ImageView);
-	renderer->subStructs->swapchain.imageViews = SDL_malloc(imageViewsListSize);
+	renderer->swapchain.imageViews = SDL_malloc(imageViewsListSize);
 
 	for(size_t i = 0; i < swapchainImageCount; i++)
 	{
@@ -163,10 +162,10 @@ VSR_SwapchainCreate(
 		VSR_ImageViewCreate(
 			renderer,
 			image,
-			renderer->subStructs->surface.surfaceFormat,
+			renderer->surface.surfaceFormat,
 			VK_IMAGE_ASPECT_COLOR_BIT);
 
-		renderer->subStructs->swapchain.imageViews[i] = imageView;
+		renderer->swapchain.imageViews[i] = imageView;
 	}
 
 	SDL_free((void*) imageList);
@@ -194,21 +193,21 @@ VSR_SwapchainDestroy(
 	VSR_Renderer* renderer
 )
 {
-	size_t count = renderer->subStructs->swapchain.imageViewCount;
+	size_t count = renderer->swapchain.imageViewCount;
 
 	for(size_t i = 0; i < count; i++)
 	{
 		VSR_ImageView* pView =
-			&renderer->subStructs->swapchain.imageViews[i];
+			&renderer->swapchain.imageViews[i];
 
 			VSR_ImageViewDestroy(renderer, pView);
 	}
 
 	vkDestroySwapchainKHR(
-		renderer->subStructs->logicalDevice.device,
-		renderer->subStructs->swapchain.swapchain,
+		renderer->logicalDevice.device,
+		renderer->swapchain.swapchain,
 		VSR_GetAllocator()
 		);
 
-	SDL_free(renderer->subStructs->swapchain.imageViews);
+	SDL_free(renderer->swapchain.imageViews);
 }

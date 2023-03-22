@@ -18,7 +18,6 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 	)
 {
 	VSR_GraphicsPipelineCreateInfo* createInfo = SDL_calloc(1, sizeof(VSR_GraphicsPipelineCreateInfo));
-	createInfo->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_CreateInfoSubStructs));
 
 	/////////////////////
 	/// init defaults ///
@@ -46,7 +45,6 @@ VSR_GraphicsPipelineGenerateCreateInfo(
 void VSR_GraphicsPipelineCreateInfoFree(
 	VSR_GraphicsPipelineCreateInfo* createInfo)
 {
-	SDL_free(createInfo->subStructs);
 	SDL_free(createInfo);
 }
 
@@ -64,20 +62,19 @@ VSR_GraphicsPipelineCreate(
 )
 {
 	VSR_GraphicsPipeline* pipeline = SDL_calloc(1, sizeof(VSR_GraphicsPipeline));
-	pipeline->subStructs = SDL_calloc(1, sizeof(GraphicsPipeline_SubStructs));
 
 	// TODO: refactor this into a function that will gauge depthsize
 	//  and create a surface with those requirements ( keep alignment! )
 	SDL_Surface* depthSur = SDL_CreateRGBSurfaceWithFormat(
 		0,
-		renderer->subStructs->surface.surfaceWidth,
-		renderer->subStructs->surface.surfaceHeight,
+		renderer->surface.surfaceWidth,
+		renderer->surface.surfaceHeight,
 		24,
 		SDL_PIXELFORMAT_BGR888
 	);
 	depthSur->pixels = NULL;
 
-	pipeline->subStructs->depthImage = VSR_ImageCreate(
+	pipeline->depthImage = VSR_ImageCreate(
 		renderer,
 		pipeline,
 		depthSur,
@@ -86,10 +83,10 @@ VSR_GraphicsPipelineCreate(
 		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
 	);
 
-	pipeline->subStructs->depthView = VSR_ImageViewCreate(
+	pipeline->depthView = VSR_ImageViewCreate(
 		renderer,
-		pipeline->subStructs->depthImage->image,
-		pipeline->subStructs->depthImage->format,
+		pipeline->depthImage->image,
+		pipeline->depthImage->format,
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
 
@@ -97,7 +94,7 @@ VSR_GraphicsPipelineCreate(
 	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 
-	renderer->subStructs->pipeline = pipeline;
+	renderer->pipeline = pipeline;
 	VSR_PopulateDefaultSamplers(renderer, pipeline);
 
 	return pipeline;
@@ -117,16 +114,15 @@ VSR_GraphicsPipelineFree(
 {
 	VSR_ImageViewDestroy(
 		renderer,
-		&pipeline->subStructs->depthView
+		&pipeline->depthView
 		);
 
-	vkDeviceWaitIdle(renderer->subStructs->logicalDevice.device);
+	vkDeviceWaitIdle(renderer->logicalDevice.device);
 
 	GraphicsPipeline_FramebufferDestroy(renderer, pipeline);
 	GraphicsPipeline_GraphicPipelineDestroy(renderer, pipeline);
 	GraphicsPipeline_RenderPassDestroy(renderer, pipeline);
 
-	SDL_free(pipeline->subStructs);
 	SDL_free(pipeline);
 }
 

@@ -32,6 +32,6 @@ struct Renderer_PhysicalDevice
 SDL_bool
 VSR_PhysicalDeviceSelect(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* vkStructs);
+	VSR_RendererCreateInfo* vkStructs);
 
 #endif //VSR_PHYSICALDEVICE_H

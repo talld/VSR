@@ -10,12 +10,12 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 	//////////////////////////////////
 	size_t listSize;
 
-	listSize = renderer->subStructs->swapchain.imageViewCount * sizeof(VkSemaphore);
-	renderer->subStructs->imageCanBeRead = SDL_malloc(listSize);
-	renderer->subStructs->imageCanBeWritten = SDL_malloc(listSize);
+	listSize = renderer->swapchain.imageViewCount * sizeof(VkSemaphore);
+	renderer->imageCanBeRead = SDL_malloc(listSize);
+	renderer->imageCanBeWritten = SDL_malloc(listSize);
 
-	listSize = renderer->subStructs->swapchain.imageViewCount * sizeof(VkFence);
-	renderer->subStructs->imageFinished = SDL_malloc(listSize);
+	listSize = renderer->swapchain.imageViewCount * sizeof(VkFence);
+	renderer->imageFinished = SDL_malloc(listSize);
 
 	//////////////////////////////
 	/// Create semaphores info ///
@@ -34,22 +34,22 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 	fenceInfo.pNext = NULL;
 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-	for(size_t i = 0; i < renderer->subStructs->swapchain.imageViewCount; i++)
+	for(size_t i = 0; i < renderer->swapchain.imageViewCount; i++)
 	{
-		vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
+		vkCreateSemaphore(renderer->logicalDevice.device,
 						  &semaphoreInfo,
 						  VSR_GetAllocator(),
-						  &renderer->subStructs->imageCanBeRead[i]);
+						  &renderer->imageCanBeRead[i]);
 
-		vkCreateSemaphore(renderer->subStructs->logicalDevice.device,
+		vkCreateSemaphore(renderer->logicalDevice.device,
 						  &semaphoreInfo,
 						  VSR_GetAllocator(),
-						  &renderer->subStructs->imageCanBeWritten[i]);
+						  &renderer->imageCanBeWritten[i]);
 
-		vkCreateFence(renderer->subStructs->logicalDevice.device,
+		vkCreateFence(renderer->logicalDevice.device,
 					  &fenceInfo,
 					  VSR_GetAllocator(),
-					  &renderer->subStructs->imageFinished[i]);
+					  &renderer->imageFinished[i]);
 	}
 
 }
@@ -63,24 +63,24 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 //------------------------------------------------------------------------------
 void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 {
-	for(size_t i = 0; i < renderer->subStructs->swapchain.imageViewCount; i++)
+	for(size_t i = 0; i < renderer->swapchain.imageViewCount; i++)
 	{
-		vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
-						   renderer->subStructs->imageCanBeWritten[i],
+		vkDestroySemaphore(renderer->logicalDevice.device,
+						   renderer->imageCanBeWritten[i],
 						   VSR_GetAllocator());
 
-		vkDestroySemaphore(renderer->subStructs->logicalDevice.device,
-						   renderer->subStructs->imageCanBeRead[i],
+		vkDestroySemaphore(renderer->logicalDevice.device,
+						   renderer->imageCanBeRead[i],
 						   VSR_GetAllocator());
 
-		vkDestroyFence(renderer->subStructs->logicalDevice.device,
-					   renderer->subStructs->imageFinished[i],
+		vkDestroyFence(renderer->logicalDevice.device,
+					   renderer->imageFinished[i],
 					   VSR_GetAllocator());
 	}
 
-	SDL_free(renderer->subStructs->imageCanBeWritten);
-	SDL_free(renderer->subStructs->imageCanBeRead);
-	SDL_free(renderer->subStructs->imageFinished);
+	SDL_free(renderer->imageCanBeWritten);
+	SDL_free(renderer->imageCanBeRead);
+	SDL_free(renderer->imageFinished);
 
 }
 
@@ -113,7 +113,7 @@ Renderer_AllocateBuffers(
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-	renderer->subStructs->VIStagingBuffer = Renderer_MemoryCreate(
+	renderer->VIStagingBuffer = Renderer_MemoryCreate(
 		renderer,
 		512 * 1024 * 1024,
 		VIStageBufferBits,
@@ -129,7 +129,7 @@ Renderer_AllocateBuffers(
 	VkMemoryPropertyFlagBits VIGPUProps =
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	renderer->subStructs->VIGPUBuffer = Renderer_MemoryCreate(
+	renderer->VIGPUBuffer = Renderer_MemoryCreate(
 		renderer,
 		448 * 1024 * 1024,
 		VIGPUBufferBits,
@@ -145,7 +145,7 @@ Renderer_AllocateBuffers(
 	VkMemoryPropertyFlagBits scratchGPUProps =
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	renderer->subStructs->scratchBuffer = Renderer_MemoryCreate(
+	renderer->scratchBuffer = Renderer_MemoryCreate(
 		renderer,
 		128 * 1024 * 1024,
 		scratchGPUBits,
@@ -171,7 +171,7 @@ Renderer_AllocateBuffers(
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;;
 
-	renderer->subStructs->USDStagingBuffer = Renderer_MemoryCreate(
+	renderer->USDStagingBuffer = Renderer_MemoryCreate(
 		renderer,
 		512 * 1024 * 1024,
 		USDStageBufferBits,
@@ -187,7 +187,7 @@ Renderer_AllocateBuffers(
 	VkMemoryPropertyFlagBits USDGPUProps =
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	renderer->subStructs->USDGPUBuffer = Renderer_MemoryCreate(
+	renderer->USDGPUBuffer = Renderer_MemoryCreate(
 		renderer,
 		448 * 1024 * 1024,
 		USDGPUBufferBits,
@@ -197,13 +197,13 @@ Renderer_AllocateBuffers(
 	/////////////////////////////
 	/// extra user descriptor ///
 	/////////////////////////////
-	for(size_t i = 0; i < renderer->subStructs->extraDescriptorCount; i++)
+	for(size_t i = 0; i < renderer->extraDescriptorCount; i++)
 	{
-		renderer->subStructs->extraDescriptorAllocs[i] =
+		renderer->extraDescriptorAllocs[i] =
 			Renderer_MemoryAllocate(
 				renderer,
-				&renderer->subStructs->USDGPUBuffer,
-				renderer->subStructs->extraDescriptorSizes[i],
+				&renderer->USDGPUBuffer,
+				renderer->extraDescriptorSizes[i],
 				0
 				);
 	}
@@ -220,10 +220,10 @@ void
 Renderer_FreeBuffers(
 	VSR_Renderer* renderer)
 {
-	Renderer_MemoryDestroy(renderer, renderer->subStructs->VIGPUBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->subStructs->VIStagingBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->subStructs->USDGPUBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->subStructs->USDStagingBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->VIGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->VIStagingBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->USDGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->USDStagingBuffer);
 
 }
 
@@ -276,9 +276,6 @@ VSR_RendererGenerateCreateInfo(
 	////////////////////////
 	size_t createInfoSize = sizeof(VSR_RendererCreateInfo);
 	VSR_RendererCreateInfo* createInfo =  SDL_calloc(1, createInfoSize);
-	
-	size_t subStructsSize = sizeof(Renderer_CreateInfoSubStructs);
-	createInfo->subStructs = SDL_calloc(1, subStructsSize);
 
 	createInfo->SDLWindow = window;
 
@@ -294,10 +291,10 @@ VSR_RendererGenerateCreateInfo(
 	////////////////////////////////////////////////////////////////////////////
 	/// populate vk create info structs as much as can be done at the moment ///
 	////////////////////////////////////////////////////////////////////////////
-	VSR_InstancePopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_DeviceQueuesPopulateCreateInfo(createInfo, createInfo->subStructs);
-    VSR_LogicalDevicePopulateCreateInfo(createInfo, createInfo->subStructs);
-	VSR_SwapchainPopulateCreateInfo(createInfo, createInfo->subStructs);
+	VSR_InstancePopulateCreateInfo(createInfo);
+	VSR_DeviceQueuesPopulateCreateInfo(createInfo);
+    VSR_LogicalDevicePopulateCreateInfo(createInfo);
+	VSR_SwapchainPopulateCreateInfo(createInfo);
 
 SUCCESS:
 	{
@@ -321,18 +318,7 @@ void
 VSR_RendererFreeCreateInfo(
 	VSR_RendererCreateInfo* rendererCreateInfo)
 {
-	Renderer_CreateInfoSubStructs* subStructs =
-		rendererCreateInfo->subStructs;
-	
-	// in an ideal world all of this would not exist
-	// all the memory needed should be part of the VSR_RendererCreateInfo struct
-	// work should be done to minimise malloc wherever possible
-	
-	///////////////////////////////////////////
-	/// Free vkStructs create info pointers ///
-	///////////////////////////////////////////
-	SDL_free((void*)subStructs);
-	
+
 	///////////////////////////////////
 	/// free the rendererCreateInfo ///
 	///////////////////////////////////
@@ -351,7 +337,6 @@ VSR_RendererCreate(
 	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 	VSR_Renderer* renderer = SDL_calloc(1, sizeof(VSR_Renderer));
-	renderer->subStructs = SDL_calloc(1, sizeof(Renderer_SubStructs));
 	
 	//////////////////////////////////
 	/// pass info to new structure ///
@@ -359,29 +344,29 @@ VSR_RendererCreate(
 	renderer->SDLWindow = rendererCreateInfo->SDLWindow;
 
 	// TODO: check
-	renderer->subStructs->texturePoolSize = rendererCreateInfo->texturePoolSize;
+	renderer->texturePoolSize = rendererCreateInfo->texturePoolSize;
 
-	renderer->subStructs->extraDescriptorSizes = rendererCreateInfo->extraDescriptorSizes;
-	renderer->subStructs->extraDescriptorCount = rendererCreateInfo->extraDescriptorCount;
+	renderer->extraDescriptorSizes = rendererCreateInfo->extraDescriptorSizes;
+	renderer->extraDescriptorCount = rendererCreateInfo->extraDescriptorCount;
 
-	renderer->subStructs->pushConstantsVertex = (VSR_PushConstants){0};
-	renderer->subStructs->pushConstantsVertex.Projection.m0 = -1.81066f;
-	renderer->subStructs->pushConstantsVertex.Projection.m5 = 2.41421342f;
-	renderer->subStructs->pushConstantsVertex.Projection.m10 = -1.002002f;
-	renderer->subStructs->pushConstantsVertex.Projection.m11 = -1.f;
-	renderer->subStructs->pushConstantsVertex.Projection.m14 = 4.f;
-	renderer->subStructs->pushConstantsVertex.Projection.m15 = 4.f;
+	renderer->pushConstantsVertex = (VSR_PushConstants){0};
+	renderer->pushConstantsVertex.Projection.m0 = -1.81066f;
+	renderer->pushConstantsVertex.Projection.m5 = 2.41421342f;
+	renderer->pushConstantsVertex.Projection.m10 = -1.002002f;
+	renderer->pushConstantsVertex.Projection.m11 = -1.f;
+	renderer->pushConstantsVertex.Projection.m14 = 4.f;
+	renderer->pushConstantsVertex.Projection.m15 = 4.f;
 
-	VSR_InstanceCreate(renderer, rendererCreateInfo->subStructs);
-	VSR_SurfaceCreate(renderer, rendererCreateInfo->subStructs);
-	VSR_PhysicalDeviceSelect(renderer, rendererCreateInfo->subStructs);
-	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo->subStructs);
-	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo->subStructs);
+	VSR_InstanceCreate(renderer, rendererCreateInfo);
+	VSR_SurfaceCreate(renderer, rendererCreateInfo);
+	VSR_PhysicalDeviceSelect(renderer, rendererCreateInfo);
+	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo);
+	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo);
 
 	Renderer_AllocateBuffers(renderer);
 
 	// TODO: move this to its own VSR_GraphicsPipeline struct
-	VSR_SwapchainCreate(renderer, rendererCreateInfo->subStructs);
+	VSR_SwapchainCreate(renderer, rendererCreateInfo);
 
 	Renderer_CreateSyncObjects(renderer);
 
@@ -411,7 +396,7 @@ VSR_RendererFree(
 	/// wait for rendering to power down ///
 	////////////////////////////////////////
 	// TODO: make multi-threading safe
-	vkDeviceWaitIdle(renderer->subStructs->logicalDevice.device);
+	vkDeviceWaitIdle(renderer->logicalDevice.device);
 
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
@@ -427,11 +412,6 @@ VSR_RendererFree(
 	VSR_SurfaceDestroy(renderer);
 	VSR_InstanceDestroy(renderer);
 
-	/////////////////////////////////
-	/// Free renderer's VKStructs ///
-	/////////////////////////////////
-	SDL_free((void*)renderer->subStructs);
-	
 	/////////////////////
 	/// Free renderer ///
 	/////////////////////
@@ -442,7 +422,7 @@ void VSR_RendererSetPipeline(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline)
 {
-	renderer->subStructs->pipeline = pipeline;
+	renderer->pipeline = pipeline;
 }
 
 
@@ -456,38 +436,38 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	////////////////
 	/// Bouncers ///
 	////////////////
-	if(!renderer->subStructs->pipeline) return;
+	if(!renderer->pipeline) return;
 
 	///////////////
 	/// aliases ///
 	///////////////
-	size_t* frameIndex = &renderer->subStructs->currentFrame;
+	size_t* frameIndex = &renderer->currentFrame;
 
 	////////////////////////////////////////////////////////////////
 	/// wait for requested image to be done ( ready to use again ///
 	////////////////////////////////////////////////////////////////
-	vkWaitForFences(renderer->subStructs->logicalDevice.device,
+	vkWaitForFences(renderer->logicalDevice.device,
 					1,
-					&renderer->subStructs->imageFinished[*frameIndex],
+					&renderer->imageFinished[*frameIndex],
 					VK_TRUE,
 					-1);
 
 	//////////////////
 	/// reset sync ///
 	//////////////////
-	vkResetFences(renderer->subStructs->logicalDevice.device,
+	vkResetFences(renderer->logicalDevice.device,
 				  1,
-				  &renderer->subStructs->imageFinished[*frameIndex]);
+				  &renderer->imageFinished[*frameIndex]);
 
 	///////////////////////////
 	/// get swapchain image ///
 	///////////////////////////
-	vkAcquireNextImageKHR(renderer->subStructs->logicalDevice.device,
-						  renderer->subStructs->swapchain.swapchain,
+	vkAcquireNextImageKHR(renderer->logicalDevice.device,
+						  renderer->swapchain.swapchain,
 						  -1,
-						  renderer->subStructs->imageCanBeWritten[*frameIndex],
+						  renderer->imageCanBeWritten[*frameIndex],
 						  VK_NULL_HANDLE,
-						  &renderer->subStructs->imageIndex);
+						  &renderer->imageIndex);
 
 	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
 		renderer);
@@ -495,7 +475,7 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	/// step 1 command record
 	Renderer_CommandBufferRecordStart(
 		renderer,
-		renderer->subStructs->pipeline,
+		renderer->pipeline,
 		cBuff);
 }
 
@@ -511,19 +491,19 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	////////////////
 	/// Bouncers ///
 	////////////////
-	if(!renderer->subStructs->pipeline) return;
+	if(!renderer->pipeline) return;
 
 
 	///////////////
 	/// aliases ///
 	///////////////
-	size_t* frameIndex = &renderer->subStructs->currentFrame;
+	size_t* frameIndex = &renderer->currentFrame;
 
 
 	/// step2 command record
 	Renderer_CommandBufferRecordEnd(
 		renderer,
-		renderer->subStructs->pipeline,
+		renderer->pipeline,
 		cBuff);
 
 	////////////////////////////////
@@ -535,17 +515,17 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeWritten[*frameIndex];
+	submitInfo.pWaitSemaphores = &renderer->imageCanBeWritten[*frameIndex];
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &renderer->subStructs->imageCanBeRead[*frameIndex];
+	submitInfo.pSignalSemaphores = &renderer->imageCanBeRead[*frameIndex];
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &cBuff;
 
-	vkQueueSubmit(renderer->subStructs->deviceQueues.QList[kGraphicsQueueIndex],
+	vkQueueSubmit(renderer->deviceQueues.QList[kGraphicsQueueIndex],
 				  1,
 				  &submitInfo,
-				  renderer->subStructs->imageFinished[*frameIndex]);
+				  renderer->imageFinished[*frameIndex]);
 
 	///////////////////////////////////////////
 	/// present queue information to screen ///
@@ -554,17 +534,17 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = NULL;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &renderer->subStructs->imageCanBeRead[*frameIndex];
+	presentInfo.pWaitSemaphores = &renderer->imageCanBeRead[*frameIndex];
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &renderer->subStructs->swapchain.swapchain;
-	presentInfo.pImageIndices = &renderer->subStructs->imageIndex;
+	presentInfo.pSwapchains = &renderer->swapchain.swapchain;
+	presentInfo.pImageIndices = &renderer->imageIndex;
 
-	vkQueuePresentKHR(renderer->subStructs->deviceQueues.QList[kGraphicsQueueIndex],
+	vkQueuePresentKHR(renderer->deviceQueues.QList[kGraphicsQueueIndex],
 					  &presentInfo);
 
-	*frameIndex = (*frameIndex + 1) % renderer->subStructs->swapchain.imageViewCount;
+	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
 
-	Renderer_MemoryReset(&renderer->subStructs->scratchBuffer);
+	Renderer_MemoryReset(&renderer->scratchBuffer);
 }
 
 int
@@ -580,19 +560,19 @@ int
 	//////////////////////
 	vkCmdPushConstants(
 		cBuff,
-		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		renderer->pipeline->graphicPipeline.pipelineLayout,
 		VK_SHADER_STAGE_VERTEX_BIT,
 		0,
 		sizeof(VSR_PushConstants),
-		&renderer->subStructs->pushConstantsVertex);
+		&renderer->pushConstantsVertex);
 
 	vkCmdPushConstants(
 		cBuff,
-		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		renderer->pipeline->graphicPipeline.pipelineLayout,
 		VK_SHADER_STAGE_FRAGMENT_BIT,
 		sizeof(VSR_PushConstants),
 		sizeof(VSR_PushConstants),
-		&renderer->subStructs->pushConstantsFragment);
+		&renderer->pushConstantsFragment);
 
 	/////////////////////////////////////////////////////////////////////
 	/// move all the instanced stuff into per instance scratch memory ///
@@ -605,13 +585,13 @@ int
 	/////////////////////
 	Renderer_MemoryAlloc* mat4StageAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->subStructs->VIStagingBuffer,
+		&renderer->VIStagingBuffer,
 		mat4ByteCount,
 		0
 	);
 	Renderer_MemoryAlloc* mat4Alloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->subStructs->scratchBuffer,
+		&renderer->scratchBuffer,
 		mat4ByteCount,
 		0
 	);
@@ -632,13 +612,13 @@ int
 	/////////////////////
 	Renderer_MemoryAlloc* samplerStageAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->subStructs->VIStagingBuffer,
+		&renderer->VIStagingBuffer,
 		samplerByteCount,
 		0
 	);
 	Renderer_MemoryAlloc* samplerAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->subStructs->scratchBuffer,
+		&renderer->scratchBuffer,
 		samplerByteCount,
 		0
 	);
@@ -699,16 +679,16 @@ int
 	enum {kDescriptorSetCount = 2};
 	VkDescriptorSet descriptorSets[kDescriptorSetCount] =
 		{
-			renderer->subStructs->descriptorPool.globalSet,
-			renderer->subStructs->descriptorPool.userSet
+			renderer->descriptorPool.globalSet,
+			renderer->descriptorPool.userSet
 		};
 
 	vkCmdBindDescriptorSets(
 		cBuff,
 		VK_PIPELINE_BIND_POINT_GRAPHICS,
-		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		renderer->pipeline->graphicPipeline.pipelineLayout,
 		0,
-		1 + (renderer->subStructs->extraDescriptorCount > 0),
+		1 + (renderer->extraDescriptorCount > 0),
 		descriptorSets,
 		0,
 		NULL
@@ -748,7 +728,7 @@ VSR_RendererSetVertexConstants(
 	VSR_Renderer* renderer,
 	VSR_PushConstants const* pushConstants)
 {
-	renderer->subStructs->pushConstantsVertex = *pushConstants;
+	renderer->pushConstantsVertex = *pushConstants;
 }
 
 void
@@ -756,7 +736,7 @@ VSR_RendererSetFragmentConstants(
 	VSR_Renderer* renderer,
 	VSR_PushConstants const* pushConstants)
 {
-	renderer->subStructs->pushConstantsFragment = *pushConstants;
+	renderer->pushConstantsFragment = *pushConstants;
 }
 
 void
@@ -769,7 +749,7 @@ VSR_RendererWriteDescriptor(
 {
 	Renderer_MemoryAlloc* stageAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->subStructs->USDStagingBuffer,
+		&renderer->USDStagingBuffer,
 		len,
 		0);
 
@@ -779,28 +759,28 @@ VSR_RendererWriteDescriptor(
 
 	Renderer_MemoryTransferAlloc(
 		renderer,
-		renderer->subStructs->extraDescriptorAllocs[index],
+		renderer->extraDescriptorAllocs[index],
 		stageAlloc
 	);
 
 	Renderer_MemoryAllocFree(renderer, stageAlloc);
 
 	VkDescriptorBufferInfo bufferInfo = (VkDescriptorBufferInfo){0};
-	bufferInfo.offset = renderer->subStructs->extraDescriptorAllocs[index]->offset;
-	bufferInfo.buffer = renderer->subStructs->extraDescriptorAllocs[index]->src->buffer;
-	bufferInfo.range = renderer->subStructs->extraDescriptorAllocs[index]->size;
+	bufferInfo.offset = renderer->extraDescriptorAllocs[index]->offset;
+	bufferInfo.buffer = renderer->extraDescriptorAllocs[index]->src->buffer;
+	bufferInfo.range = renderer->extraDescriptorAllocs[index]->size;
 
 	VkWriteDescriptorSet bufferWrite = (VkWriteDescriptorSet){0};
 	bufferWrite.pNext = NULL;
 	bufferWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	bufferWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	bufferWrite.dstSet = renderer->subStructs->descriptorPool.userSet;
+	bufferWrite.dstSet = renderer->descriptorPool.userSet;
 	bufferWrite.dstBinding = index;
 	bufferWrite.dstArrayElement =0;
 	bufferWrite.descriptorCount = 1;
 	bufferWrite.pBufferInfo = &bufferInfo;
 
-	vkUpdateDescriptorSets(renderer->subStructs->logicalDevice.device,
+	vkUpdateDescriptorSets(renderer->logicalDevice.device,
 	                       1, &bufferWrite,
 	                       0, NULL);
 	

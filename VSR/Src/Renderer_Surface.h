@@ -36,7 +36,7 @@ struct Renderer_Surface
 SDL_bool
 VSR_SurfaceCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* createInfo);
 
 Renderer_Surface
 VSR_SurfaceGetSurfaceFormatFromDevice(

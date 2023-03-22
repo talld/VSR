@@ -6,12 +6,6 @@
 #include <vulkan/vulkan.h>
 #include <SDL2/SDL.h>
 
-////////////////////////////////
-/// Renderer pre-declaration ///
-////////////////////////////////
-typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
-struct Renderer_CreateInfoSubStructs;
-
 
 typedef struct Renderer_InstanceCreateInfo Renderer_InstanceCreateInfo;
 struct Renderer_InstanceCreateInfo
@@ -28,13 +22,12 @@ struct Renderer_Instance
 
 SDL_bool
 VSR_InstancePopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* createInfo);
 
 SDL_bool
 VSR_InstanceCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* createInfo);
 
 void
 VSR_InstanceDestroy

@@ -25,7 +25,7 @@ VSR_ShaderCreate(
 	shader->createInfo.pCode = (uint32_t*) bytes;
 
 	vkCreateShaderModule(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&shader->createInfo,
 		VSR_GetAllocator(),
 		&shader->module
@@ -47,7 +47,7 @@ VSR_ShaderDestroy(
 	VSR_Shader* shader)
 {
 	vkDestroyShaderModule(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		shader->module,
 		VSR_GetAllocator()
 		);

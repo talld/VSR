@@ -44,43 +44,44 @@ struct Renderer_ModelBuffer
 	size_t len;
 };
 
-typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
-struct Renderer_CreateInfoSubStructs
-{
-	Renderer_InstanceCreateInfo         instanceCreateInfo;
-	Renderer_SurfaceCreateInfo          surfaceCreateInfo;
-	Renderer_PhysicalDeviceCreateInfo   physicalDeviceCreateInfo;
-	Renderer_LogicalDeviceCreateInfo    logicalDeviceCreateInfo;
-	Renderer_DeviceQueuesCreateInfo     deviceQueuesCreateInfo;
-	Renderer_SwapchainCreateInfo        swapchainCreateInfo;
-
-
-
-	Renderer_CommandPoolCreateInfo     commandPoolCreateInfo;
-	Renderer_DescriptorPoolCreateInfo  descriptorPoolCreateInfo;
-};
-
 enum {kMaxSupportedStorageBuffers = 4};
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo
 {
-	SDL_Window*   SDLWindow;
+	SDL_Window* SDLWindow;
 
-	SDL_bool   geometryShaderRequested;
-	SDL_bool   tessellationShaderRequested;
+	SDL_bool geometryShaderRequested;
+	SDL_bool tessellationShaderRequested;
 
 	size_t texturePoolSize;
 
 	size_t extraDescriptorSizes[kMaxSupportedStorageBuffers];
 	size_t extraDescriptorCount;
 
-	Renderer_CreateInfoSubStructs*  subStructs;
+	Renderer_InstanceCreateInfo       instanceCreateInfo;
+	Renderer_SurfaceCreateInfo        surfaceCreateInfo;
+	Renderer_PhysicalDeviceCreateInfo physicalDeviceCreateInfo;
+	Renderer_LogicalDeviceCreateInfo  logicalDeviceCreateInfo;
+	Renderer_DeviceQueuesCreateInfo   deviceQueuesCreateInfo;
+	Renderer_SwapchainCreateInfo      swapchainCreateInfo;
+
+	Renderer_CommandPoolCreateInfo    commandPoolCreateInfo;
+	Renderer_DescriptorPoolCreateInfo descriptorPoolCreateInfo;
 };
 
 typedef struct Renderer_SubStructs Renderer_SubStructs;
 struct Renderer_SubStructs
 {
 	/// render substructs ///
+
+};
+
+typedef struct VSR_Renderer VSR_Renderer;
+struct VSR_Renderer
+{
+	SDL_Window         * SDLWindow;
+
+
 	Renderer_Instance       instance;
 	Renderer_Surface        surface;
 	Renderer_PhysicalDevice physicalDevice;
@@ -88,16 +89,16 @@ struct Renderer_SubStructs
 	Renderer_LogicalDevice  logicalDevice;
 	Renderer_Swapchain      swapchain;
 
-	Renderer_DescriptorPool    descriptorPool;
-	Renderer_CommandPool       commandPool;
+	Renderer_DescriptorPool descriptorPool;
+	Renderer_CommandPool    commandPool;
 
 	/// pipeline ( subject to change at runtime! ) ///
-	VSR_GraphicsPipeline*   pipeline;
+	VSR_GraphicsPipeline* pipeline;
 
 	/// render sync ///
-	VkSemaphore*            imageCanBeWritten;
-	VkSemaphore*            imageCanBeRead;
-	VkFence*                imageFinished;
+	VkSemaphore* imageCanBeWritten;
+	VkSemaphore* imageCanBeRead;
+	VkFence*     imageFinished;
 
 	/// memory ///
 	VSR_PushConstants pushConstantsVertex;
@@ -105,28 +106,21 @@ struct Renderer_SubStructs
 
 	size_t texturePoolSize;
 
-	size_t* extraDescriptorSizes;
+	size_t*               extraDescriptorSizes;
 	Renderer_MemoryAlloc* extraDescriptorAllocs[kMaxSupportedStorageBuffers];
-	size_t extraDescriptorCount;
+	size_t                extraDescriptorCount;
 
-	// Vertex UV Index:
+	/// Vertex UV Index ///
 	Renderer_Memory VIStagingBuffer;
 	Renderer_Memory VIGPUBuffer;
 	Renderer_Memory scratchBuffer;
 
-	// Uniform Storage Descriptor
+	/// Uniform Storage Descriptor ///
 	Renderer_Memory USDStagingBuffer;
 	Renderer_Memory USDGPUBuffer;
 
-	uint32_t                imageIndex;
-	size_t                  currentFrame;
-};
-
-typedef struct VSR_Renderer VSR_Renderer;
-struct VSR_Renderer
-{
-	SDL_Window         * SDLWindow;
-	Renderer_SubStructs* subStructs;
+	uint32_t imageIndex;
+	size_t currentFrame;
 };
 
 // Temp allocate function

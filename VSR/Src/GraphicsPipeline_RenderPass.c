@@ -39,7 +39,7 @@ GraphicsPipeline_RenderPassCreate(
 
 	VkAttachmentDescription colourAttachment = (VkAttachmentDescription){0};
 	colourAttachment.flags = 0L;
-	colourAttachment.format = renderer->subStructs->surface.surfaceFormat;
+	colourAttachment.format = renderer->surface.surfaceFormat;
 	colourAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	colourAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colourAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -61,7 +61,7 @@ GraphicsPipeline_RenderPassCreate(
 
 	VkAttachmentDescription depthAttachment = (VkAttachmentDescription){0};
 	depthAttachment.flags = 0L;
-	depthAttachment.format = pipeline->subStructs->depthView.format;
+	depthAttachment.format = pipeline->depthView.format;
 	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -129,10 +129,10 @@ GraphicsPipeline_RenderPassCreate(
 	passInfo.pDependencies = subpassDependencies;
 
 	VkResult err = vkCreateRenderPass(
-		renderer->subStructs->logicalDevice.device,
+		renderer->logicalDevice.device,
 		&passInfo,
 		VSR_GetAllocator(),
-		&pipeline->subStructs->renderPass.renderPass);
+		&pipeline->renderPass.renderPass);
 
 	if(err != VK_SUCCESS)
 	{
@@ -165,7 +165,7 @@ GraphicsPipeline_RenderPassDestroy(
 	VSR_GraphicsPipeline* pipeline
 )
 {
-	vkDestroyRenderPass(renderer->subStructs->logicalDevice.device,
-						pipeline->subStructs->renderPass.renderPass,
+	vkDestroyRenderPass(renderer->logicalDevice.device,
+						pipeline->renderPass.renderPass,
 						VSR_GetAllocator());
 }

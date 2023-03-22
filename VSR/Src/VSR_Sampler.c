@@ -20,13 +20,13 @@ void VSR_SamplerWriteToDescriptor(
 
 	imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	imageWrite.dstSet = renderer->subStructs->descriptorPool.globalSet;
+	imageWrite.dstSet = renderer->descriptorPool.globalSet;
 	imageWrite.dstBinding = 0;
 	imageWrite.dstArrayElement = index;
 	imageWrite.descriptorCount = 1;
 	imageWrite.pImageInfo = &imageInfo;
 
-	vkUpdateDescriptorSets(renderer->subStructs->logicalDevice.device,
+	vkUpdateDescriptorSets(renderer->logicalDevice.device,
 						   1, &imageWrite,
 						   0, NULL);
 }
@@ -107,7 +107,7 @@ VSR_GetTextureSampler(
 		textureSamplerInfo.anisotropyEnable = VK_FALSE;
 		textureSamplerInfo.maxAnisotropy = 0.f;
 
-		vkCreateSampler(renderer->subStructs->logicalDevice.device,
+		vkCreateSampler(renderer->logicalDevice.device,
 						&textureSamplerInfo,
 						VSR_GetAllocator(),
 						&sTextureSampler);
@@ -131,7 +131,7 @@ VSR_PopulateDefaultSamplers(
 
 	 VSR_Sampler* sampler = VSR_SamplerCreate(renderer, pipeline, 0, sur);
 
-	for(size_t i = 0; i < renderer->subStructs->texturePoolSize; i++)
+	for(size_t i = 0; i < renderer->texturePoolSize; i++)
 	{
 		VSR_SamplerWriteToDescriptor(renderer,pipeline, i, sampler);
 	}

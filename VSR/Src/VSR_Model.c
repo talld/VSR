@@ -69,8 +69,8 @@ VSR_ModelUpdate(
 	///////////////
 	/// get mem ///
 	///////////////
-	Renderer_Memory *stageMem = &renderer->subStructs->VIStagingBuffer;
-	Renderer_Memory *GPUMem = &renderer->subStructs->VIGPUBuffer;
+	Renderer_Memory *stageMem = &renderer->VIStagingBuffer;
+	Renderer_Memory *GPUMem = &renderer->VIGPUBuffer;
 
 	////////////////
 	/// vertices ///

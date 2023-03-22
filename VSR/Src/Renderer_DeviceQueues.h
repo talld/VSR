@@ -43,8 +43,7 @@ struct Renderer_DeviceQueues
 
 SDL_bool
 VSR_DeviceQueuesPopulateCreateInfo(
-	VSR_RendererCreateInfo* rendererCreateInfo,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* rendererCreateInfo);
 
 Renderer_DeviceQueues
 VSR_DeviceQueuesSelectFromDevice(
@@ -55,6 +54,6 @@ VSR_DeviceQueuesSelectFromDevice(
 SDL_bool
 VSR_DeviceQueuesCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs);
+	VSR_RendererCreateInfo* createInfo);
 
 #endif // VSR_DEVICEQUEUES_H

@@ -11,13 +11,12 @@
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_InstancePopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 	///////////////
 	/// Aliases ///
 	///////////////
-	Renderer_InstanceCreateInfo* instanceInfo = &subStructs->instanceCreateInfo;
+	Renderer_InstanceCreateInfo* instanceInfo = &createInfo->instanceCreateInfo;
 
 	VkInstanceCreateInfo* instanceCreateInfo = &instanceInfo->createInfo;
 
@@ -98,15 +97,8 @@ VSR_InstancePopulateCreateInfo(
 SDL_bool
 VSR_InstanceCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
-	///////////////
-	/// Aliases ///
-	///////////////
-	VkInstanceCreateInfo* createInfo =
-		&subStructs->instanceCreateInfo.createInfo;
-
-
 	////////////////////////////////
 	/// Get available extensions ///
 	////////////////////////////////
@@ -147,17 +139,17 @@ VSR_InstanceCreate(
 	/// Check that we have all the extensions SDL needs ///
 	///////////////////////////////////////////////////////
 	size_t foundExtensions = 0;
-	size_t requiredExtensions = createInfo->enabledExtensionCount;
+	size_t requiredExtensions = createInfo->instanceCreateInfo.createInfo.enabledExtensionCount;
 	for(size_t i = 0; i < propertyCount; i++)
 	{
 		VSR_LOG("FOUND_EXTENSION: %s",availableProperties[i].extensionName);
 		for(size_t j = 0; j < requiredExtensions; j++)
 		{
 			if( strcmp(availableProperties[i].extensionName,
-					   createInfo->ppEnabledExtensionNames[j]) == 0 )
+			           createInfo->instanceCreateInfo.createInfo.ppEnabledExtensionNames[j]) == 0 )
 			{
 				VSR_LOG("MATCHES: %s",
-						createInfo->ppEnabledExtensionNames[j]);
+				        createInfo->instanceCreateInfo.createInfo.ppEnabledExtensionNames[j]);
 
 				foundExtensions++;
 			}
@@ -210,17 +202,17 @@ VSR_InstanceCreate(
 	/// Check that we have all the layers SDL needs ///
 	///////////////////////////////////////////////////////
 	size_t foundLayers = 0;
-	size_t requiredLayers = createInfo->enabledLayerCount;
+	size_t requiredLayers =  createInfo->instanceCreateInfo.createInfo.enabledLayerCount;
 	for(size_t i = 0; i < layerCount; i++)
 	{
 		VSR_LOG("FOUND_LAYER: %s",availableLayers[i].layerName);
 		for(size_t j = 0; j < requiredLayers; j++)
 		{
 			if( strcmp(availableLayers[i].layerName,
-					   createInfo->ppEnabledLayerNames[j]) == 0 )
+			           createInfo->instanceCreateInfo.createInfo.ppEnabledLayerNames[j]) == 0 )
 			{
 				VSR_LOG("MATCHES: %s",
-						createInfo->ppEnabledLayerNames[j]);
+				        createInfo->instanceCreateInfo.createInfo.ppEnabledLayerNames[j]);
 
 				foundLayers++;
 			}
@@ -240,7 +232,7 @@ VSR_InstanceCreate(
 
 
 	VkInstance instance;
-	err = vkCreateInstance(createInfo,
+	err = vkCreateInstance( &createInfo->instanceCreateInfo.createInfo,
 						   VSR_GetAllocator(),
 						   &instance);
 
@@ -254,8 +246,8 @@ VSR_InstanceCreate(
 		goto FAIL;
 	}
 
-	renderer->subStructs->instance.instance = instance;
-	SDL_free((void*) createInfo->ppEnabledExtensionNames);
+	renderer->instance.instance = instance;
+	SDL_free((void*)  createInfo->instanceCreateInfo.createInfo.ppEnabledExtensionNames);
 
 	SUCCESS:
 	{
@@ -279,6 +271,6 @@ void
 VSR_InstanceDestroy(
 	VSR_Renderer* renderer)
 {
-	vkDestroyInstance(renderer->subStructs->instance.instance,
+	vkDestroyInstance(renderer->instance.instance,
 	                  VSR_GetAllocator());
 }

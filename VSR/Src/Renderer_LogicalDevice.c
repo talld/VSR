@@ -8,18 +8,17 @@
 //------------------------------------------------------------------------------
 SDL_bool
 VSR_LogicalDevicePopulateCreateInfo(
-	VSR_RendererCreateInfo* createInfo,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 	///////////////
 	/// aliases ///
 	///////////////
 
 	Renderer_PhysicalDeviceCreateInfo* physicalDeviceCreateInfo =
-		&subStructs->physicalDeviceCreateInfo;
+		&createInfo->physicalDeviceCreateInfo;
 
 	Renderer_LogicalDeviceCreateInfo * logicalDeviceCreateInfo =
-		&subStructs->logicalDeviceCreateInfo;
+		&createInfo->logicalDeviceCreateInfo;
 
 	VkDeviceCreateInfo* deviceCreateInfo =
 		&logicalDeviceCreateInfo->createInfo;
@@ -30,7 +29,7 @@ VSR_LogicalDevicePopulateCreateInfo(
 
 	if(createInfo->geometryShaderRequested)
 	{
-		subStructs->physicalDeviceCreateInfo.physicalDeviceFeatures2
+		createInfo->physicalDeviceCreateInfo.physicalDeviceFeatures2
 		.features.geometryShader = VK_TRUE;
 	}
 
@@ -81,7 +80,7 @@ VSR_LogicalDevicePopulateCreateInfo(
 SDL_bool
 VSR_LogicalDeviceCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 	VkResult err;
 	VkDevice logicalDevice;
@@ -90,13 +89,13 @@ VSR_LogicalDeviceCreate(
 	/// aliases ///
 	///////////////
 	Renderer_LogicalDeviceCreateInfo * logicalDeviceCreateInfo =
-		&subStructs->logicalDeviceCreateInfo;
+		&createInfo->logicalDeviceCreateInfo;
 
 	VkDeviceCreateInfo* deviceCreateInfo =
 		&logicalDeviceCreateInfo->createInfo;
 
 	Renderer_DeviceQueues* deviceQueues =
-		&renderer->subStructs->deviceQueues;
+		&renderer->deviceQueues;
 
 	/////////////////////////////
 	/// Create logical device ///
@@ -147,7 +146,7 @@ VSR_LogicalDeviceCreate(
 	deviceCreateInfo->pQueueCreateInfos = queueCreateInfos;
 	deviceCreateInfo->queueCreateInfoCount = deviceQueues->uniqueQFamilyCount;
 
-	err = vkCreateDevice(renderer->subStructs->physicalDevice.device,
+	err = vkCreateDevice(renderer->physicalDevice.device,
 	                     deviceCreateInfo,
 						 VSR_GetAllocator(),
 						 &logicalDevice);
@@ -159,41 +158,41 @@ VSR_LogicalDeviceCreate(
 		goto FAIL;
 	}
 
-	renderer->subStructs->logicalDevice.device = logicalDevice;
+	renderer->logicalDevice.device = logicalDevice;
 
 	////////////////////
 	/// Fetch queues ///
 	////////////////////
 
-	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+	vkGetDeviceQueue(renderer->logicalDevice.device,
 	                 deviceQueues->QFamilies[kGraphicsQueueIndex],
 	                 deviceQueues->QFamilyIndexes[kGraphicsQueueIndex],
-					 &renderer->subStructs->deviceQueues.QList[kGraphicsQueueIndex]);
+					 &renderer->deviceQueues.QList[kGraphicsQueueIndex]);
 
-	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+	vkGetDeviceQueue(renderer->logicalDevice.device,
 	                 deviceQueues->QFamilies[kTransferQueueIndex],
 	                 deviceQueues->QFamilyIndexes[kTransferQueueIndex],
-					 &renderer->subStructs->deviceQueues.QList[kTransferQueueIndex]);
+					 &renderer->deviceQueues.QList[kTransferQueueIndex]);
 
 
-	vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+	vkGetDeviceQueue(renderer->logicalDevice.device,
 	                 deviceQueues->QFamilies[kComputeQueueIndex],
 	                 deviceQueues->QFamilyIndexes[kComputeQueueIndex],
-					 &renderer->subStructs->deviceQueues.QList[kComputeQueueIndex]);
+					 &renderer->deviceQueues.QList[kComputeQueueIndex]);
 
-	if(renderer->subStructs->deviceQueues.QCanPresent[kGraphicsQueueIndex])
+	if(renderer->deviceQueues.QCanPresent[kGraphicsQueueIndex])
 	{
-		vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+		vkGetDeviceQueue(renderer->logicalDevice.device,
 		                 deviceQueues->QFamilies[kPresentQueueIndex],
 		                 deviceQueues->QFamilyIndexes[kPresentQueueIndex],
-		                 &renderer->subStructs->deviceQueues.QList[kPresentQueueIndex]);
+		                 &renderer->deviceQueues.QList[kPresentQueueIndex]);
 	}
-	else if(renderer->subStructs->deviceQueues.QCanPresent[kComputeQueueIndex])
+	else if(renderer->deviceQueues.QCanPresent[kComputeQueueIndex])
 	{
-		vkGetDeviceQueue(renderer->subStructs->logicalDevice.device,
+		vkGetDeviceQueue(renderer->logicalDevice.device,
 		                 deviceQueues->QFamilies[kGraphicsQueueIndex],
 		                 deviceQueues->QFamilyIndexes[kComputeQueueIndex],
-		                 &renderer->subStructs->deviceQueues.QList[kPresentQueueIndex]);
+		                 &renderer->deviceQueues.QList[kPresentQueueIndex]);
 	}
 
 	SUCCESS:
@@ -218,7 +217,7 @@ void
 VSR_LogicalDeviceDestroy(
 	VSR_Renderer* renderer)
 {
-	vkDestroyDevice(renderer->subStructs->logicalDevice.device,
+	vkDestroyDevice(renderer->logicalDevice.device,
 	                VSR_GetAllocator());
 }
 
@@ -234,7 +233,7 @@ VSR_LogicalDeviceFreeMemory(
 	VSR_Renderer* renderer,
 	VkDeviceMemory memory)
 {
-	vkFreeMemory(renderer->subStructs->logicalDevice.device,
+	vkFreeMemory(renderer->logicalDevice.device,
 				 memory,
 				 VSR_GetAllocator());
 }

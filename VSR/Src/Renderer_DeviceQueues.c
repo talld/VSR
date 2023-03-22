@@ -3,8 +3,7 @@
 #include "VSR_Renderer.h"
 
 SDL_bool VSR_DeviceQueuesPopulateCreateInfo(
-	VSR_RendererCreateInfo* rendererCreateInfo,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 
 
@@ -54,8 +53,7 @@ void findFistQueue(
 Renderer_DeviceQueues
 VSR_DeviceQueuesSelectFromDevice(
 	VkPhysicalDevice physicalDevice,
-	VSR_Renderer* renderer
-	)
+	VSR_Renderer* renderer)
 {
 	Renderer_DeviceQueues queues = (Renderer_DeviceQueues){0};
 
@@ -88,7 +86,7 @@ VSR_DeviceQueuesSelectFromDevice(
 		if(!hasGraphicsQ)
 		{
 			findFistQueue(physicalDevice,
-			              renderer->subStructs->surface.surface,
+			              renderer->surface.surface,
 			              i,
 			              pQueueFamilyProperties,
 			              VK_QUEUE_GRAPHICS_BIT,
@@ -102,7 +100,7 @@ VSR_DeviceQueuesSelectFromDevice(
 		if(!hasComputeQ)
 		{
 			findFistQueue(physicalDevice,
-			              renderer->subStructs->surface.surface,
+			              renderer->surface.surface,
 			              i,
 			              pQueueFamilyProperties,
 			              VK_QUEUE_COMPUTE_BIT,
@@ -116,7 +114,7 @@ VSR_DeviceQueuesSelectFromDevice(
 		if(!hasTransferQ)
 		{
 			findFistQueue(physicalDevice,
-			              renderer->subStructs->surface.surface,
+			              renderer->surface.surface,
 			              i,
 			              pQueueFamilyProperties,
 			              VK_QUEUE_COMPUTE_BIT,
@@ -142,7 +140,7 @@ VSR_DeviceQueuesSelectFromDevice(
 SDL_bool
 VSR_DeviceQueuesCreate(
 	VSR_Renderer* renderer,
-	Renderer_CreateInfoSubStructs* subStructs)
+	VSR_RendererCreateInfo* createInfo)
 {
 
 SUCCESS:
