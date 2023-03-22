@@ -91,17 +91,17 @@ Renderer_MemoryAllocate(
 	VkDeviceSize align);
 
 void
-Renderer_MemoryFree(
+Renderer_MemoryAllocFree(
 	VSR_Renderer* renderer,
 	Renderer_MemoryAlloc* alloc);
 
 void*
-Render_MemoryMapAlloc(
+Renderer_MemoryAllocMap(
 	VSR_Renderer* renderer,
 	Renderer_MemoryAlloc* alloc);
 
 void
-Render_MemoryUnmapAlloc(
+Renderer_MemoryAllocUnmap(
 	VSR_Renderer* renderer,
 	Renderer_MemoryAlloc* alloc);
 

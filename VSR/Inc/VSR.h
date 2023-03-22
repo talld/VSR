@@ -98,6 +98,7 @@ struct VSR_Mesh
 {
 	size_t      vertexCount;
 	VSR_Vertex* vertices;
+	VSR_Vertex* normals;
 	VSR_UV*     UVs;
 
 	size_t      indexCount;
@@ -181,7 +182,7 @@ void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Sh
 
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, VSR_Sampler* samplers, size_t batchCount);
 
-VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices, VSR_UV const* UVs, size_t indexCount, VSR_Index const* indices);
+VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices, VSR_Vertex const* normals, VSR_UV const* UVs, size_t indexCount, VSR_Index const* indices);
 
 void VSR_MeshFree(VSR_Mesh* model);
 

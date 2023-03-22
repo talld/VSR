@@ -125,7 +125,7 @@ VSR_ImageCreate(
 			image->alloc->align
 		);
 
-		void* p = Render_MemoryMapAlloc(
+		void* p = Renderer_MemoryAllocMap(
 			renderer,
 			alloc
 		);
@@ -134,7 +134,7 @@ VSR_ImageCreate(
 		memcpy(p, surface->pixels, alloc->size);
 		SDL_UnlockSurface(surface);
 
-		Render_MemoryUnmapAlloc(
+		Renderer_MemoryAllocUnmap(
 			renderer,
 			alloc
 		);
@@ -151,7 +151,7 @@ VSR_ImageCreate(
 		///////////////////////////
 		/// free staging buffer ///
 		///////////////////////////
-	//	Renderer_MemoryFree(renderer, alloc);
+		Renderer_MemoryAllocFree(renderer, alloc);
 
 	}
 

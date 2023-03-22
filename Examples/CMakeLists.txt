@@ -23,6 +23,7 @@ target_link_options(${PROJECT_NAME} PRIVATE
         )
 
 add_subdirectory(External/cglm)
+target_include_directories(${PROJECT_NAME} PUBLIC External/tinyobjloader-c/)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE VSR cglm)
 target_include_directories(${PROJECT_NAME} PUBLIC ${VSR_INCLUDE_DIRS})

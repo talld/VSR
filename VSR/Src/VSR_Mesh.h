@@ -11,6 +11,7 @@ VSR_Mesh*
 VSR_MeshCreate(
 	size_t vertexCount,
 	VSR_Vertex const* vertices,
+	VSR_Vertex const* normals,
 	VSR_UV const* UVs,
 	size_t indexCount,
 	VSR_Index const* indices);

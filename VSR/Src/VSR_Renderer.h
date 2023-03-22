@@ -110,8 +110,9 @@ struct Renderer_SubStructs
 	size_t extraDescriptorCount;
 
 	// Vertex UV Index:
-	Renderer_Memory VUVIStagingBuffer;
-	Renderer_Memory VUVIGPUBuffer;
+	Renderer_Memory VIStagingBuffer;
+	Renderer_Memory VIGPUBuffer;
+	Renderer_Memory scratchBuffer;
 
 	// Uniform Storage Descriptor
 	Renderer_Memory USDStagingBuffer;

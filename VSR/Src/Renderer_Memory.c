@@ -125,7 +125,7 @@ Renderer_MemoryCreate(
 
 
 //==============================================================================
-// Renderer_MemoryFree
+// Renderer_MemoryAllocFree
 //------------------------------------------------------------------------------
 void
 Renderer_MemoryDestroy(
@@ -264,7 +264,7 @@ Renderer_MemoryTransferToImage(
 
 	vkCmdCopyBufferToImage(
 		buff,
-		renderer->subStructs->USDStagingBuffer.buffer,
+		src->src->buffer,
 		dist->image,
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		1,
@@ -303,7 +303,7 @@ Renderer_MemoryAllocate(
 	{ // init with this alloc as the root (first alloc)
 		if(memory->bufferSize >= size)
 		{ //
-			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
+			alloc = SDL_calloc(1, sizeof(Renderer_MemoryAlloc));
 			alloc->prev = NULL;
 			alloc->next = NULL;
 			alloc->offset = 0;
@@ -329,7 +329,7 @@ Renderer_MemoryAllocate(
 
 		if((freeBegin + size) <= memory->bufferSize)
 		{
-			alloc = SDL_malloc(sizeof(Renderer_MemoryAlloc));
+			alloc = SDL_calloc(1, sizeof(Renderer_MemoryAlloc));
 
 			runner->next = alloc;
 			alloc->prev = runner;
@@ -344,16 +344,19 @@ Renderer_MemoryAllocate(
 	}
 
 
-	// remember where you came from
-	alloc->src = memory;
+	if(alloc) // remember where you came from
+
+	{
+		alloc->src = memory;
+	}
 	return alloc;
 }
 
 //==============================================================================
-// Renderer_MemoryFree
+// Renderer_MemoryAllocFree
 //------------------------------------------------------------------------------
 void
-Renderer_MemoryFree(
+Renderer_MemoryAllocFree(
 	VSR_Renderer* renderer,
 	Renderer_MemoryAlloc* alloc)
 {
@@ -362,11 +365,18 @@ Renderer_MemoryFree(
 		if (alloc->prev)
 		{
 			alloc->prev->next = alloc->next;
+			alloc->prev = NULL;
 		}
 
 		if (alloc->next)
 		{
 			alloc->next->prev = alloc->prev;
+			alloc->next = NULL;
+		}
+
+		if(alloc->src->root == alloc)
+		{
+			alloc->src->root = NULL;
 		}
 
 		SDL_free(alloc);
@@ -375,10 +385,10 @@ Renderer_MemoryFree(
 
 
 //==============================================================================
-// Render_MemoryMapAlloc
+// Renderer_MemoryAllocMap
 //------------------------------------------------------------------------------
 void*
-Render_MemoryMapAlloc(
+Renderer_MemoryAllocMap(
 	VSR_Renderer* renderer,
 	Renderer_MemoryAlloc* alloc)
 {
@@ -402,10 +412,10 @@ Render_MemoryMapAlloc(
 
 
 //==============================================================================
-// Render_MemoryUnmapAlloc
+// Renderer_MemoryAllocUnmap
 //------------------------------------------------------------------------------
 void
-Render_MemoryUnmapAlloc(
+Renderer_MemoryAllocUnmap(
 	VSR_Renderer* renderer,
 	Renderer_MemoryAlloc* alloc)
 {

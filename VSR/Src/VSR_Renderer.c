@@ -1,5 +1,5 @@
 #include "VSR_Renderer.h"
-
+#include "stdio.h"
 //==============================================================================
 // Renderer_CreateSyncObjects
 //------------------------------------------------------------------------------
@@ -95,66 +95,108 @@ void
 Renderer_AllocateBuffers(
 	VSR_Renderer* renderer)
 {
-	VkBufferUsageFlagBits VUVIStageBufferBits =
-							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	///////////////////////////////////////////
+	/// permanent vertex (index UV) storage ///
+	///////////////////////////////////////////
+	VkBufferUsageFlagBits VIBufferBits =
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+		| VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-	VkMemoryPropertyFlagBits VUVIstagingProps =
-								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-								 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	/////////////
+	/// stage ///
+	/////////////
+	VkBufferUsageFlagBits VIStageBufferBits =
+		VIBufferBits
+		| VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-	renderer->subStructs->VUVIStagingBuffer = Renderer_MemoryCreate(
+	VkMemoryPropertyFlagBits VIStagingProps =
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+	renderer->subStructs->VIStagingBuffer = Renderer_MemoryCreate(
 		renderer,
-		1024 * 1024 * 1024,
-		VUVIStageBufferBits,
-		VUVIstagingProps);
+		512 * 1024 * 1024,
+		VIStageBufferBits,
+		VIStagingProps);
 
-	VkBufferUsageFlagBits VUVIGPUBufferBits =
-							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	////////////
+	/// gpu ///
+	///////////
+	VkBufferUsageFlagBits VIGPUBufferBits =
+		VIBufferBits
+		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-	VkMemoryPropertyFlagBits VUVIGPUProps =
-								 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	VkMemoryPropertyFlagBits VIGPUProps =
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	renderer->subStructs->VUVIGPUBuffer = Renderer_MemoryCreate(
+	renderer->subStructs->VIGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		1024 * 1024 * 1024,
-		VUVIGPUBufferBits,
-		VUVIGPUProps);
+		448 * 1024 * 1024,
+		VIGPUBufferBits,
+		VIGPUProps);
 
+	///////////////////////////////////////////////////////
+	/// Scratch GPU Mem (allocs reset at end of render) ///
+	///////////////////////////////////////////////////////
+	VkBufferUsageFlagBits scratchGPUBits =
+		VIBufferBits
+		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	VkMemoryPropertyFlagBits scratchGPUProps =
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+	renderer->subStructs->scratchBuffer = Renderer_MemoryCreate(
+		renderer,
+		128 * 1024 * 1024,
+		scratchGPUBits,
+		scratchGPUProps);
+
+	//////////////////////////////////////////////
+	/// Uniform + sampler + descriptor storage ///
+	//////////////////////////////////////////////
+	VkBufferUsageFlagBits USDBufferBits =
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+		| VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+		| VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT
+		| VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT;
+
+	/////////////
+	/// stage ///
+	/////////////
 	VkBufferUsageFlagBits USDStageBufferBits =
-							  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_INDEX_BUFFER_BIT
-							  | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		USDBufferBits
+		| VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
 	VkMemoryPropertyFlagBits USDStageProps =
-								 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-								 | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;;
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;;
 
 	renderer->subStructs->USDStagingBuffer = Renderer_MemoryCreate(
 		renderer,
-		1024 * 1024 * 1024,
+		512 * 1024 * 1024,
 		USDStageBufferBits,
 		USDStageProps);
 
+	///////////
+	/// GPU ///
+	///////////
 	VkBufferUsageFlagBits USDGPUBufferBits =
-							  VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
-							  | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-							  | VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT
-							  | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT
-							  | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		USDBufferBits
+		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
 	VkMemoryPropertyFlagBits USDGPUProps =
-								 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 	renderer->subStructs->USDGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		128 * 1024 * 1024,
+		448 * 1024 * 1024,
 		USDGPUBufferBits,
 		USDGPUProps);
 
+
+	/////////////////////////////
+	/// extra user descriptor ///
+	/////////////////////////////
 	for(size_t i = 0; i < renderer->subStructs->extraDescriptorCount; i++)
 	{
 		renderer->subStructs->extraDescriptorAllocs[i] =
@@ -178,8 +220,8 @@ void
 Renderer_FreeBuffers(
 	VSR_Renderer* renderer)
 {
-	Renderer_MemoryDestroy(renderer, renderer->subStructs->VUVIGPUBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->subStructs->VUVIStagingBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->subStructs->VIGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->subStructs->VIStagingBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->subStructs->USDGPUBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->subStructs->USDStagingBuffer);
 
@@ -244,6 +286,7 @@ VSR_RendererGenerateCreateInfo(
 	/// setup defaults ///
 	//////////////////////
 	createInfo->texturePoolSize = 256;
+
 	createInfo->geometryShaderRequested = SDL_FALSE;
 	createInfo->tessellationShaderRequested = SDL_FALSE;
 
@@ -462,24 +505,6 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	////////////////
 	if(!renderer->subStructs->pipeline) return;
 
-	//////////////////////
-	/// push constants ///
-	//////////////////////
-	vkCmdPushConstants(
-		cBuff,
-		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
-		VK_SHADER_STAGE_VERTEX_BIT,
-		0,
-		sizeof(VSR_PushConstants),
-		&renderer->subStructs->pushConstantsVertex);
-
-	vkCmdPushConstants(
-		cBuff,
-		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
-		VK_SHADER_STAGE_FRAGMENT_BIT,
-		0,
-		sizeof(VSR_PushConstants),
-		&renderer->subStructs->pushConstantsFragment);
 
 	///////////////
 	/// aliases ///
@@ -530,6 +555,8 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 					  &presentInfo);
 
 	*frameIndex = (*frameIndex + 1) % renderer->subStructs->swapchain.imageViewCount;
+
+	Renderer_MemoryReset(&renderer->subStructs->scratchBuffer);
 }
 
 int
@@ -537,85 +564,173 @@ int
 	VSR_Renderer* renderer,
 	VSR_Model* model,
 	VSR_Mat4* transforms,
+	VSR_Sampler* samplers,
 	size_t batchCount)
 {
+	//////////////////////
+	/// push constants ///
+	//////////////////////
+	vkCmdPushConstants(
+		cBuff,
+		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		VK_SHADER_STAGE_VERTEX_BIT,
+		0,
+		sizeof(VSR_PushConstants),
+		&renderer->subStructs->pushConstantsVertex);
+
+	vkCmdPushConstants(
+		cBuff,
+		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		sizeof(VSR_PushConstants),
+		sizeof(VSR_PushConstants),
+		&renderer->subStructs->pushConstantsFragment);
+
+	/////////////////////////////////////////////////////////////////////
+	/// move all the instanced stuff into per instance scratch memory ///
+	/////////////////////////////////////////////////////////////////////
+	size_t mat4ByteCount = sizeof(VSR_Mat4) * batchCount;
+	size_t samplerByteCount = sizeof(uint32_t) * batchCount;
+
+	/////////////////////
+	/// load matrices ///
+	/////////////////////
+	Renderer_MemoryAlloc* mat4StageAlloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->VIStagingBuffer,
+		mat4ByteCount,
+		0
+	);
+	Renderer_MemoryAlloc* mat4Alloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->scratchBuffer,
+		mat4ByteCount,
+		0
+	);
+	VSR_Mat4* p = Renderer_MemoryAllocMap(renderer, mat4StageAlloc);
 
 	for(size_t i = 0; i < batchCount; i++)
 	{
-		vkCmdBindVertexBuffers(
+		VSR_Mat4 rotate = transforms[i];
+		p[i] = rotate;
+	}
+	Renderer_MemoryAllocUnmap(renderer, mat4StageAlloc);
+
+	Renderer_MemoryTransferAlloc(renderer, mat4Alloc, mat4StageAlloc);
+	Renderer_MemoryAllocFree(renderer, mat4StageAlloc);
+
+	/////////////////////
+	/// load samplers ///
+	/////////////////////
+	Renderer_MemoryAlloc* samplerStageAlloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->VIStagingBuffer,
+		samplerByteCount,
+		0
+	);
+	Renderer_MemoryAlloc* samplerAlloc = Renderer_MemoryAllocate(
+		renderer,
+		&renderer->subStructs->scratchBuffer,
+		samplerByteCount,
+		0
+	);
+	uint32_t* ip = Renderer_MemoryAllocMap(renderer, samplerStageAlloc);
+	for(size_t i = 0; i < batchCount; i++)
+	{
+		ip[i] = (int32_t)samplers[i].index;
+	}
+	Renderer_MemoryAllocUnmap(renderer, samplerStageAlloc);
+	Renderer_MemoryTransferAlloc(renderer, samplerAlloc, samplerStageAlloc);
+	Renderer_MemoryAllocFree(renderer, samplerStageAlloc);
+
+	////////////////////////
+	/// per vertex stuff ///
+	////////////////////////
+	enum {kPerVertexBufferCount = 3};
+	VkBuffer perVertexBuffers[kPerVertexBufferCount] = {
+		model->vertices->src->buffer,
+		model->normals->src->buffer,
+		model->UVs->src->buffer,
+	};
+
+	VkDeviceSize perVertexBufferOffsets[kPerVertexBufferCount] = {
+		model->vertices->offset,
+		model->normals->offset,
+		model->UVs->offset
+	};
+
+	vkCmdBindVertexBuffers(
+		cBuff,
+		0,
+		kPerVertexBufferCount,
+		perVertexBuffers,
+		perVertexBufferOffsets);
+
+	//////////////////////////
+	/// per instance stuff ///
+	//////////////////////////
+	enum {kPerInstanceBufferCount = 2};
+	VkBuffer perInstanceBuffers[kPerInstanceBufferCount] = {
+		samplerAlloc->src->buffer,
+		mat4Alloc->src->buffer,
+
+	};
+
+	VkDeviceSize perInstanceBufferOffsets[kPerInstanceBufferCount] = {
+		samplerAlloc->offset,
+		mat4Alloc->offset,
+	};
+
+	vkCmdBindVertexBuffers(
+		cBuff,
+		kPerVertexBufferCount, // start were per vertex data ended
+		kPerInstanceBufferCount,
+		perInstanceBuffers,
+		perInstanceBufferOffsets);
+
+	enum {kDescriptorSetCount = 2};
+	VkDescriptorSet descriptorSets[kDescriptorSetCount] =
+		{
+			renderer->subStructs->descriptorPool.globalSet,
+			renderer->subStructs->descriptorPool.userSet
+		};
+
+	vkCmdBindDescriptorSets(
+		cBuff,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
+		0,
+		1 + (renderer->subStructs->extraDescriptorCount > 0),
+		descriptorSets,
+		0,
+		NULL
+		);
+
+	if (model->indexCount)
+	{
+		vkCmdBindIndexBuffer(
 			cBuff,
-			0,
-			1,
-			&renderer->subStructs->VUVIGPUBuffer.buffer,
-			&model->vertices->offset);
+			model->indices->src->buffer,
+			model->indices->offset,
+			VK_INDEX_TYPE_UINT32);
 
-		if(model->mesh->UVs)
-		{
-			vkCmdBindVertexBuffers(
-				cBuff,
-				1,
-				1,
-				&renderer->subStructs->VUVIGPUBuffer.buffer,
-				&model->UVs->offset);
-		}
-
-		Renderer_PushConstantsVertex pushConstantsVertex = (Renderer_PushConstantsVertex){0};
-
-		if(transforms)
-		{
-			pushConstantsVertex.MVP = transforms[i];
-		}
-		else // assign identity matrix
-		{
-			pushConstantsVertex.MVP.m0 = 1;
-			pushConstantsVertex.MVP.m5 = 1;
-			pushConstantsVertex.MVP.m10 = 1;
-			pushConstantsVertex.MVP.m15 = 1;
-		}
-
-		if(model->sampler)
-		{
-			pushConstantsVertex.imageIndex = model->sampler->index;
-		}
-		else
-		{
-			pushConstantsVertex.imageIndex = 0;
-		}
-
-		vkCmdPushConstants(
+		vkCmdDrawIndexed(
 			cBuff,
-			renderer->subStructs->pipeline->subStructs->graphicPipeline.pipelineLayout,
-			VK_SHADER_STAGE_VERTEX_BIT,
+			model->indexCount,
+			batchCount,
 			0,
-			sizeof(Renderer_PushConstantsVertex),
-			&pushConstantsVertex);
-
-		if (model->indexCount)
-		{
-			vkCmdBindIndexBuffer(
-				cBuff,
-				renderer->subStructs->VUVIGPUBuffer.buffer,
-				model->indices->offset,
-				VK_INDEX_TYPE_UINT32);
-
-			vkCmdDrawIndexed(
-				cBuff,
-				model->indexCount,
-				batchCount,
-				0,
-				0,
-				0);
-		}
-		else
-		{
-			// don't know why i couldn't just do index = 0 for this...
-			vkCmdDraw(
-				cBuff,
-				model->vertexCount,
-				batchCount,
-				0,
-				0);
-		}
+			0,
+			0);
+	}
+	else
+	{
+		// don't know why i couldn't just do index = 0 for this...
+		vkCmdDraw(
+			cBuff,
+			model->vertexCount,
+			batchCount,
+			0,
+			0);
 	}
 	return 0;
 }
@@ -644,24 +759,23 @@ VSR_RendererWriteDescriptor(
 	void* data,
 	size_t len)
 {
-	Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+	Renderer_MemoryAlloc* stageAlloc = Renderer_MemoryAllocate(
 		renderer,
 		&renderer->subStructs->USDStagingBuffer,
 		len,
 		0);
 
-	void* p = Render_MemoryMapAlloc(renderer, alloc);
+	void* p = Renderer_MemoryAllocMap(renderer, stageAlloc);
 	memcpy(p, data, len);
-	Render_MemoryUnmapAlloc(renderer, alloc);
+	Renderer_MemoryAllocUnmap(renderer, stageAlloc);
 
-	Renderer_MemoryTransfer(
+	Renderer_MemoryTransferAlloc(
 		renderer,
-		renderer->subStructs->extraDescriptorAllocs[index]->src,
-		renderer->subStructs->extraDescriptorAllocs[index]->offset + offset,
-		alloc->src,
-		alloc->offset,
-		len
-		);
+		renderer->subStructs->extraDescriptorAllocs[index],
+		stageAlloc
+	);
+
+	Renderer_MemoryAllocFree(renderer, stageAlloc);
 
 	VkDescriptorBufferInfo bufferInfo = (VkDescriptorBufferInfo){0};
 	bufferInfo.offset = renderer->subStructs->extraDescriptorAllocs[index]->offset;

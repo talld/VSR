@@ -15,6 +15,7 @@ VSR_Mesh*
 VSR_MeshCreate(
 	size_t vertexCount,
 	VSR_Vertex const* vertices,
+	VSR_Vertex const* normals,
 	VSR_UV const* UVs,
 	size_t indexCount,
 	VSR_Index const* indices)
@@ -22,27 +23,62 @@ VSR_MeshCreate(
 	VSR_Mesh* mesh;
 	mesh = SDL_malloc(sizeof(VSR_Mesh));
 
+	////////////////
+	/// vertices ///
+	////////////////
 	size_t vertSize = vertexCount * sizeof(VSR_Vertex);
-	mesh->vertices = malloc(vertSize);
+	mesh->vertices = SDL_malloc(vertSize);
 	mesh->vertexCount = vertexCount;
 	memcpy(mesh->vertices, vertices, vertSize);
 
-	mesh->UVs = NULL;
-	if(UVs)
+	///////////////
+	/// normals ///
+	///////////////
+	mesh->normals = NULL;
+	size_t normalSize = vertexCount * sizeof(VSR_Vertex);
+	mesh->normals = SDL_malloc(normalSize);
+	if(normals)
 	{
-		size_t UVSize = vertexCount * sizeof(VSR_UV);
-		mesh->UVs = malloc(UVSize);
-		memcpy(mesh->UVs, UVs, UVSize);
+		SDL_memcpy(mesh->normals, normals, normalSize);
+	}
+	else
+	{
+		SDL_memset(mesh->normals, 0, normalSize);
 	}
 
+	///////////
+	/// UVs ///
+	///////////
+	mesh->UVs = NULL;
+	size_t UVSize = vertexCount * sizeof(VSR_UV);
+	mesh->UVs = SDL_malloc(UVSize);
+	if(UVs)
+	{
+		SDL_memcpy(mesh->UVs, UVs, UVSize);
+	}
+	else
+	{
+		SDL_memset(mesh->UVs, 0, UVSize);
+	}
+
+	///////////////
+	/// indices ///
+	///////////////
 	mesh->indexCount = 0;
 	mesh->indices = NULL;
-	if(indices)
+	size_t indicesSize = indexCount * sizeof(VSR_Index);
+	mesh->indices    = malloc(indicesSize);
+	if(indexCount)
 	{
-		size_t indicesSize = indexCount * sizeof(VSR_Index);
-		mesh->indices    = malloc(indicesSize);
 		mesh->indexCount = indexCount;
-		memcpy(mesh->indices, indices, indicesSize);
+		SDL_memcpy(mesh->indices, indices, indicesSize);
+	}
+	else
+	{
+		for(int i = 0; i < vertexCount; i++)
+		{
+			mesh->indices[i] = *(VSR_Index*)&i;
+		}
 	}
 
 	return mesh;

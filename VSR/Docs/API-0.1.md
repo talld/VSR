@@ -25,9 +25,11 @@ model render when a model with appropriate UVs is drawn
 
 # Transforms
 ```c
-VSR_Transform* VSR_CreateTransforms(size_t count);
+VSR_Transform* VSR_CreateTransforms(size_t batchCount);
 ```
-transforms are created
+transforms are created in vertex memory, currently only transforms created in
+batches may be rendered in batches
+  (see VSR_RenderModels but TLDR is batchCount in rendering MUST == batchCount in creation)
 
 ```c
 void VSR_FreeTransforms(VSR_Transform* transforms, size_t count);

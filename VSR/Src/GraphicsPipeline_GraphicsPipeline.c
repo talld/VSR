@@ -3,8 +3,8 @@
 #include "VSR_Renderer.h"
 #include "VSR_error.h"
 
-#include "vert.h"
-#include "frag.h"
+#include "VSR_VertexShaderDefault.h"
+#include "VSR_FragmentShaderDefault.h"
 
 
 
@@ -96,11 +96,11 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/// Shader stages ///
 	/////////////////////
 	VSR_Shader* vertBackup =
-		VSR_ShaderCreate(renderer, kVertexShaderBytecodeSize, kVertexShaderBytecode);
+		VSR_ShaderCreate(renderer, kVertexShaderBytecodeSize, kVertexShaderByteCode);
 	shadersStages[SHADER_STAGE_VERTEX].module = vertBackup->module;
 
 	VSR_Shader* fragBackup =
-		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderBytecode);
+		VSR_ShaderCreate(renderer, kFragmentShaderBytecodeSize, kFragmentShaderByteCode);
 	shadersStages[SHADER_STAGE_FRAGMENT].module = fragBackup->module;
 
 	if(createInfo->vertexShader)
@@ -119,29 +119,110 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	/// Vertex Input ///
 	////////////////////
 
-	enum {kVertexInputCount = 2};
+	// VSR_VERTEX          vec3
+	// VSR_UV              vec2
+	// VSR_TRANSFORM       vec4[0]
+	// VSR_TRANSFORM       vec4[1]
+	// VSR_TRANSFORM       vec4[2]
+	// VSR_TRANSFORM       vec4[3]
+	// VSR_SAMPLER (index) int32
+
+	enum {
+		kVertexInput = 0,
+		kNormalInput = 1,
+		kUVInput = 2,
+		kSamplerInput = 3,
+		kMat4Input = 4,
+		kVertexInputCount = 5};
+
+
+	enum {
+		kVertexBinding = 0,
+		kNormalBinding = 1,
+		kUVBinding = 2,
+		kSamplerBiding = 3,
+		kMat4Row1Biding = 4,
+		kMat4Row2Biding = 5,
+		kMat4Row3Biding = 6,
+		kMat4Row4Biding = 7,
+		kVertexBindingCount = 8};
+
 	VkVertexInputBindingDescription vertexInputDesc[kVertexInputCount] = {0};
-	VkVertexInputAttributeDescription vertexAttrDesc[kVertexInputCount] = {0};
+	VkVertexInputAttributeDescription vertexAttrDesc[kVertexBindingCount] = {0};
 
-	// vertices
-	vertexInputDesc[0].binding = 0;
-	vertexInputDesc[0].stride = sizeof(VSR_Vertex);
-	vertexInputDesc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	vertexAttrDesc[0].binding = 0;
-	vertexAttrDesc[0].location = 0;
-	vertexAttrDesc[0].offset = 0;
-	vertexAttrDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3
 
-	// UVs
-	vertexInputDesc[1].binding = 1;
-	vertexInputDesc[1].stride = sizeof(VSR_UV);
-	vertexInputDesc[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	// vertices [0]
+	vertexInputDesc[kVertexInput].binding = kVertexInput;
+	vertexInputDesc[kVertexInput].stride = sizeof(VSR_Vertex);
+	vertexInputDesc[kVertexInput].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	vertexAttrDesc[1].binding = 1;
-	vertexAttrDesc[1].location = 1;
-	vertexAttrDesc[1].offset = 0;
-	vertexAttrDesc[1].format = VK_FORMAT_R32G32_SFLOAT; // vec2
+	vertexAttrDesc[kVertexBinding].binding = kVertexBinding;
+	vertexAttrDesc[kVertexBinding].location = kVertexInput;
+	vertexAttrDesc[kVertexBinding].offset = 0;
+	vertexAttrDesc[kVertexBinding].format = VK_FORMAT_R32G32B32_SFLOAT;
+
+	// normals [1]
+	vertexInputDesc[kNormalInput].binding = kNormalInput;
+	vertexInputDesc[kNormalInput].stride = sizeof(VSR_Vertex);
+	vertexInputDesc[kNormalInput].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	vertexAttrDesc[kNormalBinding].location = kNormalInput;
+	vertexAttrDesc[kNormalBinding].binding = kNormalBinding;
+	vertexAttrDesc[kNormalBinding].offset = 0;
+	vertexAttrDesc[kNormalBinding].format = VK_FORMAT_R32G32B32_SFLOAT;
+
+	// UVs [1]
+	vertexInputDesc[kUVInput].binding = kUVInput;
+	vertexInputDesc[kUVInput].stride = sizeof(VSR_UV);
+	vertexInputDesc[kUVInput].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	vertexAttrDesc[kUVBinding].binding = kUVInput;
+	vertexAttrDesc[kUVBinding].location = kUVBinding;
+	vertexAttrDesc[kUVBinding].offset = 0;
+	vertexAttrDesc[kUVBinding].format = VK_FORMAT_R32G32_SFLOAT; // vec2
+
+	// sampler [2]
+	vertexInputDesc[kSamplerInput].binding = kSamplerInput;
+	vertexInputDesc[kSamplerInput].stride = sizeof(uint32_t);
+	vertexInputDesc[kSamplerInput].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+
+	vertexAttrDesc[kSamplerBiding].binding = kSamplerInput;
+	vertexAttrDesc[kSamplerBiding].location = kSamplerBiding;
+	vertexAttrDesc[kSamplerBiding].offset = 0;
+	vertexAttrDesc[kSamplerBiding].format = VK_FORMAT_R32_UINT; // int32
+
+	// transform
+	// mat4 is is actually vec4[4]..
+	// so uses 4 bindings..
+
+	// mat4 row1 [3]
+	vertexInputDesc[kMat4Input].binding = kMat4Input;
+	vertexInputDesc[kMat4Input].stride = sizeof(VSR_Mat4);
+	vertexInputDesc[kMat4Input].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+
+	vertexAttrDesc[kMat4Row1Biding].binding = kMat4Input;
+	vertexAttrDesc[kMat4Row1Biding].location = kMat4Row1Biding;
+	vertexAttrDesc[kMat4Row1Biding].offset =  sizeof(float[4]) * 0;
+	vertexAttrDesc[kMat4Row1Biding].format = VK_FORMAT_R32G32B32A32_SFLOAT; // vec4
+
+	// mat4 row2 [4]
+	vertexAttrDesc[kMat4Row2Biding].binding = kMat4Input;
+	vertexAttrDesc[kMat4Row2Biding].location = kMat4Row2Biding;
+	vertexAttrDesc[kMat4Row2Biding].offset =  sizeof(float[4]) * 1;
+	vertexAttrDesc[kMat4Row2Biding].format = VK_FORMAT_R32G32B32A32_SFLOAT; // vec4
+
+	// mat4 row3 [5]
+	vertexAttrDesc[kMat4Row3Biding].binding = kMat4Input;
+	vertexAttrDesc[kMat4Row3Biding].location = kMat4Row3Biding;
+	vertexAttrDesc[kMat4Row3Biding].offset =  sizeof(float[4]) * 2;
+	vertexAttrDesc[kMat4Row3Biding].format = VK_FORMAT_R32G32B32A32_SFLOAT; // vec4
+
+	// mat4 row4 [6]
+	vertexAttrDesc[kMat4Row4Biding].binding = kMat4Input;
+	vertexAttrDesc[kMat4Row4Biding].location = kMat4Row4Biding;
+	vertexAttrDesc[kMat4Row4Biding].offset =  sizeof(float[4]) * 3;
+	vertexAttrDesc[kMat4Row4Biding].format = VK_FORMAT_R32G32B32A32_SFLOAT; // vec4
 
 	VkPipelineVertexInputStateCreateInfo vertInfo =
 		(VkPipelineVertexInputStateCreateInfo){0};
@@ -151,8 +232,8 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	vertInfo.flags = 0L;
 	vertInfo.vertexBindingDescriptionCount = kVertexInputCount;
 	vertInfo.pVertexBindingDescriptions = vertexInputDesc;
-	vertInfo.vertexAttributeDescriptionCount = kVertexInputCount;
-	vertInfo.pVertexAttributeDescriptions = vertexAttrDesc;
+	vertInfo.vertexAttributeDescriptionCount = kVertexBindingCount;
+	vertInfo.pVertexAttributeDescriptions = vertexAttrDesc ;
 
 	//////////////////////
 	/// Input Assembly ///
@@ -207,7 +288,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	rasterInfo.rasterizerDiscardEnable = VK_FALSE;
 	rasterInfo.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterInfo.lineWidth = 1.f;
-	rasterInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterInfo.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterInfo.depthBiasEnable = VK_FALSE;
 
@@ -286,23 +367,29 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	//////////////////////
 	/// push constants ///
 	//////////////////////
-	enum { pushConstantCount = 1 };
+	enum { pushConstantCount = 2 };
 	VkPushConstantRange pushConstants[pushConstantCount];
 	pushConstants[0].offset = 0;
-	pushConstants[0].size = sizeof(Renderer_PushConstantsVertex);
+	pushConstants[0].size = sizeof(VSR_PushConstants);
 	pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	pushConstants[1].offset =  sizeof(VSR_PushConstants);
+	pushConstants[1].size = sizeof(VSR_PushConstants);
+	pushConstants[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	//////////////
 	/// layout ///
 	//////////////
 
-	enum {kLayoutCount = 1};
+	enum {kLayoutCount = 2};
 	VkDescriptorSetLayout layouts[kLayoutCount] = {
-		renderer->subStructs->descriptorPool.globalLayout
+		renderer->subStructs->descriptorPool.globalLayout,
+		renderer->subStructs->descriptorPool.userLayout
 	};
 
-	layoutCreateInfo->setLayoutCount = kLayoutCount;
+	layoutCreateInfo->setLayoutCount = 1 + (renderer->subStructs->extraDescriptorCount > 0);
 	layoutCreateInfo->pSetLayouts = layouts;
+
 	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
 	layoutCreateInfo->pPushConstantRanges = pushConstants;
 

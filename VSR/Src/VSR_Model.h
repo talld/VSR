@@ -12,6 +12,7 @@ struct VSR_Model
 
 	size_t vertexCount;
 	Renderer_MemoryAlloc* vertices;
+	Renderer_MemoryAlloc* normals;
 	Renderer_MemoryAlloc* UVs;
 	size_t indexCount;
 	Renderer_MemoryAlloc* indices;

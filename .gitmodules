@@ -1,3 +1,6 @@
 [submodule "Examples/External/cglm"]
 	path = Examples/External/cglm
 	url = https://github.com/recp/cglm.git
+[submodule "Examples/External/tinyobjloader-c"]
+	path = Examples/External/tinyobjloader-c
+	url = https://github.com/syoyo/tinyobjloader-c.git
