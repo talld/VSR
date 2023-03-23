@@ -203,7 +203,7 @@ Renderer_MemoryTransfer(
 int
 Renderer_MemoryTransferAlloc(
 	VSR_Renderer* renderer,
-	Renderer_MemoryAlloc*dst,
+	Renderer_MemoryAlloc* dst,
 	Renderer_MemoryAlloc* src)
 {
 	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
