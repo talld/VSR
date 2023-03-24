@@ -61,7 +61,7 @@ GraphicsPipeline_RenderPassCreate(
 
 	VkAttachmentDescription depthAttachment = (VkAttachmentDescription){0};
 	depthAttachment.flags = 0L;
-	depthAttachment.format = pipeline->depthView.format;
+	depthAttachment.format = pipeline->depthView->format;
 	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

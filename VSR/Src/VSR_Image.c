@@ -228,15 +228,16 @@ VSR_ImageTransition(
 //==============================================================================
 // VSR_ImageViewCreate
 //------------------------------------------------------------------------------
-VSR_ImageView
+VSR_ImageView*
 VSR_ImageViewCreate(
 	VSR_Renderer* renderer,
 	VkImage image,
 	VkFormat imageFormat,
 	VkImageAspectFlags aspectFlags)
 {
-	VkImageViewCreateInfo viewCreateInfo;
+	VSR_ImageView* imageView = NULL;
 
+	VkImageViewCreateInfo viewCreateInfo;
 	viewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	viewCreateInfo.flags = 0;
 	viewCreateInfo.pNext = NULL;
@@ -264,12 +265,12 @@ VSR_ImageViewCreate(
 		&view
 		);
 
-	VSR_ImageView imageView;
 	if(err == VK_SUCCESS)
 	{
-		imageView.image     = image;
-		imageView.format    = imageFormat;
-		imageView.imageView = view;
+		imageView = SDL_malloc(sizeof(VSR_ImageView));
+		imageView->image     = image;
+		imageView->format    = imageFormat;
+		imageView->imageView = view;
 	}
 
 	return imageView;

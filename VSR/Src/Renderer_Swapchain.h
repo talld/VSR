@@ -24,7 +24,7 @@ struct Renderer_Swapchain
 {
 	VkSwapchainKHR   swapchain;
 	size_t           imageViewCount;
-	VSR_ImageView*   imageViews;
+	VSR_ImageView**  pImageViews;
 };
 
 

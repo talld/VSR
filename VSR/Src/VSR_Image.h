@@ -38,7 +38,7 @@ VSR_ImageTransition(
 	VkImageLayout from,
 	VkImageLayout to);
 
-VSR_ImageView
+VSR_ImageView*
 VSR_ImageViewCreate(
 	VSR_Renderer* renderer,
 	VkImage image,

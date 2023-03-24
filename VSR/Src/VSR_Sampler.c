@@ -11,7 +11,7 @@ void VSR_SamplerWriteToDescriptor(
 {
 	VkDescriptorImageInfo imageInfo;
 	imageInfo.sampler = sampler->sampler;
-	imageInfo.imageView = sampler->view.imageView;
+	imageInfo.imageView = sampler->view->imageView;
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 	VkWriteDescriptorSet imageWrite = (VkWriteDescriptorSet){0};
@@ -55,7 +55,7 @@ VSR_SamplerCreate(
 		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	);
 
-	VSR_ImageView imgView = VSR_ImageViewCreate(
+	VSR_ImageView* imgView = VSR_ImageViewCreate(
 		renderer,
 		img->image,
 		img->format,

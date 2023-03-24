@@ -10,7 +10,7 @@ struct VSR_Sampler
 {
 	size_t index;
 	VSR_Image* image;
-	VSR_ImageView view;
+	VSR_ImageView* view;
 	VkSampler sampler;
 };
 

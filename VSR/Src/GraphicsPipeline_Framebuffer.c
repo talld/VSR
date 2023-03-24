@@ -34,8 +34,8 @@ GraphicsPipeline_FramebufferCreate(
 	framebufferCreateInfo->renderPass = pipeline->renderPass.renderPass;
 	framebufferCreateInfo->attachmentCount = 2; // colour, depth
 	VkImageView attachments[2] = {
-		renderer->swapchain.imageViews[0].imageView,
-		pipeline->depthView.imageView
+		renderer->swapchain.pImageViews[0]->imageView,
+		pipeline->depthView->imageView
 		};
 
 	framebufferCreateInfo->height = renderer->surface.surfaceHeight;
@@ -44,7 +44,7 @@ GraphicsPipeline_FramebufferCreate(
 
 	for(size_t i = 0; i < frameCount; i++)
 	{
-		attachments[0] = renderer->swapchain.imageViews[i].imageView;
+		attachments[0] = renderer->swapchain.pImageViews[i]->imageView;
 		// depth stencil doesn't change from image to image here
 		framebufferCreateInfo->pAttachments = attachments;
 

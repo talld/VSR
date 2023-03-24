@@ -152,20 +152,20 @@ VSR_SwapchainCreate(
 	renderer->swapchain.imageViewCount = swapchainImageCount;
 
 	size_t imageViewsListSize = swapchainImageCount * sizeof(VSR_ImageView);
-	renderer->swapchain.imageViews = SDL_malloc(imageViewsListSize);
+	renderer->swapchain.pImageViews = SDL_malloc(imageViewsListSize);
 
 	for(size_t i = 0; i < swapchainImageCount; i++)
 	{
 		VkImage image = imageList[i];
 
-		VSR_ImageView imageView =
+		VSR_ImageView* imageView =
 		VSR_ImageViewCreate(
 			renderer,
 			image,
 			renderer->surface.surfaceFormat,
 			VK_IMAGE_ASPECT_COLOR_BIT);
 
-		renderer->swapchain.imageViews[i] = imageView;
+		renderer->swapchain.pImageViews[i] = imageView;
 	}
 
 	SDL_free((void*) imageList);
@@ -198,7 +198,7 @@ VSR_SwapchainDestroy(
 	for(size_t i = 0; i < count; i++)
 	{
 		VSR_ImageView* pView =
-			&renderer->swapchain.imageViews[i];
+			renderer->swapchain.pImageViews[i];
 
 			VSR_ImageViewDestroy(renderer, pView);
 	}
@@ -209,5 +209,5 @@ VSR_SwapchainDestroy(
 		VSR_GetAllocator()
 		);
 
-	SDL_free(renderer->swapchain.imageViews);
+	SDL_free(renderer->swapchain.pImageViews);
 }

@@ -27,7 +27,7 @@ typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;
 struct VSR_GraphicsPipeline
 {
 	VSR_Image*                         depthImage;
-	VSR_ImageView                      depthView;
+	VSR_ImageView*                     depthView;
 
 	GraphicsPipeline_RenderPass        renderPass;
 	GraphicsPipeline_Framebuffer       framebuffer;
