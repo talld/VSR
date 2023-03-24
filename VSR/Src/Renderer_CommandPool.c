@@ -193,6 +193,12 @@ Renderer_CommandPoolSubmitTransferBuffer(
 			VK_TRUE,
 			-1
 		);
+
+		vkDestroyFence(
+			renderer->logicalDevice.device,
+			fence,
+			VSR_GetAllocator()
+		);
 	}
 }
 
