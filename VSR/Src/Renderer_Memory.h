@@ -38,6 +38,8 @@ struct Renderer_MemoryAlloc
 
 struct Renderer_Memory
 {
+	VkFence bufferFence;
+
 	VkDeviceMemory memory;
 	VkBuffer       buffer;
 	VkDeviceSize   bufferSize; // buffer is 1:1 with memory
@@ -45,7 +47,7 @@ struct Renderer_Memory
 	Renderer_MemoryAlloc* root;
 };
 
-Renderer_Memory
+Renderer_Memory*
 Renderer_MemoryCreate(
 	VSR_Renderer* renderer,
 	VkDeviceSize size,
@@ -55,7 +57,7 @@ Renderer_MemoryCreate(
 void
 Renderer_MemoryDestroy(
 	VSR_Renderer* renderer,
-	Renderer_Memory memory);
+	Renderer_Memory* memory);
 
 void
 Renderer_MemoryReset(
@@ -68,7 +70,8 @@ Renderer_MemoryTransfer(
 	VkDeviceSize dstOffset,
 	Renderer_Memory* src,
 	VkDeviceSize srcOffset,
-	VkDeviceSize len);
+	VkDeviceSize len,
+	VkFence fence);
 
 int
 Renderer_MemoryTransferAlloc(

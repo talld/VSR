@@ -38,6 +38,7 @@ struct Renderer_DeviceQueues
 	uint32_t QFamilies[kMaxUniqueQFamilies];
 	uint32_t QFamilyIndexes[kMaxUniqueQFamilies];
 
+	VkFence QFences[kMaxUniqueQFamilies];
 	VkQueue QList[kMaxUniqueQFamilies];
 };
 

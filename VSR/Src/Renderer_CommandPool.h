@@ -59,7 +59,8 @@ Renderer_CommandPoolAllocateTransferBuffer(
 void
 Renderer_CommandPoolSubmitTransferBuffer(
 	VSR_Renderer* renderer,
-	VkCommandBuffer buff);
+	VkCommandBuffer buff,
+	VkFence fence);
 
 int
 Renderer_CommandBufferRecordStart(

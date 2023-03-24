@@ -215,7 +215,7 @@ Renderer_AllocateBuffers(
 	{
 		renderer->extraDescriptorAllocs[i] = Renderer_MemoryAllocate(
 			renderer,
-			&renderer->USDGPUBuffer,
+			renderer->USDGPUBuffer,
 			renderer->extraDescriptorSizes[i],
 			0
 		);
@@ -571,7 +571,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 
 	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
 
-	Renderer_MemoryReset(&renderer->scratchBuffer);
+	Renderer_MemoryReset(renderer->scratchBuffer);
 }
 
 
@@ -622,7 +622,7 @@ VSR_RenderModels(
 	// alloc stage
 	Renderer_MemoryAlloc* mat4StageAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->VIStagingBuffer,
+		renderer->VIStagingBuffer,
 		mat4ByteCount,
 		0
 	);
@@ -635,7 +635,7 @@ VSR_RenderModels(
 	// alloc gpu mem
 	Renderer_MemoryAlloc* mat4Alloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->scratchBuffer,
+		renderer->scratchBuffer,
 		mat4ByteCount,
 		0
 	);
@@ -647,7 +647,7 @@ VSR_RenderModels(
 	/////////////////////
 	Renderer_MemoryAlloc* samplerStageAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->VIStagingBuffer,
+		renderer->VIStagingBuffer,
 		samplerByteCount,
 		0
 	);
@@ -663,7 +663,7 @@ VSR_RenderModels(
 	// allocate GPU side in scratch memory
 	Renderer_MemoryAlloc* samplerAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->scratchBuffer,
+		renderer->scratchBuffer,
 		samplerByteCount,
 		0
 	);
@@ -814,7 +814,7 @@ VSR_RendererWriteDescriptor(
 {
 	Renderer_MemoryAlloc* stageAlloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->USDStagingBuffer,
+		renderer->USDStagingBuffer,
 		len,
 		0
 	);

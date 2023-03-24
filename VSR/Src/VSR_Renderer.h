@@ -111,13 +111,13 @@ struct VSR_Renderer
 	size_t                extraDescriptorCount;
 
 	/// Vertex UV Index ///
-	Renderer_Memory VIStagingBuffer;
-	Renderer_Memory VIGPUBuffer;
-	Renderer_Memory scratchBuffer;
+	Renderer_Memory* VIStagingBuffer;
+	Renderer_Memory* VIGPUBuffer;
+	Renderer_Memory* scratchBuffer;
 
 	/// Uniform Storage Descriptor ///
-	Renderer_Memory USDStagingBuffer;
-	Renderer_Memory USDGPUBuffer;
+	Renderer_Memory* USDStagingBuffer;
+	Renderer_Memory* USDGPUBuffer;
 
 	uint32_t imageIndex;
 	size_t currentFrame;

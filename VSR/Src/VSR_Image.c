@@ -87,7 +87,7 @@ VSR_ImageCreate(
 
 	image->alloc = Renderer_MemoryAllocate(
 		renderer,
-		&renderer->USDGPUBuffer,
+		renderer->USDGPUBuffer,
 		memoryRequirementsInfo.size,
 		memoryRequirementsInfo.alignment
 	);
@@ -120,7 +120,7 @@ VSR_ImageCreate(
 		// grab a staging buffer
 		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
 			renderer,
-			&renderer->USDStagingBuffer,
+			renderer->USDStagingBuffer,
 			image->alloc->size,
 			image->alloc->align
 		);
@@ -219,7 +219,10 @@ VSR_ImageTransition(
 		1, &imageBarrier
 	);
 
-	Renderer_CommandPoolSubmitTransferBuffer(renderer, buff);
+	Renderer_CommandPoolSubmitTransferBuffer(
+		renderer,
+		buff,
+		NULL);
 }
 
 

@@ -115,16 +115,23 @@ Renderer_CommandPoolAllocateTransferBuffer(
 	allocInfo.commandPool = renderer->commandPool.transferPool;
 	allocInfo.commandBufferCount = 1;
 
-	vkAllocateCommandBuffers(
+	VkResult err = vkAllocateCommandBuffers(
 		renderer->logicalDevice.device,
-							 &allocInfo,
-							 &buff);
+		&allocInfo,
+		&buff);
 
-	VkCommandBufferBeginInfo beginInfo = (VkCommandBufferBeginInfo){0};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	if(err == VK_SUCCESS)
+	{
+		VkCommandBufferBeginInfo beginInfo = (VkCommandBufferBeginInfo) {0};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	vkBeginCommandBuffer(buff, &beginInfo);
+		vkBeginCommandBuffer(buff, &beginInfo);
+	}
+	else
+	{
+		buff = NULL;
+	}
 
 	return buff;
 }
@@ -132,44 +139,61 @@ Renderer_CommandPoolAllocateTransferBuffer(
 void
 Renderer_CommandPoolSubmitTransferBuffer(
 	VSR_Renderer* renderer,
-	VkCommandBuffer buff)
+	VkCommandBuffer buff,
+	VkFence fence)
 {
 	vkEndCommandBuffer(buff);
 
+	SDL_bool bInternalSync = SDL_FALSE;
+
+	if(fence)
+	{
+		vkResetFences(
+			renderer->logicalDevice.device,
+			1,
+			&fence
+		);
+	}
+	else
+	{
+		bInternalSync = SDL_TRUE;
+
+		VkFenceCreateInfo fenceCreateInfo = (VkFenceCreateInfo){0};
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.pNext = NULL;
+		fenceCreateInfo.flags = 0L;
+
+		vkCreateFence(
+			renderer->logicalDevice.device,
+			&fenceCreateInfo,
+			VSR_GetAllocator(),
+			&fence
+		);
+	}
+
 	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
+	submitInfo.pNext = NULL;
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &buff;
-
-	VkFence transferFence;
-	VkFenceCreateInfo fenceInfo;
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.pNext = NULL;
-	fenceInfo.flags = 0;
-
-	vkCreateFence(
-		renderer->logicalDevice.device,
-		&fenceInfo,
-		VSR_GetAllocator(),
-		&transferFence);
 
 	vkQueueSubmit(
 		renderer->deviceQueues.QList[kTransferQueueIndex],
 		1,
 		&submitInfo,
-		transferFence);
+		fence
+	);
 
-	vkWaitForFences(
-		renderer->logicalDevice.device,
-		1,
-		&transferFence,
-		VK_TRUE,
-		-1);
-
-	vkDestroyFence(
-		renderer->logicalDevice.device,
-		transferFence,
-		VSR_GetAllocator());
+	if(bInternalSync)
+	{
+		vkWaitForFences(
+			renderer->logicalDevice.device,
+			1,
+			&fence,
+			VK_TRUE,
+			-1
+		);
+	}
 }
 
 int

@@ -96,26 +96,36 @@ createBuffer(
 //==============================================================================
 // Renderer_MemoryCreate
 //------------------------------------------------------------------------------
-Renderer_Memory
+Renderer_Memory*
 Renderer_MemoryCreate(
 	VSR_Renderer* renderer,
 	VkDeviceSize size,
 	VkBufferUsageFlagBits use,
 	VkMemoryPropertyFlags flags)
 {
-	// this will be copied out so alloc on stack
-	Renderer_Memory rendererMemory = (Renderer_Memory){0};
+	Renderer_Memory* rendererMemory = SDL_malloc(sizeof(Renderer_Memory));
+
+	VkFenceCreateInfo fenceInfo;
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.pNext = NULL;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	vkCreateFence(
+		renderer->logicalDevice.device,
+		&fenceInfo,
+		VSR_GetAllocator(),
+		&rendererMemory->bufferFence);
 
 	createBuffer(
 		renderer,
 		size,
 		use,
 		flags,
-		&rendererMemory.buffer,
-		&rendererMemory.memory);
+		&rendererMemory->buffer,
+		&rendererMemory->memory);
 
-	rendererMemory.bufferSize = size;
-	rendererMemory.root = NULL;
+	rendererMemory->bufferSize = size;
+	rendererMemory->root = NULL;
 
 	return rendererMemory;
 }
@@ -130,17 +140,32 @@ Renderer_MemoryCreate(
 void
 Renderer_MemoryDestroy(
 	VSR_Renderer* renderer,
-	Renderer_Memory memory)
+	Renderer_Memory* memory)
 {
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&memory->bufferFence,
+		VK_TRUE,
+		-1
+	);
+
+	vkDestroyFence(
+		renderer->logicalDevice.device,
+		memory->bufferFence,
+		VSR_GetAllocator());
+
 	vkDestroyBuffer(
 		renderer->logicalDevice.device,
-		memory.buffer,
+		memory->buffer,
 		VSR_GetAllocator());
 
 	vkFreeMemory(
 		renderer->logicalDevice.device,
-		memory.memory,
+		memory->memory,
 		VSR_GetAllocator());
+
+	SDL_free(memory);
 }
 
 
@@ -171,8 +196,10 @@ Renderer_MemoryTransfer(
 	VkDeviceSize dstOffset,
 	Renderer_Memory* src,
 	VkDeviceSize srcOffset,
-	VkDeviceSize len)
+	VkDeviceSize len,
+	VkFence fence)
 {
+
 	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
 		renderer
 	);
@@ -182,11 +209,17 @@ Renderer_MemoryTransfer(
 	copyRegion.srcOffset = srcOffset;
 	copyRegion.size = len;
 
-	vkCmdCopyBuffer(buff, src->buffer, dst->buffer, 1, &copyRegion);
+	vkCmdCopyBuffer(
+		buff,
+		src->buffer,
+		dst->buffer,
+		1,
+		&copyRegion);
 
 	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		buff
+		buff,
+		fence
 	);
 
 
@@ -206,29 +239,18 @@ Renderer_MemoryTransferAlloc(
 	Renderer_MemoryAlloc* dst,
 	Renderer_MemoryAlloc* src)
 {
-	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
-		renderer
-	);
 
-	VkBufferCopy copyRegion = (VkBufferCopy){0};
-	copyRegion.dstOffset = dst->offset;
-	copyRegion.srcOffset = src->offset;
-	copyRegion.size = src->size;
-
-	vkCmdCopyBuffer(
-		buff,
-		src->src->buffer,
-		dst->src->buffer,
-		1,
-		&copyRegion
-	);
-
-	Renderer_CommandPoolSubmitTransferBuffer(
+	int res = Renderer_MemoryTransfer(
 		renderer,
-		buff
+		dst->src,
+		dst->offset,
+		src->src,
+		src->offset,
+		src->size,
+		NULL
 	);
 
-	return 0;
+	return res;
 }
 
 
@@ -273,7 +295,8 @@ Renderer_MemoryTransferToImage(
 
 	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		buff
+		buff,
+		NULL
 	);
 
 	return SDL_TRUE;
@@ -344,9 +367,9 @@ Renderer_MemoryAllocate(
 	}
 
 
-	if(alloc) // remember where you came from
-
+	if(alloc)
 	{
+		// remember where you came from
 		alloc->src = memory;
 	}
 	return alloc;
@@ -362,6 +385,8 @@ Renderer_MemoryAllocFree(
 {
 	if(alloc)
 	{
+
+
 		if (alloc->prev)
 		{
 			alloc->prev->next = alloc->next;
@@ -378,7 +403,6 @@ Renderer_MemoryAllocFree(
 		{
 			alloc->src->root = NULL;
 		}
-
 		SDL_free(alloc);
 	}
 }

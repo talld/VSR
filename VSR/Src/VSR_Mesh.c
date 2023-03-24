@@ -100,11 +100,8 @@ VSR_MeshFree(
 {
 	SDL_free(mesh->vertices);
 	SDL_free(mesh->UVs);
+	SDL_free(mesh->indices);
 
-	if(mesh->indices)
-	{
-		SDL_free(mesh->indices);
-	}
 
 	SDL_free(mesh);
 }
