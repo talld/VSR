@@ -48,7 +48,6 @@ VkImage createImage(VSR_Renderer* renderer,
 VSR_Image*
 VSR_ImageCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	SDL_Surface* surface,
 	VkFormat format,
 	VkImageTiling tiling,
@@ -107,7 +106,6 @@ VSR_ImageCreate(
 		//////////////////////////////////////////
 		VSR_ImageTransition(
 			renderer,
-			pipeline,
 			image,
 			VK_IMAGE_LAYOUT_UNDEFINED,
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
@@ -168,7 +166,6 @@ VSR_ImageCreate(
 void
 VSR_ImageTransition(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	VSR_Image* img,
 	VkImageLayout from,
 	VkImageLayout to)

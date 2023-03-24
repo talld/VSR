@@ -390,6 +390,7 @@ VSR_RendererCreate(
 	Renderer_DescriptorPoolCreate(renderer, rendererCreateInfo);
 	Renderer_CommandPoolCreate(renderer, rendererCreateInfo);
 
+	VSR_PopulateDefaultSamplers(renderer);
 
 	return renderer;
 }

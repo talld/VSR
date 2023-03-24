@@ -180,7 +180,7 @@ void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 
 void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
-VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, size_t index, SDL_Surface* sur);
+VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface* sur);
 
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 

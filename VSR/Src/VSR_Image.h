@@ -26,7 +26,6 @@ struct VSR_ImageView
 VSR_Image*
 VSR_ImageCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	SDL_Surface* surface,
 	VkFormat format,
 	VkImageTiling tiling,
@@ -35,7 +34,6 @@ VSR_ImageCreate(
 void
 VSR_ImageTransition(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	VSR_Image* img,
 	VkImageLayout from,
 	VkImageLayout to);

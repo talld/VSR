@@ -94,9 +94,6 @@ VSR_GraphicsPipelineCreate(
 	GraphicsPipeline_FramebufferCreate(renderer, pipeline, createInfo);
 	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 
-	renderer->pipeline = pipeline;
-	VSR_PopulateDefaultSamplers(renderer, pipeline);
-
 	return pipeline;
 }
 

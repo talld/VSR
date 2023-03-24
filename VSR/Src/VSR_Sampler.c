@@ -5,7 +5,6 @@
 
 void VSR_SamplerWriteToDescriptor(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	size_t index,
 	VSR_Sampler* sampler
 	)
@@ -34,7 +33,6 @@ void VSR_SamplerWriteToDescriptor(
 VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	size_t index,
 	SDL_Surface* sur)
 {
@@ -42,7 +40,6 @@ VSR_SamplerCreate(
 
 	VSR_Image* img = VSR_ImageCreate(
 		renderer,
-		pipeline,
 		sur,
 		VK_FORMAT_R8G8B8A8_UNORM,
 		VK_IMAGE_TILING_OPTIMAL,
@@ -53,7 +50,6 @@ VSR_SamplerCreate(
 
 	VSR_ImageTransition(
 		renderer,
-		pipeline,
 		img,
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
@@ -74,7 +70,7 @@ VSR_SamplerCreate(
 	sampler->view = imgView;
 	sampler->sampler = VSR_GetTextureSampler(renderer);
 
-	VSR_SamplerWriteToDescriptor(renderer,pipeline, index, sampler);
+	VSR_SamplerWriteToDescriptor(renderer,index, sampler);
 
 	return sampler;
 }
@@ -118,8 +114,7 @@ VSR_GetTextureSampler(
 
 void
 VSR_PopulateDefaultSamplers(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline)
+	VSR_Renderer* renderer)
 {
 	SDL_Surface* sur = SDL_CreateRGBSurfaceWithFormat(
 		0,
@@ -129,10 +124,10 @@ VSR_PopulateDefaultSamplers(
 		kFallBackTextureFormat);
 	sur->pixels = kFallBackTexturePixels;
 
-	 VSR_Sampler* sampler = VSR_SamplerCreate(renderer, pipeline, 0, sur);
+	 VSR_Sampler* sampler = VSR_SamplerCreate(renderer, 0, sur);
 
 	for(size_t i = 0; i < renderer->texturePoolSize; i++)
 	{
-		VSR_SamplerWriteToDescriptor(renderer,pipeline, i, sampler);
+		VSR_SamplerWriteToDescriptor(renderer, i, sampler);
 	}
 }

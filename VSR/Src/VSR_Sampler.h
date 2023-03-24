@@ -17,7 +17,6 @@ struct VSR_Sampler
 VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
 	size_t index,
 	SDL_Surface* sur);
 
@@ -27,7 +26,6 @@ VSR_GetTextureSampler(
 
 void
 VSR_PopulateDefaultSamplers(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline);
+	VSR_Renderer* renderer);
 
 #endif //VSR_SAMPLER_H
