@@ -1,5 +1,6 @@
 #include "VSR_Renderer.h"
-#include "stdio.h"
+#include "fallbackTexture.h"
+
 //==============================================================================
 // Renderer_CreateSyncObjects
 //------------------------------------------------------------------------------
@@ -233,11 +234,11 @@ void
 Renderer_FreeBuffers(
 	VSR_Renderer* renderer)
 {
+	Renderer_MemoryDestroy(renderer, renderer->scratchBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->VIGPUBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->VIStagingBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->USDGPUBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->USDStagingBuffer);
-
 }
 
 
@@ -296,6 +297,7 @@ VSR_RendererGenerateCreateInfo(
 	/// setup defaults ///
 	//////////////////////
 	createInfo->texturePoolSize = 256;
+	createInfo->cmdBuffersPerPool = 10;
 
 	createInfo->geometryShaderRequested = SDL_FALSE;
 	createInfo->tessellationShaderRequested = SDL_FALSE;
@@ -390,7 +392,22 @@ VSR_RendererCreate(
 	Renderer_DescriptorPoolCreate(renderer, rendererCreateInfo);
 	Renderer_CommandPoolCreate(renderer, rendererCreateInfo);
 
-	VSR_PopulateDefaultSamplers(renderer);
+	//
+	SDL_Surface* sur = SDL_CreateRGBSurfaceWithFormat(
+		0,
+		kFallBackTextureWidth,
+		kFallBackTextureHeight,
+		kFallBackTextureDepth,
+		kFallBackTextureFormat);
+	sur->pixels = kFallBackTexturePixels;
+
+	renderer->defaultSampler = VSR_SamplerCreate(renderer, 0, sur);
+
+	for(size_t i = 0; i < renderer->texturePoolSize; i++)
+	{
+		VSR_SamplerWriteToDescriptor(renderer, i, renderer->defaultSampler );
+	}
+
 
 	return renderer;
 }
@@ -411,6 +428,13 @@ VSR_RendererFree(
 	////////////////////////////////////////
 	// TODO: make multi-threading safe
 	vkDeviceWaitIdle(renderer->logicalDevice.device);
+
+	VSR_SamplerFree(renderer, renderer->defaultSampler);
+	vkDestroySampler(
+		renderer->logicalDevice.device,
+		VSR_GetTextureSampler(renderer),
+		VSR_GetAllocator()
+		);
 
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
@@ -489,6 +513,8 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 		&renderer->imageIndex
 	);
 
+	// reset frame memory
+	Renderer_MemoryReset(renderer->scratchBuffer);
 	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
 		renderer
 	);
@@ -571,8 +597,6 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	);
 
 	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
-
-	Renderer_MemoryReset(renderer->scratchBuffer);
 }
 
 
@@ -657,7 +681,7 @@ VSR_RenderModels(
 	uint32_t* ip = Renderer_MemoryAllocMap(renderer, samplerStageAlloc);
 	for(size_t i = 0; i < batchCount; i++)
 	{
-		ip[i] = (int32_t)samplers[i]->index;
+		ip[i] = (int32_t)(samplers[i]->index);
 	}
 	Renderer_MemoryAllocUnmap(renderer, samplerStageAlloc);
 

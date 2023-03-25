@@ -35,19 +35,23 @@ Renderer_CommandPoolCreate(
 	/////////////////////
 	VkResult err;
 
+	/// pass settings over ///
+	renderer->commandPool.cmdBuffersPerPool = createInfo->cmdBuffersPerPool;
+
+	/// ///
 	VkCommandPoolCreateInfo* poolCreateInfo =
 		&createInfo->commandPoolCreateInfo.commandPoolCreateInfo;
 
 	poolCreateInfo->sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	poolCreateInfo->pNext = NULL;
-	poolCreateInfo->flags = 0L;
-
+	poolCreateInfo->flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 	poolCreateInfo->queueFamilyIndex = renderer->deviceQueues.QFamilyIndexes[kGraphicsQueueIndex];
 	err = vkCreateCommandPool(renderer->logicalDevice.device,
 						poolCreateInfo,
 						VSR_GetAllocator(),
 						&renderer->commandPool.graphicsPool);
+
 
 	poolCreateInfo->queueFamilyIndex = renderer->deviceQueues.QFamilyIndexes[kTransferQueueIndex];
 	err = vkCreateCommandPool(renderer->logicalDevice.device,
@@ -62,6 +66,86 @@ Renderer_CommandPoolCreate(
 				VSR_VkErrorToString(err));
 		goto FAIL;
 	}
+
+	////////////////////////////////
+	/// allocate synchronization ///
+	////////////////////////////////
+
+	VkFenceCreateInfo fenceCreateInfo;
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.pNext = NULL;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	size_t fenceListSize = renderer->commandPool.cmdBuffersPerPool * sizeof(VkFence);
+	renderer->commandPool.graphicsCmdReadySignals = SDL_malloc(fenceListSize);
+	renderer->commandPool.transferCmdReadySignals = SDL_malloc(fenceListSize);
+
+	for(size_t i = 0; i < renderer->commandPool.cmdBuffersPerPool; i++)
+	{
+		vkCreateFence(
+			renderer->logicalDevice.device,
+			&fenceCreateInfo,
+			VSR_GetAllocator(),
+			&renderer->commandPool.graphicsCmdReadySignals[i]
+		);
+
+		vkCreateFence(
+			renderer->logicalDevice.device,
+			&fenceCreateInfo,
+			VSR_GetAllocator(),
+			&renderer->commandPool.transferCmdReadySignals[i]
+		);
+	}
+
+	////////////////////////////////
+	/// allocate command buffers ///
+	////////////////////////////////
+
+	VkCommandBufferAllocateInfo commandBuffAllocateInfo = (VkCommandBufferAllocateInfo){0};
+	commandBuffAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBuffAllocateInfo.pNext = NULL;
+	commandBuffAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	commandBuffAllocateInfo.commandBufferCount = renderer->commandPool.cmdBuffersPerPool;
+
+
+	/// graphics pool ///
+	commandBuffAllocateInfo.commandPool = renderer->commandPool.graphicsPool;
+
+	renderer->commandPool.graphicsCmdBuffers = SDL_malloc(
+		renderer->commandPool.cmdBuffersPerPool * sizeof(VkCommandBuffer));
+
+	err = vkAllocateCommandBuffers(
+		renderer->logicalDevice.device,
+		&commandBuffAllocateInfo,
+		renderer->commandPool.graphicsCmdBuffers);
+
+	if(err != VK_SUCCESS)
+	{
+		VSR_Error("Failed to create command pool: %s",
+		          VSR_VkErrorToString(err));
+		goto FAIL;
+	}
+
+
+	/// transfer pool ///
+	commandBuffAllocateInfo.commandPool = renderer->commandPool.transferPool;
+
+	renderer->commandPool.transferCmdBuffers= SDL_malloc(
+		renderer->commandPool.cmdBuffersPerPool * sizeof(VkCommandBuffer));
+
+	err = vkAllocateCommandBuffers(
+		renderer->logicalDevice.device,
+		&commandBuffAllocateInfo,
+		renderer->commandPool.transferCmdBuffers);
+
+
+	if(err != VK_SUCCESS)
+	{
+		VSR_Error("Failed to create command pool: %s",
+		          VSR_VkErrorToString(err));
+		goto FAIL;
+	}
+
 
 
 	SUCCESS:
@@ -79,27 +163,33 @@ VkCommandBuffer
 Renderer_CommandPoolAllocateGraphicsBuffer(
 	VSR_Renderer* renderer)
 {
-	///////////////////////
-	/// command buffers ///
-	///////////////////////
-	VkCommandBuffer buff;
+	static size_t lastGiven = 0;
+	size_t newIndex = lastGiven + 1;
 
-	VkCommandBufferAllocateInfo commandBufInfo = (VkCommandBufferAllocateInfo){0};
-	commandBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	commandBufInfo.pNext = NULL;
-	commandBufInfo.commandPool = renderer->commandPool.graphicsPool;
-	commandBufInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	commandBufInfo.commandBufferCount = 1;
-
-	VkResult err = vkAllocateCommandBuffers(renderer->logicalDevice.device,
-								   &commandBufInfo,
-								   &buff);
-
-	if(err)
+	if(newIndex >= renderer->commandPool.cmdBuffersPerPool)
 	{
-		buff = NULL;
+		newIndex = 0;
 	}
 
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&renderer->commandPool.graphicsCmdReadySignals[newIndex],
+		VK_TRUE,
+		-1
+	);
+
+	VkCommandBuffer buff = renderer->commandPool.graphicsCmdBuffers[newIndex];
+
+	VkCommandBufferBeginInfo beginInfo;
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.pNext = NULL;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = NULL;
+
+	vkBeginCommandBuffer(buff, &beginInfo);
+
+	lastGiven = newIndex;
 	return buff;
 }
 
@@ -107,32 +197,33 @@ VkCommandBuffer
 Renderer_CommandPoolAllocateTransferBuffer(
 	VSR_Renderer* renderer)
 {
-	VkCommandBuffer buff;
+	static size_t lastGiven = 0;
+	size_t newIndex = lastGiven + 1;
 
-	VkCommandBufferAllocateInfo allocInfo = (VkCommandBufferAllocateInfo){0};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = renderer->commandPool.transferPool;
-	allocInfo.commandBufferCount = 1;
+	if(newIndex >= renderer->commandPool.cmdBuffersPerPool)
+	{
+		newIndex = 0;
+	}
 
-	VkResult err = vkAllocateCommandBuffers(
+	vkWaitForFences(
 		renderer->logicalDevice.device,
-		&allocInfo,
-		&buff);
+		1,
+		&renderer->commandPool.transferCmdReadySignals[newIndex],
+		VK_TRUE,
+		-1
+	);
 
-	if(err == VK_SUCCESS)
-	{
-		VkCommandBufferBeginInfo beginInfo = (VkCommandBufferBeginInfo) {0};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	VkCommandBuffer buff = renderer->commandPool.transferCmdBuffers[newIndex];
 
-		vkBeginCommandBuffer(buff, &beginInfo);
-	}
-	else
-	{
-		buff = NULL;
-	}
+	VkCommandBufferBeginInfo beginInfo;
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.pNext = NULL;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = NULL;
 
+	vkBeginCommandBuffer(buff, &beginInfo);
+
+	lastGiven = newIndex;
 	return buff;
 }
 
@@ -200,6 +291,10 @@ Renderer_CommandPoolSubmitTransferBuffer(
 			VSR_GetAllocator()
 		);
 	}
+
+	VkCommandBufferResetFlags resetFlags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
+	vkResetCommandBuffer(buff, resetFlags);
+
 }
 
 int
@@ -208,12 +303,6 @@ Renderer_CommandBufferRecordStart(
 	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer cBuff)
 {
-	VkCommandBufferBeginInfo bufferBeginInfo = (VkCommandBufferBeginInfo){0};
-	bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	bufferBeginInfo.pNext = NULL;
-	bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-	bufferBeginInfo.pInheritanceInfo = NULL;
-
 	VkRenderPassBeginInfo passBeginInfo = (VkRenderPassBeginInfo){0};
 	passBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	passBeginInfo.pNext = NULL;
@@ -235,13 +324,6 @@ Renderer_CommandBufferRecordStart(
 	/// record buffers    ///
 	/////////////////////////
 	{
-		VkResult err = vkBeginCommandBuffer(cBuff, &bufferBeginInfo);
-		if(err != VK_SUCCESS)
-		{
-            VSR_Error("Failed to start command recording: %s",
-					VSR_VkErrorToString(err));
-			goto FAIL;
-		}
 		vkCmdBeginRenderPass(cBuff, &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(cBuff,

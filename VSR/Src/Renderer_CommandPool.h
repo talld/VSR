@@ -28,8 +28,16 @@ struct Renderer_CommandPoolCreateInfo
 typedef struct Renderer_CommandPool Renderer_CommandPool;
 struct Renderer_CommandPool
 {
+	size_t cmdBuffersPerPool;
+
 	VkCommandPool graphicsPool;
+	VkCommandBuffer* graphicsCmdBuffers;
+	VkFence* graphicsCmdReadySignals;
+
 	VkCommandPool transferPool;
+	VkCommandBuffer* transferCmdBuffers;
+	VkFence* transferCmdReadySignals;
+
 };
 
 

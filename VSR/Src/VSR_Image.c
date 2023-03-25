@@ -161,6 +161,31 @@ VSR_ImageCreate(
 
 
 //==============================================================================
+// VSR_ImageDestroy
+//------------------------------------------------------------------------------
+void
+VSR_ImageDestroy(
+	VSR_Renderer* renderer,
+	VSR_Image* image)
+{
+	// wait for the current frame to finish
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&renderer->imageFinished[renderer->currentFrame],
+		VK_TRUE,
+		-1
+	);
+
+	vkDestroyImage(
+		renderer->logicalDevice.device,
+		image->image,
+		VSR_GetAllocator()
+	);
+}
+
+
+//==============================================================================
 // VSR_ImageViewCreate
 //------------------------------------------------------------------------------
 void

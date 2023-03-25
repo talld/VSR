@@ -20,12 +20,19 @@ VSR_SamplerCreate(
 	size_t index,
 	SDL_Surface* sur);
 
+void
+VSR_SamplerFree(
+	VSR_Renderer* renderer,
+	VSR_Sampler* sampler);
+
 VkSampler
 VSR_GetTextureSampler(
 	VSR_Renderer* renderer);
 
-void
-VSR_PopulateDefaultSamplers(
-	VSR_Renderer* renderer);
+void VSR_SamplerWriteToDescriptor(
+	VSR_Renderer* renderer,
+	size_t index,
+	VSR_Sampler* sampler);
+
 
 #endif //VSR_SAMPLER_H

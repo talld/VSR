@@ -32,6 +32,11 @@ VSR_ImageCreate(
 	VkImageUsageFlags useFlags);
 
 void
+VSR_ImageDestroy(
+	VSR_Renderer* renderer,
+	VSR_Image* image);
+
+void
 VSR_ImageTransition(
 	VSR_Renderer* renderer,
 	VSR_Image* img,

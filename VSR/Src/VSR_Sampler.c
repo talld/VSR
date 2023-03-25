@@ -1,34 +1,8 @@
 #include "VSR_Sampler.h"
 
 #include "VSR_Renderer.h"
-#include "fallbackTexture.h"
+#include "VSR_error.h"
 
-void VSR_SamplerWriteToDescriptor(
-	VSR_Renderer* renderer,
-	size_t index,
-	VSR_Sampler* sampler
-	)
-{
-	VkDescriptorImageInfo imageInfo;
-	imageInfo.sampler = sampler->sampler;
-	imageInfo.imageView = sampler->view->imageView;
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-	VkWriteDescriptorSet imageWrite = (VkWriteDescriptorSet){0};
-	imageWrite.pNext = NULL;
-
-	imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	imageWrite.dstSet = renderer->descriptorPool.globalSet;
-	imageWrite.dstBinding = 0;
-	imageWrite.dstArrayElement = index;
-	imageWrite.descriptorCount = 1;
-	imageWrite.pImageInfo = &imageInfo;
-
-	vkUpdateDescriptorSets(renderer->logicalDevice.device,
-						   1, &imageWrite,
-						   0, NULL);
-}
 
 VSR_Sampler*
 VSR_SamplerCreate(
@@ -75,6 +49,33 @@ VSR_SamplerCreate(
 	return sampler;
 }
 
+void
+VSR_SamplerFree(
+	VSR_Renderer* renderer,
+	VSR_Sampler* sampler)
+{
+
+	// wait for the last frame to finish as sampler might be in use
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&renderer->imageFinished[renderer->imageIndex],
+		VK_TRUE,
+		-1
+	);
+
+	VSR_ImageViewDestroy(
+		renderer,
+		sampler->view
+		);
+
+	VSR_ImageDestroy(
+		renderer,
+		sampler->image
+	);
+
+}
+
 VkSampler
 VSR_GetTextureSampler(
 	VSR_Renderer* renderer)
@@ -103,31 +104,48 @@ VSR_GetTextureSampler(
 		textureSamplerInfo.anisotropyEnable = VK_FALSE;
 		textureSamplerInfo.maxAnisotropy = 0.f;
 
-		vkCreateSampler(renderer->logicalDevice.device,
-						&textureSamplerInfo,
-						VSR_GetAllocator(),
-						&sTextureSampler);
+		VkResult err = vkCreateSampler(
+			renderer->logicalDevice.device,
+			&textureSamplerInfo,
+			VSR_GetAllocator(),
+			&sTextureSampler);
+
+		if(err != VK_SUCCESS)
+		{
+			VSR_Error(
+				"Failed to create default sampler: %s",
+				VSR_VkErrorToString(err)
+			);
+		}
 	}
 
 	return sTextureSampler;
 }
 
-void
-VSR_PopulateDefaultSamplers(
-	VSR_Renderer* renderer)
+
+void VSR_SamplerWriteToDescriptor(
+	VSR_Renderer* renderer,
+	size_t index,
+	VSR_Sampler* sampler
+)
 {
-	SDL_Surface* sur = SDL_CreateRGBSurfaceWithFormat(
-		0,
-		kFallBackTextureWidth,
-		kFallBackTextureHeight,
-		kFallBackTextureDepth,
-		kFallBackTextureFormat);
-	sur->pixels = kFallBackTexturePixels;
+	VkDescriptorImageInfo imageInfo;
+	imageInfo.sampler = sampler->sampler;
+	imageInfo.imageView = sampler->view->imageView;
+	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-	 VSR_Sampler* sampler = VSR_SamplerCreate(renderer, 0, sur);
+	VkWriteDescriptorSet imageWrite = (VkWriteDescriptorSet){0};
+	imageWrite.pNext = NULL;
 
-	for(size_t i = 0; i < renderer->texturePoolSize; i++)
-	{
-		VSR_SamplerWriteToDescriptor(renderer, i, sampler);
-	}
+	imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	imageWrite.dstSet = renderer->descriptorPool.globalSet;
+	imageWrite.dstBinding = 0;
+	imageWrite.dstArrayElement = index;
+	imageWrite.descriptorCount = 1;
+	imageWrite.pImageInfo = &imageInfo;
+
+	vkUpdateDescriptorSets(renderer->logicalDevice.device,
+	                       1, &imageWrite,
+	                       0, NULL);
 }
