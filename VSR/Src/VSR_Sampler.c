@@ -1,18 +1,7 @@
 #include "VSR_Sampler.h"
 
 #include "VSR_Renderer.h"
-#include "fallbackTexture.h"
-
-void VSR_SamplerWriteToDescriptor(
-	VSR_Renderer* renderer,
-	size_t index,
-	VSR_Sampler* sampler
-	)
-{
-	VkDescriptorImageInfo imageInfo;
-	imageInfo.sampler = sampler->sampler;
-	imageInfo.imageView = sampler->view->imageView;
-	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+#include "VSR_error.h"
 
 	VkWriteDescriptorSet imageWrite = (VkWriteDescriptorSet){0};
 	imageWrite.pNext = NULL;

@@ -26,6 +26,8 @@ typedef struct Renderer_Memory Renderer_Memory;
 typedef struct Renderer_MemoryAlloc Renderer_MemoryAlloc;
 struct Renderer_MemoryAlloc
 {
+	VkSemaphore bufferInUseSignal;
+
 	Renderer_MemoryAlloc* prev;
 	Renderer_MemoryAlloc* next;
 

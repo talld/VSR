@@ -182,6 +182,8 @@ void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
 VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface* sur);
 
+void VSR_SamplerFree(VSR_Renderer* renderer, VSR_Sampler* sampler);
+
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 
 #endif // VSR_H

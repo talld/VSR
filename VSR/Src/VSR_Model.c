@@ -39,10 +39,10 @@ VSR_ModelFree(
 	VSR_Renderer* renderer,
 	VSR_Model* model)
 {
-	SDL_free(model);
 	Renderer_MemoryAllocFree(renderer, model->vertices);
 	Renderer_MemoryAllocFree(renderer, model->UVs);
 	Renderer_MemoryAllocFree(renderer, model->indices);
+	SDL_free(model);
 }
 
 

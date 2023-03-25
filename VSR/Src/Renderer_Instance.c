@@ -70,9 +70,13 @@ VSR_InstancePopulateCreateInfo(
 	////////////////////////////////
 	#ifdef VSR_DEBUG
 	{
-		static const char* layerName =  "VK_LAYER_KHRONOS_validation";
-		instanceCreateInfo->ppEnabledLayerNames = &layerName;
-		instanceCreateInfo->enabledLayerCount = 1;
+		enum{kEnabledLayerCount = 1};
+		static const char* layerNames[kEnabledLayerCount] ={
+			"VK_LAYER_KHRONOS_validation",
+		//	"VK_LAYER_LUNARG_api_dump",
+		};
+		instanceCreateInfo->ppEnabledLayerNames = layerNames;
+		instanceCreateInfo->enabledLayerCount = kEnabledLayerCount;
 	}
 	#endif
 
@@ -208,8 +212,9 @@ VSR_InstanceCreate(
 		VSR_LOG("FOUND_LAYER: %s",availableLayers[i].layerName);
 		for(size_t j = 0; j < requiredLayers; j++)
 		{
-			if( strcmp(availableLayers[i].layerName,
-			           createInfo->instanceCreateInfo.createInfo.ppEnabledLayerNames[j]) == 0 )
+			const char* strA =  availableLayers[i].layerName;
+			const char* strB =  createInfo->instanceCreateInfo.createInfo.ppEnabledLayerNames[j];
+			if( strcmp(strA, strB) == 0 )
 			{
 				VSR_LOG("MATCHES: %s",
 				        createInfo->instanceCreateInfo.createInfo.ppEnabledLayerNames[j]);

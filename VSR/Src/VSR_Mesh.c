@@ -69,15 +69,15 @@ VSR_MeshCreate(
 	if(indexCount)
 	{
 		size_t indicesSize = indexCount * sizeof(VSR_Index);
-		mesh->indexCount = indexCount;
-		mesh->indices    = malloc(indicesSize);
+		mesh->indexCount   = indexCount;
+		mesh->indices      = SDL_malloc(indicesSize);
 		SDL_memcpy(mesh->indices, indices, indicesSize);
 	}
 	else
 	{
 		size_t indicesSize = vertexCount * sizeof(VSR_Index);
-		mesh->indexCount = vertexCount;
-		mesh->indices    = malloc(indicesSize);
+		mesh->indexCount   = vertexCount;
+		mesh->indices      = SDL_malloc(indicesSize);
 		for(int i = 0; i < vertexCount; i++)
 		{
 			mesh->indices[i] = *(VSR_Index*)&i;

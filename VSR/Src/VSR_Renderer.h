@@ -53,6 +53,7 @@ struct VSR_RendererCreateInfo
 	SDL_bool geometryShaderRequested;
 	SDL_bool tessellationShaderRequested;
 
+	size_t cmdBuffersPerPool;
 	size_t texturePoolSize;
 
 	size_t extraDescriptorSizes[kMaxSupportedStorageBuffers];
@@ -79,7 +80,7 @@ struct Renderer_SubStructs
 typedef struct VSR_Renderer VSR_Renderer;
 struct VSR_Renderer
 {
-	SDL_Window         * SDLWindow;
+	SDL_Window* SDLWindow;
 
 
 	Renderer_Instance       instance;
@@ -109,6 +110,8 @@ struct VSR_Renderer
 	size_t*               extraDescriptorSizes;
 	Renderer_MemoryAlloc* extraDescriptorAllocs[kMaxSupportedStorageBuffers];
 	size_t                extraDescriptorCount;
+
+	VSR_Sampler* defaultSampler;
 
 	/// Vertex UV Index ///
 	Renderer_Memory* VIStagingBuffer;
