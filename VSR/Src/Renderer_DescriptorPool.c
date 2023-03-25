@@ -181,7 +181,6 @@ void
 Renderer_DescriptorPoolDestroy(
 	VSR_Renderer* renderer)
 {
-
 	vkDestroyDescriptorPool(
 		renderer->logicalDevice.device,
 		renderer->descriptorPool.globalPool,
@@ -194,4 +193,9 @@ Renderer_DescriptorPoolDestroy(
 		VSR_GetAllocator()
 	);
 
+	vkDestroyDescriptorSetLayout(
+		renderer->logicalDevice.device,
+		renderer->descriptorPool.userLayout,
+		VSR_GetAllocator()
+	);
 }

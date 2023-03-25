@@ -392,6 +392,21 @@ void
 Renderer_CommandPoolDestroy(
 	VSR_Renderer* renderer)
 {
+	for(size_t i = 0; i < renderer->commandPool.cmdBuffersPerPool; i++)
+	{
+		vkDestroyFence(
+			renderer->logicalDevice.device,
+			renderer->commandPool.graphicsCmdReadySignals[i],
+			VSR_GetAllocator()
+		);
+
+		vkDestroyFence(
+			renderer->logicalDevice.device,
+			renderer->commandPool.transferCmdReadySignals[i],
+			VSR_GetAllocator()
+		);
+	}
+
 	vkDestroyCommandPool(renderer->logicalDevice.device,
 						 renderer->commandPool.graphicsPool,
 						 VSR_GetAllocator());
