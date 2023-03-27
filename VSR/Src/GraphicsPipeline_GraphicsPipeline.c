@@ -2,6 +2,7 @@
 
 #include "VSR_Renderer.h"
 #include "VSR_error.h"
+#include "VSR_Mat4.h"
 
 #include "VSR_VertexShaderDefault.h"
 #include "VSR_FragmentShaderDefault.h"
@@ -377,6 +378,9 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pushConstants[1].size = sizeof(VSR_PushConstants);
 	pushConstants[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
+	layoutCreateInfo->pPushConstantRanges = pushConstants;
+
 	//////////////
 	/// layout ///
 	//////////////
@@ -389,9 +393,6 @@ GraphicsPipeline_GraphicsPipelineCreate(
 
 	layoutCreateInfo->setLayoutCount = 1 + (renderer->extraDescriptorCount > 0);
 	layoutCreateInfo->pSetLayouts = layouts;
-
-	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
-	layoutCreateInfo->pPushConstantRanges = pushConstants;
 
 	VkResult err =
 		vkCreatePipelineLayout(renderer->logicalDevice.device,

@@ -18,7 +18,6 @@ typedef struct Renderer_DeviceQueuesCreateInfo Renderer_DeviceQueuesCreateInfo;
 struct Renderer_DeviceQueuesCreateInfo
 {
 
-
 };
 
 enum {kGraphicsQueueIndex = 0,

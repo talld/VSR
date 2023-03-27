@@ -10,7 +10,13 @@ VSR_SamplerCreate(
 	size_t textureIndex,
 	SDL_Surface* sur)
 {
+	static size_t uuid = 0;
+	if(uuid == 0) {uuid++;}
+
 	VSR_Sampler* sampler = SDL_malloc(sizeof(VSR_Sampler));
+	sampler->uuid = uuid++;
+	sampler->arrayIndex = -1;
+	sampler->needsUpdate = SDL_TRUE;
 
 	VSR_Image* img = VSR_ImageCreate(
 		renderer,

@@ -1,4 +1,7 @@
 #include "VSR_Renderer.h"
+
+#include "VSR_Mat4.h"
+
 #include "fallbackTexture.h"
 
 //==============================================================================
@@ -103,7 +106,8 @@ void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 //------------------------------------------------------------------------------
 void
 Renderer_AllocateBuffers(
-	VSR_Renderer* renderer)
+	VSR_Renderer* renderer,
+	VSR_RendererCreateInfo* createInfo)
 {
 	///////////////////////////////////////////
 	/// permanent vertex (index UV) storage ///
@@ -123,9 +127,9 @@ Renderer_AllocateBuffers(
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 		| VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-	renderer->VIStagingBuffer = Renderer_MemoryCreate(
+	renderer->vertexStagingBuffer = Renderer_MemoryCreate(
 		renderer,
-		512 * 1024 * 1024,
+		createInfo->vertexStagingBufferSize,
 		VIStageBufferBits,
 		VIStagingProps
 	);
@@ -140,30 +144,30 @@ Renderer_AllocateBuffers(
 	VkMemoryPropertyFlagBits VIGPUProps =
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-	renderer->VIGPUBuffer = Renderer_MemoryCreate(
+	renderer->perModelVertexGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		448 * 1024 * 1024,
+		createInfo->perModelVertexGPUBufferSize,
 		VIGPUBufferBits,
 		VIGPUProps
 	);
 
-	///////////////////////////////////////////////////////
-	/// Scratch GPU Mem (allocs reset at end of render) ///
-	///////////////////////////////////////////////////////
-	VkBufferUsageFlagBits scratchGPUBits =
-		VIBufferBits
-		| VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-	VkMemoryPropertyFlagBits scratchGPUProps =
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-	renderer->scratchBuffer = Renderer_MemoryCreate(
+	renderer->perInstanceVertexGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		128 * 1024 * 1024,
-		scratchGPUBits,
-		scratchGPUProps
+		createInfo->perInstanceVertexGPUBufferSize,
+		VIGPUBufferBits,
+		VIGPUProps
 	);
 
+	size_t Mat4Size = sizeof(float[16]);
+	size_t samplerSize = sizeof(uint32_t);
+
+	size_t combinedSize = samplerSize + Mat4Size;
+	size_t combinedCount = createInfo->perInstanceVertexGPUBufferSize / combinedSize;
+	renderer->samplerMatrixArrayLength = combinedCount * 2;
+	renderer->matrixStartIndex = combinedCount;
+
+	size_t arraySizeBytes = renderer->samplerMatrixArrayLength * sizeof(uint64_t);
+	renderer->modelSamplerMatrixArray = SDL_malloc(arraySizeBytes);
 	//////////////////////////////////////////////
 	/// Uniform + sampler + descriptor storage ///
 	//////////////////////////////////////////////
@@ -186,7 +190,7 @@ Renderer_AllocateBuffers(
 
 	renderer->USDStagingBuffer = Renderer_MemoryCreate(
 		renderer,
-		512 * 1024 * 1024,
+		createInfo->DescriptorSamplerStagingBufferSize,
 		USDStageBufferBits,
 		USDStageProps
 	);
@@ -203,7 +207,7 @@ Renderer_AllocateBuffers(
 
 	renderer->USDGPUBuffer = Renderer_MemoryCreate(
 		renderer,
-		448 * 1024 * 1024,
+		createInfo->DescriptorSamplerGPUBufferSize,
 		USDGPUBufferBits,
 		USDGPUProps
 	);
@@ -234,9 +238,9 @@ void
 Renderer_FreeBuffers(
 	VSR_Renderer* renderer)
 {
-	Renderer_MemoryDestroy(renderer, renderer->scratchBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->VIGPUBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->VIStagingBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->perModelVertexGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->perInstanceVertexGPUBuffer);
+	Renderer_MemoryDestroy(renderer, renderer->vertexStagingBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->USDGPUBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->USDStagingBuffer);
 }
@@ -302,6 +306,12 @@ VSR_RendererGenerateCreateInfo(
 	createInfo->geometryShaderRequested = SDL_FALSE;
 	createInfo->tessellationShaderRequested = SDL_FALSE;
 
+	createInfo->vertexStagingBufferSize = 128 * 1024 * 1024;
+	createInfo->perModelVertexGPUBufferSize = 128 * 1024 * 1024;
+	createInfo->perInstanceVertexGPUBufferSize = 128 * 1024 * 1024;
+
+	createInfo->DescriptorSamplerStagingBufferSize = 128 * 1024 * 1024;
+	createInfo->DescriptorSamplerGPUBufferSize = 512 * 1024 * 1024;
 
 	////////////////////////////////////////////////////////////////////////////
 	/// populate vk create info structs as much as can be done at the moment ///
@@ -360,39 +370,38 @@ VSR_RendererCreate(
 
 	// TODO: check
 	renderer->texturePoolSize = rendererCreateInfo->texturePoolSize;
-
 	renderer->extraDescriptorSizes = rendererCreateInfo->extraDescriptorSizes;
 	renderer->extraDescriptorCount = rendererCreateInfo->extraDescriptorCount;
 
-	renderer->pushConstantsVertex = (VSR_PushConstants){0};
-	renderer->pushConstantsVertex.Projection.m0 = -1.81066f;
-	renderer->pushConstantsVertex.Projection.m5 = 2.41421342f;
-	renderer->pushConstantsVertex.Projection.m10 = -1.002002f;
-	renderer->pushConstantsVertex.Projection.m11 = -1.f;
-	renderer->pushConstantsVertex.Projection.m14 = 4.f;
-	renderer->pushConstantsVertex.Projection.m15 = 4.f;
-
+	// stage one object creation
 	VSR_InstanceCreate(renderer, rendererCreateInfo);
 	VSR_SurfaceCreate(renderer, rendererCreateInfo);
 	VSR_PhysicalDeviceSelect(renderer, rendererCreateInfo);
 	VSR_DeviceQueuesCreate(renderer, rendererCreateInfo);
 	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo);
-
-	Renderer_AllocateBuffers(renderer);
-
-	// TODO: move this to its own VSR_GraphicsPipeline struct
 	VSR_SwapchainCreate(renderer, rendererCreateInfo);
 
+	// stage 2 mem alloc
+	Renderer_AllocateBuffers(renderer, rendererCreateInfo);
 	Renderer_CreateSyncObjects(renderer);
 
-	// stage 2
 	Renderer_DescriptorPoolPopulateCreateInfo(renderer, rendererCreateInfo);
 	Renderer_CommandPoolPopulateCreateInfo(renderer, rendererCreateInfo);
 
 	Renderer_DescriptorPoolCreate(renderer, rendererCreateInfo);
 	Renderer_CommandPoolCreate(renderer, rendererCreateInfo);
 
-	//
+	// stage 3 set more defaults
+	renderer->pushConstantsVertex = (VSR_PushConstants){0};
+	/* TODO: replace with static matrix that pointer defaults to
+	renderer->pushConstantsVertex.Projection->m0 = -1.81066f;
+	renderer->pushConstantsVertex.Projection->m5 = 2.41421342f;
+	renderer->pushConstantsVertex.Projection->m10 = -1.002002f;
+	renderer->pushConstantsVertex.Projection->m11 = -1.f;
+	renderer->pushConstantsVertex.Projection->m14 = 4.f;
+	renderer->pushConstantsVertex.Projection->m15 = 4.f;
+	*/
+
 	SDL_Surface* sur = SDL_CreateRGBSurfaceWithFormat(
 		0,
 		kFallBackTextureWidth,
@@ -513,8 +522,7 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 		&renderer->imageIndex
 	);
 
-	// reset frame memory
-	Renderer_MemoryReset(renderer->scratchBuffer);
+	renderer->modelInstanceCount = 0;
 	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
 		renderer
 	);
@@ -599,7 +607,146 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
 }
 
+size_t
+VSR_RendererMoveMat4ToGpu(
+	VSR_Renderer* renderer,
+	VSR_Mat4** mat4s,
+	size_t mat4Count)
+{
+	const size_t mat4Size = sizeof(float[16]);
+	size_t offset = 0;
 
+	// map the stage and keep it mapped until we need to transfer
+	void* p = NULL;
+	VkMemoryMapFlags flags = 0L; // currently unimp'd
+	vkMapMemory(
+		renderer->logicalDevice.device,
+		renderer->vertexStagingBuffer->memory,
+		0,
+		renderer->vertexStagingBuffer->bufferSize,
+		flags,
+		&p
+	);
+
+	size_t stageUsed = 0;
+
+	for(size_t i = 0; i < mat4Count; i++)
+	{
+		size_t index = renderer->modelInstanceCount
+			+ renderer->matrixStartIndex;
+
+		if(renderer->modelSamplerMatrixArray[index] != mat4s[i]->uuid)
+		{
+			// we're uploading so that is an update
+			mat4s[i]->needsUpdate = SDL_FALSE;
+
+			float* mat4Data = (void*)mat4s[i] + offsetof(VSR_Mat4, m0);
+
+			memcpy(
+				p + stageUsed,
+				mat4Data,
+				1
+			);
+
+			stageUsed += mat4Size;
+
+			renderer->modelSamplerMatrixArray[index] = mat4s[i]->uuid;
+
+		}
+
+		renderer->modelInstanceCount++;
+	}
+
+	vkUnmapMemory(
+		renderer->logicalDevice.device,
+		renderer->vertexStagingBuffer->memory
+	);
+
+	offset = sizeof(uint32_t) * renderer->matrixStartIndex;
+
+	Renderer_MemoryTransfer(
+		renderer,
+		renderer->perInstanceVertexGPUBuffer,
+		offset,
+		renderer->vertexStagingBuffer,
+		0,
+		stageUsed,
+		NULL
+	);
+
+	return offset;
+
+
+}
+
+size_t
+VSR_RendererMoveSamplerToGpu(
+	VSR_Renderer* renderer,
+	VSR_Sampler** samplers,
+	size_t samplerCount)
+{
+
+	const size_t samplerDataSize = sizeof(uint32_t);
+	size_t offset = 0;
+
+	// map the stage and keep it mapped until we need to transfer
+	void* p = NULL;
+	VkMemoryMapFlags flags = 0L; // currently unimp'd
+	vkMapMemory(
+		renderer->logicalDevice.device,
+		renderer->vertexStagingBuffer->memory,
+		0,
+		renderer->vertexStagingBuffer->bufferSize,
+		flags,
+		&p
+	);
+
+	size_t stageUsed = 0;
+
+	for(size_t i = 0; i < samplerCount; i++)
+	{
+		size_t index = renderer->modelInstanceCount;
+
+		if(renderer->modelSamplerMatrixArray[index] != samplers[i]->uuid)
+		{
+			// we're uploading so that is an update
+			samplers[i]->needsUpdate = SDL_FALSE;
+
+			uint32_t* samlperData = ((void*)samplers[i]) + offsetof(VSR_Sampler , textureIndex);
+
+			memcpy(
+				p + stageUsed,
+				samlperData,
+				samplerDataSize
+			);
+
+			stageUsed += samplerDataSize;
+
+			renderer->modelSamplerMatrixArray[index] = samplers[i]->uuid;
+		}
+
+		renderer->modelInstanceCount++;
+	}
+
+	vkUnmapMemory(
+		renderer->logicalDevice.device,
+		renderer->vertexStagingBuffer->memory
+	);
+
+	offset = 0;
+
+	Renderer_MemoryTransfer(
+		renderer,
+		renderer->perInstanceVertexGPUBuffer,
+		offset,
+		renderer->vertexStagingBuffer,
+		0,
+		stageUsed,
+		NULL
+	);
+
+	return offset;
+}
 
 
 
@@ -610,7 +757,7 @@ int
 VSR_RenderModels(
 	VSR_Renderer* renderer,
 	VSR_Model* model,
-	VSR_Mat4* transforms,
+	VSR_Mat4** transforms,
 	VSR_Sampler** samplers,
 	size_t batchCount)
 {
@@ -638,72 +785,27 @@ VSR_RenderModels(
 	/////////////////////////////////////////////////////////////////////
 	/// move all the instanced stuff into per instance scratch memory ///
 	/////////////////////////////////////////////////////////////////////
-	size_t mat4ByteCount = sizeof(VSR_Mat4) * batchCount;
-	size_t samplerByteCount = sizeof(uint32_t) * batchCount;
-
-	/////////////////////
-	/// load matrices ///
-	/////////////////////
-	// alloc stage
-	Renderer_MemoryAlloc* mat4StageAlloc = Renderer_MemoryAllocate(
+	size_t mat4Offset = VSR_RendererMoveMat4ToGpu(
 		renderer,
-		renderer->VIStagingBuffer,
-		mat4ByteCount,
-		0
+		transforms,
+		batchCount
 	);
 
-	// write data to stage
-	VSR_Mat4* p = Renderer_MemoryAllocMap(renderer, mat4StageAlloc);
-	SDL_memcpy(p, transforms, mat4ByteCount);
-	Renderer_MemoryAllocUnmap(renderer, mat4StageAlloc);
-
-	// alloc gpu mem
-	Renderer_MemoryAlloc* mat4Alloc = Renderer_MemoryAllocate(
+	size_t samplerOffset = VSR_RendererMoveSamplerToGpu(
 		renderer,
-		renderer->scratchBuffer,
-		mat4ByteCount,
-		0
-	);
-	Renderer_MemoryTransferAlloc(renderer, mat4Alloc, mat4StageAlloc);
-	Renderer_MemoryAllocFree(renderer, mat4StageAlloc);
-
-	/////////////////////
-	/// load samplers ///
-	/////////////////////
-	Renderer_MemoryAlloc* samplerStageAlloc = Renderer_MemoryAllocate(
-		renderer,
-		renderer->VIStagingBuffer,
-		samplerByteCount,
-		0
+		samplers,
+		batchCount
 	);
 
-	// write data to stage
-	uint32_t* ip = Renderer_MemoryAllocMap(renderer, samplerStageAlloc);
-	for(size_t i = 0; i < batchCount; i++)
-	{
-		ip[i] = (int32_t)(samplers[i]->textureIndex);
-	}
-	Renderer_MemoryAllocUnmap(renderer, samplerStageAlloc);
 
-	// allocate GPU side in scratch memory
-	Renderer_MemoryAlloc* samplerAlloc = Renderer_MemoryAllocate(
-		renderer,
-		renderer->scratchBuffer,
-		samplerByteCount,
-		0
-	);
-
-	// ship it
-	Renderer_MemoryTransferAlloc(renderer, samplerAlloc, samplerStageAlloc);
-	Renderer_MemoryAllocFree(renderer, samplerStageAlloc);
 	////////////////////////
 	/// per vertex stuff ///
 	////////////////////////
 	enum {kPerVertexBufferCount = 3};
 	VkBuffer perVertexBuffers[kPerVertexBufferCount] = {
-		model->vertices->src->buffer,
-		model->normals->src->buffer,
-		model->UVs->src->buffer,
+		renderer->perModelVertexGPUBuffer->buffer,
+		renderer->perModelVertexGPUBuffer->buffer,
+		renderer->perModelVertexGPUBuffer->buffer,
 	};
 
 	VkDeviceSize perVertexBufferOffsets[kPerVertexBufferCount] = {
@@ -725,13 +827,13 @@ VSR_RenderModels(
 	//////////////////////////
 	enum {kPerInstanceBufferCount = 2};
 	VkBuffer perInstanceBuffers[kPerInstanceBufferCount] = {
-		samplerAlloc->src->buffer,
-		mat4Alloc->src->buffer,
+		renderer->perInstanceVertexGPUBuffer->buffer,
+		renderer->perInstanceVertexGPUBuffer->buffer,
 	};
 
 	VkDeviceSize perInstanceBufferOffsets[kPerInstanceBufferCount] = {
-		samplerAlloc->offset,
-		mat4Alloc->offset,
+		samplerOffset,
+		mat4Offset,
 	};
 
 	vkCmdBindVertexBuffers(
@@ -857,7 +959,7 @@ VSR_RendererWriteDescriptor(
 	Renderer_MemoryAllocFree(renderer, stageAlloc);
 
 	VkDescriptorBufferInfo bufferInfo = (VkDescriptorBufferInfo){0};
-	bufferInfo.offset = renderer->extraDescriptorAllocs[index]->offset;
+	bufferInfo.offset = renderer->extraDescriptorAllocs[index]->offset + offset;
 	bufferInfo.buffer = renderer->extraDescriptorAllocs[index]->src->buffer;
 	bufferInfo.range = renderer->extraDescriptorAllocs[index]->size;
 

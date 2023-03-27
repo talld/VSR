@@ -37,6 +37,7 @@ set(VSR_SRC
         Src/VSR_Sampler.c
         Src/VSR_Mesh.c
         Src/VSR_Model.c
+        Src/VSR_Mat4.c
         )
 
 add_library(${PROJECT_NAME} STATIC ${VSR_SRC})
@@ -44,8 +45,6 @@ add_library(${PROJECT_NAME} STATIC ${VSR_SRC})
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
         -Wall
-        -Wno-unused-label
-        -Werror
         )
 
 target_link_options(${PROJECT_NAME} PRIVATE

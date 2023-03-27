@@ -15,7 +15,7 @@ VSR_ShaderCreate(
 	size_t byteCount,
 	const uint8_t* bytes)
 {
-	VSR_Shader* shader = SDL_calloc(1, sizeof(VSR_Shader));
+	VSR_Shader* shader = SDL_malloc(sizeof(VSR_Shader));
 
 	shader->createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	shader->createInfo.pNext = NULL;

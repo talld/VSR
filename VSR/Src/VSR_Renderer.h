@@ -19,25 +19,6 @@
 #include "VSR_Mesh.h"
 #include "VSR_Sampler.h"
 
-
-typedef enum Renderer_ResourceType Renderer_ResourceType;
-enum Renderer_ResourceType
-{
-	RESOURCE_TYPE_VERTEX,
-	RESOURCE_TYPE_INDEX,
-	RESOURCE_TYPE_UV,
-};
-
-// struct for holding (sub-allocated) data used by a model
-typedef struct Renderer_ModelBuffer Renderer_ModelBuffer;
-struct Renderer_ModelBuffer
-{
-	VSR_Mesh* pModel;
-	Renderer_ResourceType resourceType; // not needed but good for sanity checks
-	size_t offset;
-	size_t len;
-};
-
 enum {kMaxSupportedStorageBuffers = 4};
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo
@@ -46,6 +27,13 @@ struct VSR_RendererCreateInfo
 
 	SDL_bool geometryShaderRequested;
 	SDL_bool tessellationShaderRequested;
+
+	size_t vertexStagingBufferSize;
+	size_t perModelVertexGPUBufferSize;
+	size_t perInstanceVertexGPUBufferSize;
+
+	size_t DescriptorSamplerStagingBufferSize;
+	size_t DescriptorSamplerGPUBufferSize;
 
 	size_t cmdBuffersPerPool;
 	size_t texturePoolSize;
@@ -94,6 +82,11 @@ struct VSR_Renderer
 
 	size_t texturePoolSize;
 
+	uint64_t* modelSamplerMatrixArray;
+	size_t    samplerMatrixArrayLength;
+	size_t    matrixStartIndex;
+	size_t    modelInstanceCount;
+
 	size_t*               extraDescriptorSizes;
 	Renderer_MemoryAlloc* extraDescriptorAllocs[kMaxSupportedStorageBuffers];
 	size_t                extraDescriptorCount;
@@ -101,9 +94,10 @@ struct VSR_Renderer
 	VSR_Sampler* defaultSampler;
 
 	/// Vertex UV Index ///
-	Renderer_Memory* VIStagingBuffer;
-	Renderer_Memory* VIGPUBuffer;
-	Renderer_Memory* scratchBuffer;
+	Renderer_Memory* vertexStagingBuffer;
+
+	Renderer_Memory* perModelVertexGPUBuffer;
+	Renderer_Memory* perInstanceVertexGPUBuffer;
 
 	/// Uniform Storage Descriptor ///
 	Renderer_Memory* USDStagingBuffer;

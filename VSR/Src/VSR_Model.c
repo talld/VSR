@@ -69,8 +69,8 @@ VSR_ModelUpdate(
 	///////////////
 	/// get mem ///
 	///////////////
-	Renderer_Memory* stageMem = renderer->VIStagingBuffer;
-	Renderer_Memory* GPUMem = renderer->VIGPUBuffer;
+	Renderer_Memory* stageMem = renderer->vertexStagingBuffer;
+	Renderer_Memory* GPUMem = renderer->perModelVertexGPUBuffer;
 
 	////////////////
 	/// vertices ///

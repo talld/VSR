@@ -8,18 +8,16 @@ add_executable(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
         -Wall
-        -Wno-unused-label
-        -Werror
         )
 
 target_link_options(${PROJECT_NAME} PRIVATE
-        -ldl
+        #-ldl
         -lm
         -fno-omit-frame-pointer
 
-        -fsanitize=address   -static-libasan
-        -fsanitize=undefined -static-libubsan
-        -fsanitize=leak      -static-liblsan
+        #-fsanitize=address   -static-libasan
+        #-fsanitize=undefined -static-libubsan
+        #-fsanitize=leak      -static-liblsan
         )
 
 add_subdirectory(External/cglm)

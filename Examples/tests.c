@@ -2,10 +2,10 @@
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <math.h>
-#include "helpers.h"
-#include "teapot.h"
 #include "cube.h"
-int main(int argc, char* argv[])
+#include "helpers.h"
+
+int SDL_main(int argc, char *argv[])
 {
 	// setup sdl
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -28,18 +28,22 @@ int main(int argc, char* argv[])
 	mat4 cubePos;
 	glm_mat4_identity(cubePos);
 	// set images
-	SDL_Surface* sur1 = SDL_LoadBMP("Assets/castle_wall_albedo.bmp");
+	SDL_Surface* sur1 = SDL_LoadBMP("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\Assets\\castle_wall_albedo.bmp");
 	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1);
 
 	// create and set pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
+	size_t n;
+	uint8_t* bytes = loadShader("vert.spv", &n);
+	VSR_Shader* vert = VSR_ShaderCreate(renderer, n, bytes);
+	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vert);
 	VSR_GraphicsPipeline* pipeline = VSR_GraphicsPipelineCreate(renderer, pipelineCreateInfo);
 	VSR_RendererSetPipeline(renderer, pipeline);
 
 	enum {kCubeRoot = 100};
 
 	enum {kCubeCount = kCubeRoot * kCubeRoot * kCubeRoot};
-	mat4* cubePositions = SDL_malloc(sizeof(mat4) * kCubeCount);;
+	VSR_Mat4** cubePositions = SDL_malloc(sizeof(mat4*) * kCubeCount);;
 	VSR_Sampler** cubeSamplers = SDL_malloc(sizeof(VSR_Sampler*) * kCubeCount);
 
 	size_t breadth = kCubeRoot * kCubeRoot;
@@ -52,7 +56,6 @@ int main(int argc, char* argv[])
 			for (size_t i = 0; i < kCubeRoot; i++)
 			{
 				size_t index = i + (j * width) + (k * breadth);
-				cubeSamplers[index] = sampler1;
 
 				vec4 offset = {
 					-125 + 2.5f * i,
@@ -60,8 +63,19 @@ int main(int argc, char* argv[])
 					-2.5f * k
 				};
 
-				glm_mat4_identity(cubePositions[index]);
-				glm_translate(cubePositions[index], offset);
+				vec4 axis = {
+					0.5f + (0.5f * i),
+					0.5f + (0.5f * j),
+					0.5f + (0.5f * k)
+				};
+
+				mat4 mat;
+				glm_mat4_identity(mat);
+				glm_translate(mat, offset);
+				glm_rotate(mat, 0.1f, axis);
+
+				cubePositions[index] = VSR_Mat4Create(renderer, (float *) mat);
+				cubeSamplers[index] = sampler1;
 			}
 		}
 	}
@@ -92,43 +106,20 @@ int main(int argc, char* argv[])
 	glm_mat4_mul(projection, view, view);
 
 	VSR_PushConstants pushConstants;
-	pushConstants.Projection = *(VSR_Mat4*) view;
+	pushConstants.Projection = (VSR_Mat4*) &view;
 	VSR_RendererSetVertexConstants(renderer, &pushConstants);
 	VSR_RendererSetFragmentConstants(renderer, &pushConstants);
-
 
 	// renderloop
 	int shouldQuit = 0;
 	SDL_Event event;
 	while(!shouldQuit)
 	{
-
-		for (size_t k = 0; k < kCubeRoot; k++)
-		{
-			for (size_t j = 0; j < kCubeRoot; j++)
-			{
-				for (size_t i = 0; i < kCubeRoot; i++)
-				{
-					size_t index = i + (j * width) + (k * breadth);
-
-
-					vec4 axis = {
-						0.5f + (0.5f * i),
-						0.5f + (0.5f * j),
-						0.5f + (0.5f * k)
-					};
-
-					glm_rotate(cubePositions[index], 0.1 , axis);
-					cubeSamplers[index] = sampler1;
-				}
-			}
-		}
-
 		VSR_RendererBeginPass(renderer);
-		VSR_RenderModels(renderer, cubeModel, (VSR_Mat4*)cubePositions, cubeSamplers, kCubeCount);
+		VSR_RenderModels(renderer, cubeModel, (VSR_Mat4**)cubePositions, cubeSamplers, kCubeCount);
 		VSR_RendererEndPass(renderer);
 		SDL_PollEvent(&event);
-		if(event.type == SDL_QUIT) {shouldQuit = 1;}
+ 		if(event.type == SDL_QUIT) {shouldQuit = 1;}
 	}
 
 	// cleanup
@@ -141,4 +132,10 @@ int main(int argc, char* argv[])
 	VSR_RendererFree(renderer);
 	printf("exit successful");
 	return 0;
+}
+
+
+int main(void) 
+{
+	return SDL_main(0, NULL);
 }

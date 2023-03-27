@@ -24,9 +24,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Struct pre-declarations                                                  ///
 ////////////////////////////////////////////////////////////////////////////////
-typedef struct Renderer_ModelBuffer Renderer_ModelBuffer;
-struct Renderer_ModelBuffer;
-
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo;
 
@@ -42,39 +39,21 @@ struct VSR_GraphicsPipeline;
 typedef enum VSR_ShaderStage VSR_ShaderStage;
 enum VSR_ShaderStage
 {
-	SHADER_STAGE_FRAGMENT = 0,
-	SHADER_STAGE_VERTEX = 1,
+	SHADER_STAGE_VERTEX = 0,
+	SHADER_STAGE_FRAGMENT = 1,
 };
 
 typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
 
 typedef struct VSR_Mat4 VSR_Mat4;
-VSR_PACKED(struct VSR_Mat4)
-{
-	float m0;
-	float m1;
-	float m2;
-	float m3;
-	float m4;
-	float m5;
-	float m6;
-	float m7;
-	float m8;
-	float m9;
-	float m10;
-	float m11;
-	float m12;
-	float m13;
-	float m14;
-	float m15;
-};
+struct VSR_Mat4;
 
 typedef struct VSR_PushConstants VSR_PushConstants;
-struct VSR_PushConstants
+VSR_PACKED(struct VSR_PushConstants)
 {
-	VSR_Mat4 Projection;
-	uint8_t bytes[64];
+	VSR_Mat4* Projection;
+	uint8_t* bytes;
 };
 
 typedef struct VSR_Vertex VSR_Vertex;
@@ -86,20 +65,20 @@ VSR_PACKED(struct VSR_Vertex)
 };
 
 typedef struct VSR_Index VSR_Index;
-struct VSR_Index
+VSR_PACKED(struct VSR_Index)
 {
 	uint32_t i;
 };
 
 typedef struct VSR_UV VSR_UV;
-struct VSR_UV
+VSR_PACKED(struct VSR_UV)
 {
 	float x;
 	float y;
 };
 
 typedef struct VSR_Mesh VSR_Mesh;
-struct VSR_Mesh
+VSR_PACKED(struct VSR_Mesh)
 {
 	size_t      vertexCount;
 	VSR_Vertex* vertices;
@@ -173,7 +152,7 @@ void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
 
 void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Shader* shader);
 
-int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4* transforms, VSR_Sampler** samplers, size_t batchCount);
+int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4** transforms, VSR_Sampler** samplers, size_t batchCount);
 
 VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices, VSR_Vertex const* normals, VSR_UV const* UVs, size_t indexCount, VSR_Index const* indices);
 
@@ -190,5 +169,9 @@ VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface
 void VSR_SamplerFree(VSR_Renderer* renderer, VSR_Sampler* sampler);
 
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
+
+VSR_Mat4* VSR_Mat4Create(VSR_Renderer* renderer, float* m);
+
+void VSR_Mat4Destroy(VSR_Renderer* renderer, VSR_Mat4* mat4);
 
 #endif // VSR_H
