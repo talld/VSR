@@ -28,12 +28,6 @@ enum Renderer_ResourceType
 	RESOURCE_TYPE_UV,
 };
 
-typedef struct Renderer_PushConstantsFragment Renderer_PushConstantsFragment;
-struct Renderer_PushConstantsFragment
-{
-
-};
-
 // struct for holding (sub-allocated) data used by a model
 typedef struct Renderer_ModelBuffer Renderer_ModelBuffer;
 struct Renderer_ModelBuffer
@@ -68,13 +62,6 @@ struct VSR_RendererCreateInfo
 
 	Renderer_CommandPoolCreateInfo    commandPoolCreateInfo;
 	Renderer_DescriptorPoolCreateInfo descriptorPoolCreateInfo;
-};
-
-typedef struct Renderer_SubStructs Renderer_SubStructs;
-struct Renderer_SubStructs
-{
-	/// render substructs ///
-
 };
 
 typedef struct VSR_Renderer VSR_Renderer;
