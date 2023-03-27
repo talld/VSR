@@ -7,7 +7,7 @@
 VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
-	size_t index,
+	size_t textureIndex,
 	SDL_Surface* sur)
 {
 	VSR_Sampler* sampler = SDL_malloc(sizeof(VSR_Sampler));
@@ -39,12 +39,12 @@ VSR_SamplerCreate(
 	///////////////////////////////////
 	/// populate and return sampler ///
 	///////////////////////////////////
-	sampler->index = index;
+	sampler->textureIndex = textureIndex;
 	sampler->image = img;
 	sampler->view = imgView;
 	sampler->sampler = VSR_GetTextureSampler(renderer);
 
-	VSR_SamplerWriteToDescriptor(renderer,index, sampler);
+	VSR_SamplerWriteToDescriptor(renderer, textureIndex, sampler);
 
 	return sampler;
 }

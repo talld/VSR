@@ -8,7 +8,7 @@
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler
 {
-	size_t index;
+	size_t textureIndex;
 	VSR_Image* image;
 	VSR_ImageView* view;
 	VkSampler sampler;
@@ -17,7 +17,7 @@ struct VSR_Sampler
 VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
-	size_t index,
+	size_t textureIndex,
 	SDL_Surface* sur);
 
 void

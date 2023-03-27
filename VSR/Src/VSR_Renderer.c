@@ -681,7 +681,7 @@ VSR_RenderModels(
 	uint32_t* ip = Renderer_MemoryAllocMap(renderer, samplerStageAlloc);
 	for(size_t i = 0; i < batchCount; i++)
 	{
-		ip[i] = (int32_t)(samplers[i]->index);
+		ip[i] = (int32_t)(samplers[i]->textureIndex);
 	}
 	Renderer_MemoryAllocUnmap(renderer, samplerStageAlloc);
 
