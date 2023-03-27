@@ -14,6 +14,13 @@
 
 #define VSR_DEBUG 1
 
+#ifdef __GNUC__
+	#define VSR_PACKED( __Declaration__ ) __attribute__((__packed__)) __Declaration__
+#endif
+
+#ifdef _MSC_VER
+	#define VSR_PACKED( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 /// Struct pre-declarations                                                  ///
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,8 +50,7 @@ typedef struct VSR_Shader VSR_Shader;
 struct VSR_Shader;
 
 typedef struct VSR_Mat4 VSR_Mat4;
-__attribute__((packed))
-struct VSR_Mat4
+VSR_PACKED(struct VSR_Mat4)
 {
 	float m0;
 	float m1;
@@ -72,8 +78,7 @@ struct VSR_PushConstants
 };
 
 typedef struct VSR_Vertex VSR_Vertex;
-__attribute__((packed))
-struct VSR_Vertex
+VSR_PACKED(struct VSR_Vertex)
 {
 	float x;
 	float y;
