@@ -371,11 +371,11 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	enum { pushConstantCount = 2 };
 	VkPushConstantRange pushConstants[pushConstantCount];
 	pushConstants[0].offset = 0;
-	pushConstants[0].size = sizeof(VSR_PushConstants);
+	pushConstants[0].size = 256;
 	pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-	pushConstants[1].offset =  sizeof(VSR_PushConstants);
-	pushConstants[1].size = sizeof(VSR_PushConstants);
+	pushConstants[1].offset =  0;
+	pushConstants[1].size = 256;
 	pushConstants[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;
