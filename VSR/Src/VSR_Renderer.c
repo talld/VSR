@@ -607,148 +607,137 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
 }
 
-size_t
-VSR_RendererMoveMat4ToGpu(
-	VSR_Renderer* renderer,
-	VSR_Mat4** mat4s,
-	size_t mat4Count)
+typedef struct QueuedRender QueuedRender;
+struct QueuedRender
 {
-	const size_t mat4Size = sizeof(float[16]);
-	size_t offset = 0;
+	QueuedRender* next;
 
-	// map the stage and keep it mapped until we need to transfer
-	void* p = NULL;
-	VkMemoryMapFlags flags = 0L; // currently unimp'd
-	vkMapMemory(
-		renderer->logicalDevice.device,
-		renderer->vertexStagingBuffer->memory,
+	size_t instanceCount;
+	size_t instanceOffset;
+	VSR_Model* model;
+};
+
+static QueuedRender* modelList;
+
+int RendererFlushQueuedModels(VSR_Renderer* renderer)
+{
+	if(!modelList) {goto SUCCESS;}
+
+	//////////////////////
+	/// push constants ///
+	//////////////////////
+	uint8_t pPushVals[256];
+	SDL_memcpy(pPushVals, renderer->pushConstantsVertex.Projection, sizeof(float[16]));
+
+
+	vkCmdPushConstants(
+		cBuff,
+		renderer->pipeline->graphicPipeline.pipelineLayout,
+		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0,
-		renderer->vertexStagingBuffer->bufferSize,
-		flags,
-		&p
+		256,
+		pPushVals
 	);
 
-	size_t stageUsed = 0;
-
-	for(size_t i = 0; i < mat4Count; i++)
+	///////////////////////
+	/// descriptor sets ///
+	///////////////////////
+	enum
 	{
-		size_t index = renderer->modelInstanceCount
-			+ renderer->matrixStartIndex;
+		kDescriptorSetCount = 2
+	};
 
-		if(renderer->modelSamplerMatrixArray[index] != mat4s[i]->uuid)
-		{
-			// we're uploading so that is an update
-			mat4s[i]->needsUpdate = SDL_FALSE;
+	VkDescriptorSet descriptorSets[kDescriptorSetCount] = {
+			renderer->descriptorPool.globalSet,
+			renderer->descriptorPool.userSet
+	};
 
-			float* mat4Data = (void*)mat4s[i] + offsetof(VSR_Mat4, m0);
-
-			memcpy(
-				p + stageUsed,
-				mat4Data,
-				1
-			);
-
-			stageUsed += mat4Size;
-
-			renderer->modelSamplerMatrixArray[index] = mat4s[i]->uuid;
-
-		}
-
-		renderer->modelInstanceCount++;
-	}
-
-	vkUnmapMemory(
-		renderer->logicalDevice.device,
-		renderer->vertexStagingBuffer->memory
-	);
-
-	offset = sizeof(uint32_t) * renderer->matrixStartIndex;
-
-	Renderer_MemoryTransfer(
-		renderer,
-		renderer->perInstanceVertexGPUBuffer,
-		offset,
-		renderer->vertexStagingBuffer,
+	vkCmdBindDescriptorSets(
+		cBuff,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		renderer->pipeline->graphicPipeline.pipelineLayout,
 		0,
-		stageUsed,
+		1 + (renderer->extraDescriptorCount > 0),
+		descriptorSets,
+		0,
 		NULL
 	);
 
-	return offset;
-
-
-}
-
-size_t
-VSR_RendererMoveSamplerToGpu(
-	VSR_Renderer* renderer,
-	VSR_Sampler** samplers,
-	size_t samplerCount)
-{
-
-	const size_t samplerDataSize = sizeof(uint32_t);
-	size_t offset = 0;
-
-	// map the stage and keep it mapped until we need to transfer
-	void* p = NULL;
-	VkMemoryMapFlags flags = 0L; // currently unimp'd
-	vkMapMemory(
-		renderer->logicalDevice.device,
-		renderer->vertexStagingBuffer->memory,
-		0,
-		renderer->vertexStagingBuffer->bufferSize,
-		flags,
-		&p
-	);
-
-	size_t stageUsed = 0;
-
-	for(size_t i = 0; i < samplerCount; i++)
+	while (modelList != NULL)
 	{
-		size_t index = renderer->modelInstanceCount;
 
-		if(renderer->modelSamplerMatrixArray[index] != samplers[i]->uuid)
-		{
-			// we're uploading so that is an update
-			samplers[i]->needsUpdate = SDL_FALSE;
+		////////////////////////
+		/// per vertex stuff ///
+		////////////////////////
+		enum {kPerVertexBufferCount = 3};
+		VkBuffer perVertexBuffers[kPerVertexBufferCount] = {
+			renderer->perModelVertexGPUBuffer->buffer,
+			renderer->perModelVertexGPUBuffer->buffer,
+			renderer->perModelVertexGPUBuffer->buffer,
+		};
 
-			uint32_t* samlperData = ((void*)samplers[i]) + offsetof(VSR_Sampler , textureIndex);
+		VkDeviceSize perVertexBufferOffsets[kPerVertexBufferCount] = {
+			modelList->model->vertices->offset,
+			modelList->model->normals->offset,
+			modelList->model->UVs->offset
+		};
 
-			memcpy(
-				p + stageUsed,
-				samlperData,
-				samplerDataSize
-			);
+		vkCmdBindVertexBuffers(
+			cBuff,
+			0,
+			kPerVertexBufferCount,
+			perVertexBuffers,
+			perVertexBufferOffsets
+		);
 
-			stageUsed += samplerDataSize;
+		//////////////////////////
+		/// per instance stuff ///
+		//////////////////////////
+		enum {kPerInstanceBufferCount = 2};
+		VkBuffer perInstanceBuffers[kPerInstanceBufferCount] = {
+			renderer->perInstanceVertexGPUBuffer->buffer,
+			renderer->perInstanceVertexGPUBuffer->buffer,
+		};
 
-			renderer->modelSamplerMatrixArray[index] = samplers[i]->uuid;
-		}
+		// these will be modified by the queuedRender's instance offset
+		VkDeviceSize perInstanceBufferOffsets[kPerInstanceBufferCount] = {
+			0,
+			0,
+		};
 
-		renderer->modelInstanceCount++;
+		vkCmdBindVertexBuffers(
+			cBuff,
+			kPerVertexBufferCount, // start were per vertex data ended
+			kPerInstanceBufferCount,
+			perInstanceBuffers,
+			perInstanceBufferOffsets
+		);
+
+		vkCmdBindIndexBuffer(
+			cBuff,
+			modelList->model->indices->src->buffer,
+			modelList->model->indices->offset,
+			VK_INDEX_TYPE_UINT32
+		);
+
+		vkCmdDrawIndexed(
+			cBuff,
+			modelList->model->indexCount,
+			modelList->instanceCount,
+			0, // firstIndex
+			0, // vertexOffset
+			modelList->instanceOffset // firstInstance
+		);
+
+		QueuedRender* old = modelList;
+		modelList = modelList->next;
+
+		SDL_free(old);
 	}
 
-	vkUnmapMemory(
-		renderer->logicalDevice.device,
-		renderer->vertexStagingBuffer->memory
-	);
-
-	offset = 0;
-
-	Renderer_MemoryTransfer(
-		renderer,
-		renderer->perInstanceVertexGPUBuffer,
-		offset,
-		renderer->vertexStagingBuffer,
-		0,
-		stageUsed,
-		NULL
-	);
-
-	return offset;
+	SUCCESS:
+	return SDL_TRUE;
 }
-
-
 
 //==============================================================================
 // VSR_RenderModels
@@ -761,136 +750,162 @@ VSR_RenderModels(
 	VSR_Sampler** samplers,
 	size_t batchCount)
 {
-	//////////////////////
-	/// push constants ///
-	//////////////////////
-	vkCmdPushConstants(
-		cBuff,
-		renderer->pipeline->graphicPipeline.pipelineLayout,
-		VK_SHADER_STAGE_VERTEX_BIT,
-		0,
-		sizeof(VSR_PushConstants),
-		&renderer->pushConstantsVertex
+
+	QueuedRender* render = SDL_malloc(sizeof(QueuedRender));
+	render->instanceOffset = renderer->modelInstanceCount;
+	render->instanceCount = batchCount;
+
+	renderer->modelInstanceCount += render->instanceCount;
+
+
+	////////////////
+	/// Matrices ///
+	////////////////
+	size_t  matrixTransferListSize = 4;
+	size_t  matrixTransferListUsed = 0;
+
+	size_t* matrixTransferStartIndexList = SDL_malloc(
+		matrixTransferListSize * sizeof(size_t)
 	);
 
-	vkCmdPushConstants(
-		cBuff,
-		renderer->pipeline->graphicPipeline.pipelineLayout,
-		VK_SHADER_STAGE_FRAGMENT_BIT,
-		sizeof(VSR_PushConstants),
-		sizeof(VSR_PushConstants),
-		&renderer->pushConstantsFragment
+	size_t* matrixTransferCountsList = SDL_malloc(
+		matrixTransferListSize * sizeof(size_t)
 	);
 
-	/////////////////////////////////////////////////////////////////////
-	/// move all the instanced stuff into per instance scratch memory ///
-	/////////////////////////////////////////////////////////////////////
-	size_t mat4Offset = VSR_RendererMoveMat4ToGpu(
-		renderer,
-		transforms,
-		batchCount
-	);
+	for(size_t i = 0; i < batchCount; i++)
+	{
+		size_t mat4Index =  renderer->matrixStartIndex + i;
 
-	size_t samplerOffset = VSR_RendererMoveSamplerToGpu(
-		renderer,
-		samplers,
-		batchCount
-	);
-
-
-	////////////////////////
-	/// per vertex stuff ///
-	////////////////////////
-	enum {kPerVertexBufferCount = 3};
-	VkBuffer perVertexBuffers[kPerVertexBufferCount] = {
-		renderer->perModelVertexGPUBuffer->buffer,
-		renderer->perModelVertexGPUBuffer->buffer,
-		renderer->perModelVertexGPUBuffer->buffer,
-	};
-
-	VkDeviceSize perVertexBufferOffsets[kPerVertexBufferCount] = {
-		model->vertices->offset,
-		model->normals->offset,
-		model->UVs->offset
-	};
-
-	vkCmdBindVertexBuffers(
-		cBuff,
-		0,
-		kPerVertexBufferCount,
-		perVertexBuffers,
-		perVertexBufferOffsets
-	);
-
-	//////////////////////////
-	/// per instance stuff ///
-	//////////////////////////
-	enum {kPerInstanceBufferCount = 2};
-	VkBuffer perInstanceBuffers[kPerInstanceBufferCount] = {
-		renderer->perInstanceVertexGPUBuffer->buffer,
-		renderer->perInstanceVertexGPUBuffer->buffer,
-	};
-
-	VkDeviceSize perInstanceBufferOffsets[kPerInstanceBufferCount] = {
-		samplerOffset,
-		mat4Offset,
-	};
-
-	vkCmdBindVertexBuffers(
-		cBuff,
-		kPerVertexBufferCount, // start were per vertex data ended
-		kPerInstanceBufferCount,
-		perInstanceBuffers,
-		perInstanceBufferOffsets
-	);
-
-	enum {kDescriptorSetCount = 2};
-	VkDescriptorSet descriptorSets[kDescriptorSetCount] =
+		if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid
+		|| transforms[i]->needsUpdate)
 		{
-			renderer->descriptorPool.globalSet,
-			renderer->descriptorPool.userSet
-		};
+			// track were the data is (compiler optimised?
+			if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid)
+			{
+				renderer->modelSamplerMatrixArray[mat4Index] = transforms[i]->uuid;
+			}
+			if(matrixTransferListUsed != 0)
+			{
+				size_t nextFromLast =
+				matrixTransferStartIndexList[matrixTransferListUsed-1]
+				+ matrixTransferCountsList[matrixTransferListUsed-1];
 
-	vkCmdBindDescriptorSets(
-		cBuff,
-		VK_PIPELINE_BIND_POINT_GRAPHICS,
-		renderer->pipeline->graphicPipeline.pipelineLayout,
-		0,
-		1 + (renderer->extraDescriptorCount > 0),
-		descriptorSets,
-		0,
-		NULL
-		);
+				if(nextFromLast == i)
+				{
+					matrixTransferCountsList[matrixTransferListUsed-1]++;
+				}
+			}
+			else
+			{
+				matrixTransferStartIndexList[matrixTransferListUsed] = i;
+				matrixTransferCountsList[matrixTransferListUsed++] = 1;
+			}
 
-	if (model->indexCount)
-	{
-		vkCmdBindIndexBuffer(
-			cBuff,
-			model->indices->src->buffer,
-			model->indices->offset,
-			VK_INDEX_TYPE_UINT32
-		);
 
-		vkCmdDrawIndexed(
-			cBuff,
-			model->indexCount,
-			batchCount,
-			0,
-			0,
-			0
-		);
+
+			if(matrixTransferListUsed == matrixTransferListSize)
+			{
+				matrixTransferListSize = matrixTransferListSize * 2;
+
+				matrixTransferStartIndexList = SDL_realloc(
+					matrixTransferStartIndexList,
+					matrixTransferListSize * sizeof(size_t)
+					);
+
+				matrixTransferCountsList = SDL_realloc(
+					matrixTransferCountsList,
+					matrixTransferListSize * sizeof(size_t)
+				);
+			}
+
+			// this is going to be uploaded so its being 'updated'
+			transforms[i]->needsUpdate = SDL_FALSE;
+		}
 	}
-	else
+
+	////////////////
+	/// Samplers ///
+	////////////////
+	size_t  samplerTransferListSize = 4;
+	size_t  samplerTransferListUsed = 0;
+
+	size_t* samplerTransferStartIndexList = SDL_malloc(
+		matrixTransferListSize * sizeof(size_t)
+	);
+
+	size_t* samplerTransferCountsList = SDL_malloc(
+		matrixTransferListSize * sizeof(size_t)
+	);
+
+	for(size_t i = 0; i < batchCount; i++)
 	{
-		// don't know why i couldn't just do index = 0 for this...
-		vkCmdDraw(
-			cBuff,
-			model->vertexCount,
-			batchCount,
-			0,
-			0
-		);
+		size_t samplerIndex = i;
+
+		if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid
+		    || transforms[i]->needsUpdate)
+		{
+			// track were the data is (compiler optimised?
+			if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid)
+			{
+				renderer->modelSamplerMatrixArray[samplerIndex] = samplers[i]->uuid;
+			}
+
+			if (samplerTransferListUsed != 0)
+			{
+				size_t nextFromLast =
+					samplerTransferStartIndexList[samplerTransferListUsed - 1]
+					+ samplerTransferCountsList[samplerTransferListUsed - 1];
+
+				if (nextFromLast == i)
+				{
+					samplerTransferCountsList[samplerTransferListUsed - 1]++;
+				}
+			}
+			else
+			{
+				samplerTransferStartIndexList[samplerTransferListUsed] = i;
+				samplerTransferCountsList[samplerTransferListUsed++] = 1;
+			}
+
+
+			if (samplerTransferListUsed == samplerTransferListSize)
+			{
+				samplerTransferListSize = samplerTransferListSize * 2;
+
+				samplerTransferStartIndexList = SDL_realloc(
+					samplerTransferStartIndexList,
+					samplerTransferListSize * sizeof(size_t)
+				);
+
+				samplerTransferCountsList = SDL_realloc(
+					samplerTransferCountsList,
+					samplerTransferListSize * sizeof(size_t)
+				);
+			}
+
+			// this is going to be uploaded so its being 'updated'
+			samplers[i]->needsUpdate = SDL_FALSE;
+		}
 	}
+
+	size_t transfersNeeded = samplerTransferListUsed + matrixTransferListUsed;
+
+	VkBufferCopy* bufferCopy = SDL_malloc(
+		transfersNeeded * sizeof(VkBufferCopy)
+	);
+
+	for(size_t i = 0; i < matrixTransferListUsed; i++)
+	{
+
+	}
+
+	for(size_t i = 0; i < samplerTransferListUsed; i++)
+	{
+
+	}
+
+
+
 	return 0;
 }
 

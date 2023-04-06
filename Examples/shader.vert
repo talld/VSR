@@ -5,7 +5,8 @@ layout(push_constant) uniform constants
 {
     mat4 vp;
     int arr[24];
-} PushConstants;
+}
+PushConstants;
 
 layout(location = 0) in vec3 inPos;
 layout(location = 1) in vec3 inNormal;
