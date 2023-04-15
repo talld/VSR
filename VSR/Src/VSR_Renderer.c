@@ -815,7 +815,7 @@ VSR_RenderModels(
 		size_t mat4Index = lastInstanceIndex + renderer->matrixStartIndex + i;
 
 		if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid
-		|| transforms[i]->needsUpdate)
+		|| transforms[i]->needsUpdate == SDL_TRUE)
 		{
 			// track were the data is (compiler optimised?
 			if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid)
@@ -880,7 +880,7 @@ VSR_RenderModels(
 		size_t samplerIndex = lastInstanceIndex + i;
 
 		if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid
-		    || transforms[i]->needsUpdate)
+		    || transforms[i]->needsUpdate == SDL_TRUE)
 		{
 			// track were the data is (compiler optimised?
 			if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid)
@@ -947,7 +947,7 @@ VSR_RenderModels(
 			0
 		);
 
-		void* p = Renderer_MemoryAllocMap(renderer, alloc);
+		uint8_t* p = Renderer_MemoryAllocMap(renderer, alloc);
 		for(size_t j = 0; j < samplerTransferCountsList[i]; j++)
 		{
 			size_t index = samplerTransferStartIndexList[i] + j;
@@ -982,7 +982,7 @@ VSR_RenderModels(
 			0
 		);
 
-		void* p = Renderer_MemoryAllocMap(renderer, alloc);
+		uint8_t* p = Renderer_MemoryAllocMap(renderer, alloc);
 		for(size_t j = 0; j < matrixTransferCountsList[i]; j++)
 		{
 			size_t index = matrixTransferStartIndexList[i] + j;

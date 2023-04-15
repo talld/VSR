@@ -17,7 +17,7 @@ enum {kMaxUniqueQFamilies = 4}; // one for each role
 typedef struct Renderer_DeviceQueuesCreateInfo Renderer_DeviceQueuesCreateInfo;
 struct Renderer_DeviceQueuesCreateInfo
 {
-
+	size_t n;
 };
 
 enum {kGraphicsQueueIndex = 0,

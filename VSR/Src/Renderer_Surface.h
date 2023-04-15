@@ -17,7 +17,8 @@ struct Renderer_CreateInfoSubStructs;
 typedef struct Renderer_SurfaceCreateInfo Renderer_SurfaceCreateInfo;
 struct Renderer_SurfaceCreateInfo
 {
-
+	size_t windowW;
+	size_t windowH;
 };
 
 

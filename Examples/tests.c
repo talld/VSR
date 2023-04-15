@@ -5,6 +5,8 @@
 #include "cube.h"
 #include "helpers.h"
 
+#include<Windows.h>
+
 int SDL_main(int argc, char *argv[])
 {
 	// setup sdl
@@ -34,13 +36,13 @@ int SDL_main(int argc, char *argv[])
 	// create and set pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
 	size_t n;
-	uint8_t* bytes = loadShader("vert.spv", &n);
+	uint8_t* bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\vert.spv", &n);
 	VSR_Shader* vert = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vert);
 	VSR_GraphicsPipeline* pipeline = VSR_GraphicsPipelineCreate(renderer, pipelineCreateInfo);
 	VSR_RendererSetPipeline(renderer, pipeline);
 
-	enum {kCubeRoot = 100};
+	enum {kCubeRoot = 10};
 
 	enum {kCubeCount = kCubeRoot * kCubeRoot * kCubeRoot};
 	VSR_Mat4** cubePositions = SDL_malloc(sizeof(mat4*) * kCubeCount);;
@@ -115,11 +117,24 @@ int SDL_main(int argc, char *argv[])
 	SDL_Event event;
 	while(!shouldQuit)
 	{
+		unsigned __int64 freq;
+		QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+		double timerFrequency = (1.0 / freq);
+		unsigned __int64 startTime;
+		QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
+
 		VSR_RendererBeginPass(renderer);
 		VSR_RenderModels(renderer, cubeModel, (VSR_Mat4**)cubePositions, cubeSamplers, kCubeCount);
 		VSR_RendererEndPass(renderer);
+
+		unsigned __int64 endTime;
+		QueryPerformanceCounter((LARGE_INTEGER*)&endTime);
+		double timeDifferenceInMilliseconds = ((endTime - startTime) * timerFrequency);
+		printf("%f\n", timeDifferenceInMilliseconds);
+
 		SDL_PollEvent(&event);
  		if(event.type == SDL_QUIT) {shouldQuit = 1;}
+
 	}
 
 	// cleanup

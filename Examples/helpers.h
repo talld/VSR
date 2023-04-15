@@ -71,10 +71,13 @@ loadShader(const char* fName, size_t* n)
 	fseek(fIn, 0, SEEK_SET);
 
 	uint8_t* byteCode = calloc(1, fSize);
-	fread(byteCode, fSize, 1, fIn);
-	fclose(fIn);
+	if (byteCode != NULL)
+	{
+		fread(byteCode, fSize, 1, fIn);
+		fclose(fIn);
+		*n = fSize;
+	}
 
-	*n = fSize;
 	return byteCode;
 }
 
