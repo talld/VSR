@@ -1,5 +1,6 @@
 #include "VSR_Shader.h"
 
+#include "VSR_error.h"
 #include "VSR_Renderer.h"
 
 
@@ -15,6 +16,13 @@ VSR_ShaderCreate(
 	size_t byteCount,
 	const uint8_t* bytes)
 {
+	if(bytes == NULL || byteCount == 0)
+	{
+		VSR_SetErr("Shader creation failed: invalid bytes");
+		goto FAIL;
+	}
+
+
 	VSR_Shader* shader = SDL_malloc(sizeof(VSR_Shader));
 
 	shader->createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -31,7 +39,11 @@ VSR_ShaderCreate(
 		&shader->module
 		);
 
+	SUCCESS:
 	return shader;
+
+	FAIL:
+	return NULL;
 }
 
 

@@ -11,7 +11,8 @@
 uint32_t findMemoryType(
 	VSR_Renderer* renderer,
 	uint32_t typeFilter,
-	VkMemoryPropertyFlags properties)
+	VkMemoryPropertyFlags propertiesReq,
+	size_t memRequired)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 
@@ -23,8 +24,12 @@ uint32_t findMemoryType(
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
 	{
+		VkMemoryPropertyFlags properties = memProperties.memoryTypes[i].propertyFlags;
+		size_t size = memProperties.memoryHeaps[i].size;
+
 		if ((typeFilter & (1 << i))
-		&& (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		&& (properties & propertiesReq) == propertiesReq
+		&& size >= memRequired)
 		{
 			index = i;
 			break;
@@ -60,21 +65,32 @@ createBuffer(
 		renderer->logicalDevice.device,
 		&bufferInfo,
 		VSR_GetAllocator(),
-		buffer);
+		buffer
+	);
 
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(
 		renderer->logicalDevice.device,
 		*buffer,
-		&memRequirements);
+		&memRequirements
+	);
+
+	size_t heapIndex = findMemoryType(
+		renderer,
+		memRequirements.memoryTypeBits,
+		properties,
+		size
+	);
+
+	if(heapIndex == -1)
+	{
+		goto FAIL;
+	}
 
 	VkMemoryAllocateInfo allocInfo = (VkMemoryAllocateInfo) {0};
 	allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize  = memRequirements.size;
-	allocInfo.memoryTypeIndex = findMemoryType(
-		renderer,
-		memRequirements.memoryTypeBits,
-		properties);
+	allocInfo.memoryTypeIndex = heapIndex;
 
 	vkAllocateMemory(
 		renderer->logicalDevice.device,
@@ -87,6 +103,12 @@ createBuffer(
 		*buffer,
 		*bufferMemory,
 		0);
+
+	SUCCESS:
+	return;
+
+	FAIL:
+	buffer = NULL;
 }
 
 
@@ -103,31 +125,44 @@ Renderer_MemoryCreate(
 	VkBufferUsageFlagBits use,
 	VkMemoryPropertyFlags flags)
 {
-	Renderer_Memory* rendererMemory = SDL_malloc(sizeof(Renderer_Memory));
 
-	VkFenceCreateInfo fenceInfo;
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.pNext = NULL;
-	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	vkCreateFence(
-		renderer->logicalDevice.device,
-		&fenceInfo,
-		VSR_GetAllocator(),
-		&rendererMemory->bufferFence);
+	VkBuffer buffer;
+	VkDeviceMemory memory;
 
 	createBuffer(
 		renderer,
 		size,
 		use,
 		flags,
-		&rendererMemory->buffer,
-		&rendererMemory->memory);
+		&buffer,
+		&memory);
 
-	rendererMemory->bufferSize = size;
-	rendererMemory->root = NULL;
+	if(buffer != NULL)
+	{
+		Renderer_Memory* rendererMemory = SDL_malloc(sizeof(Renderer_Memory));
 
-	return rendererMemory;
+		rendererMemory->buffer = buffer;
+		rendererMemory->memory = memory;
+
+		VkFenceCreateInfo fenceInfo;
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.pNext = NULL;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		vkCreateFence(
+			renderer->logicalDevice.device,
+			&fenceInfo,
+			VSR_GetAllocator(),
+			&rendererMemory->bufferFence);
+
+		rendererMemory->bufferSize = size;
+		rendererMemory->root = NULL;
+		return rendererMemory;
+	}
+	else
+	{
+		return NULL;
+	}
 }
 
 

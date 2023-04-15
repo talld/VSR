@@ -199,7 +199,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 
 	// mat4 row1 [3]
 	vertexInputDesc[kMat4Input].binding = kMat4Input;
-	vertexInputDesc[kMat4Input].stride = sizeof(VSR_Mat4);
+	vertexInputDesc[kMat4Input].stride = sizeof(float[16]);
 	vertexInputDesc[kMat4Input].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
 
 	vertexAttrDesc[kMat4Row1Biding].binding = kMat4Input;
@@ -371,11 +371,11 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	enum { pushConstantCount = 2 };
 	VkPushConstantRange pushConstants[pushConstantCount];
 	pushConstants[0].offset = 0;
-	pushConstants[0].size = 256;
+	pushConstants[0].size = 128;
 	pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 	pushConstants[1].offset =  0;
-	pushConstants[1].size = 256;
+	pushConstants[1].size = 128;
 	pushConstants[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 	layoutCreateInfo->pushConstantRangeCount = pushConstantCount;

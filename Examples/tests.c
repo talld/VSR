@@ -73,8 +73,8 @@ int SDL_main(int argc, char *argv[])
 				glm_mat4_identity(mat);
 				glm_translate(mat, offset);
 				glm_rotate(mat, 0.1f, axis);
-
-				cubePositions[index] = VSR_Mat4Create(renderer, (float *) mat);
+				VSR_Mat4* mat4 = VSR_Mat4Create(renderer, (float *) mat);
+				cubePositions[index] = mat4;
 				cubeSamplers[index] = sampler1;
 			}
 		}
@@ -134,8 +134,9 @@ int SDL_main(int argc, char *argv[])
 	return 0;
 }
 
-
+#ifndef main
 int main(void) 
 {
 	return SDL_main(0, NULL);
 }
+#endif

@@ -311,7 +311,7 @@ VSR_RendererGenerateCreateInfo(
 	createInfo->perInstanceVertexGPUBufferSize = 128 * 1024 * 1024;
 
 	createInfo->DescriptorSamplerStagingBufferSize = 128 * 1024 * 1024;
-	createInfo->DescriptorSamplerGPUBufferSize = 512 * 1024 * 1024;
+	createInfo->DescriptorSamplerGPUBufferSize = 256 * 1024 * 1024;
 
 	////////////////////////////////////////////////////////////////////////////
 	/// populate vk create info structs as much as can be done at the moment ///
@@ -557,6 +557,8 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 
 
 	/// step2 command record
+	Renderer_FlushQueuedModels(renderer);
+
 	Renderer_CommandBufferRecordEnd(
 		renderer,
 		renderer->pipeline,
@@ -612,16 +614,16 @@ struct QueuedRender
 {
 	QueuedRender* next;
 
-	size_t instanceCount;
 	size_t instanceOffset;
+	size_t instanceCount;
 	VSR_Model* model;
 };
 
-static QueuedRender* modelList;
+static QueuedRender* sQueuedModelList;
 
-int RendererFlushQueuedModels(VSR_Renderer* renderer)
+int Renderer_FlushQueuedModels(VSR_Renderer* renderer)
 {
-	if(!modelList) {goto SUCCESS;}
+	if(!sQueuedModelList) {goto SUCCESS;}
 
 	//////////////////////
 	/// push constants ///
@@ -635,7 +637,7 @@ int RendererFlushQueuedModels(VSR_Renderer* renderer)
 		renderer->pipeline->graphicPipeline.pipelineLayout,
 		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0,
-		256,
+		128,
 		pPushVals
 	);
 
@@ -663,7 +665,7 @@ int RendererFlushQueuedModels(VSR_Renderer* renderer)
 		NULL
 	);
 
-	while (modelList != NULL)
+	while (sQueuedModelList != NULL)
 	{
 
 		////////////////////////
@@ -677,9 +679,9 @@ int RendererFlushQueuedModels(VSR_Renderer* renderer)
 		};
 
 		VkDeviceSize perVertexBufferOffsets[kPerVertexBufferCount] = {
-			modelList->model->vertices->offset,
-			modelList->model->normals->offset,
-			modelList->model->UVs->offset
+			sQueuedModelList->model->vertices->offset,
+			sQueuedModelList->model->normals->offset,
+			sQueuedModelList->model->UVs->offset
 		};
 
 		vkCmdBindVertexBuffers(
@@ -699,15 +701,18 @@ int RendererFlushQueuedModels(VSR_Renderer* renderer)
 			renderer->perInstanceVertexGPUBuffer->buffer,
 		};
 
+		size_t samplerOffset = 0;
+		size_t matrixOffset = renderer->matrixStartIndex * sizeof(uint32_t);
+
 		// these will be modified by the queuedRender's instance offset
 		VkDeviceSize perInstanceBufferOffsets[kPerInstanceBufferCount] = {
-			0,
-			0,
+			samplerOffset,
+			matrixOffset,
 		};
 
 		vkCmdBindVertexBuffers(
 			cBuff,
-			kPerVertexBufferCount, // start were per vertex data ended
+			kPerVertexBufferCount, // start where per vertex data ended
 			kPerInstanceBufferCount,
 			perInstanceBuffers,
 			perInstanceBufferOffsets
@@ -715,22 +720,22 @@ int RendererFlushQueuedModels(VSR_Renderer* renderer)
 
 		vkCmdBindIndexBuffer(
 			cBuff,
-			modelList->model->indices->src->buffer,
-			modelList->model->indices->offset,
+			sQueuedModelList->model->indices->src->buffer,
+			sQueuedModelList->model->indices->offset,
 			VK_INDEX_TYPE_UINT32
 		);
 
 		vkCmdDrawIndexed(
 			cBuff,
-			modelList->model->indexCount,
-			modelList->instanceCount,
+			sQueuedModelList->model->indexCount,
+			sQueuedModelList->instanceCount,
 			0, // firstIndex
 			0, // vertexOffset
-			modelList->instanceOffset // firstInstance
+			sQueuedModelList->instanceOffset // firstInstance
 		);
 
-		QueuedRender* old = modelList;
-		modelList = modelList->next;
+		QueuedRender* old = sQueuedModelList;
+		sQueuedModelList = sQueuedModelList->next;
 
 		SDL_free(old);
 	}
@@ -750,13 +755,46 @@ VSR_RenderModels(
 	VSR_Sampler** samplers,
 	size_t batchCount)
 {
+	////////////////////////////////////
+	/// split into batches if needed ///
+	////////////////////////////////////
+	while(batchCount >= renderer->samplerMatrixArrayLength)
+	{
+		batchCount -= renderer->samplerMatrixArrayLength;
+		VSR_RenderModels(
+			renderer,
+			model,
+			transforms,
+			samplers,
+			renderer->samplerMatrixArrayLength
+		);
+	}
 
-	QueuedRender* render = SDL_malloc(sizeof(QueuedRender));
-	render->instanceOffset = renderer->modelInstanceCount;
-	render->instanceCount = batchCount;
+	QueuedRender* queuedRender = SDL_malloc(sizeof(QueuedRender));
+	queuedRender->instanceOffset = renderer->modelInstanceCount;
+	queuedRender->instanceCount = batchCount;
+	queuedRender->model = model;
+	queuedRender->next = NULL;
 
-	renderer->modelInstanceCount += render->instanceCount;
+	renderer->modelInstanceCount += queuedRender->instanceCount;
 
+	size_t lastInstanceIndex;
+	if(sQueuedModelList)
+	{
+		QueuedRender* last = sQueuedModelList;
+		while (last->next != NULL)
+		{
+			last = last->next;
+		}
+
+		last->next = queuedRender;
+		lastInstanceIndex = last->instanceOffset + lastInstanceIndex;
+	}
+	else
+	{
+		sQueuedModelList = queuedRender;
+		lastInstanceIndex = 0;
+	}
 
 	////////////////
 	/// Matrices ///
@@ -774,7 +812,7 @@ VSR_RenderModels(
 
 	for(size_t i = 0; i < batchCount; i++)
 	{
-		size_t mat4Index =  renderer->matrixStartIndex + i;
+		size_t mat4Index = lastInstanceIndex + renderer->matrixStartIndex + i;
 
 		if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid
 		|| transforms[i]->needsUpdate)
@@ -839,7 +877,7 @@ VSR_RenderModels(
 
 	for(size_t i = 0; i < batchCount; i++)
 	{
-		size_t samplerIndex = i;
+		size_t samplerIndex = lastInstanceIndex + i;
 
 		if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid
 		    || transforms[i]->needsUpdate)
@@ -888,23 +926,84 @@ VSR_RenderModels(
 		}
 	}
 
+
 	size_t transfersNeeded = samplerTransferListUsed + matrixTransferListUsed;
 
 	VkBufferCopy* bufferCopy = SDL_malloc(
 		transfersNeeded * sizeof(VkBufferCopy)
 	);
-
-	for(size_t i = 0; i < matrixTransferListUsed; i++)
-	{
-
-	}
+	size_t mat4Size =  sizeof(float[16]);
+	size_t samplerSize = sizeof(uint32_t);
 
 	for(size_t i = 0; i < samplerTransferListUsed; i++)
 	{
+		size_t copySize = samplerTransferCountsList[i] * samplerSize;
+		size_t dstOffset = lastInstanceIndex * samplerSize;
 
+		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+			renderer,
+			renderer->vertexStagingBuffer,
+			copySize,
+			0
+		);
+
+		void* p = Renderer_MemoryAllocMap(renderer, alloc);
+		for(size_t j = 0; j < samplerTransferCountsList[i]; j++)
+		{
+			size_t index = samplerTransferStartIndexList[i] + j;
+			SDL_memcpy(p, &samplers[index]->textureIndex, samplerSize);
+			p += samplerSize;
+		}
+		Renderer_MemoryAllocUnmap(renderer, alloc);
+
+		Renderer_MemoryTransfer(
+			renderer,
+			renderer->perInstanceVertexGPUBuffer,
+			dstOffset,
+			alloc->src,
+			alloc->offset,
+			alloc->size,
+			NULL
+		);
+
+		Renderer_MemoryAllocFree(renderer, alloc);
 	}
 
+	for(size_t i = 0; i < matrixTransferListUsed; i++)
+	{
+		size_t copySize = matrixTransferCountsList[i] * mat4Size;
+		size_t samplerOffset = renderer->matrixStartIndex * samplerSize;
+		size_t dstOffset = samplerOffset+(lastInstanceIndex * mat4Size);
 
+		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+			renderer,
+			renderer->vertexStagingBuffer,
+			copySize,
+			0
+		);
+
+		void* p = Renderer_MemoryAllocMap(renderer, alloc);
+		for(size_t j = 0; j < matrixTransferCountsList[i]; j++)
+		{
+			size_t index = matrixTransferStartIndexList[i] + j;
+			VSR_Mat4* mat4 = transforms[index];
+			SDL_memcpy(p, &mat4->m0, mat4Size);
+			p += mat4Size;
+		}
+		Renderer_MemoryAllocUnmap(renderer, alloc);
+
+		Renderer_MemoryTransfer(
+			renderer,
+			renderer->perInstanceVertexGPUBuffer,
+			dstOffset,
+			alloc->src,
+			alloc->offset,
+			alloc->size,
+			NULL
+			);
+
+		Renderer_MemoryAllocFree(renderer, alloc);
+	}
 
 	return 0;
 }
