@@ -274,6 +274,57 @@ VSR_RendererRequestDescriptor(
 
 
 //==============================================================================
+// GraphicsPipelineAllocateDepthAttachment
+//------------------------------------------------------------------------------
+void
+Renderer_AllocateAttachments(
+	VSR_Renderer* renderer)
+{
+	SDL_Surface* depthSur = SDL_CreateRGBSurfaceWithFormat(
+		0,
+		renderer->surface.surfaceWidth,
+		renderer->surface.surfaceHeight,
+		24,
+		SDL_PIXELFORMAT_BGR888
+	);
+	depthSur->pixels = NULL;
+
+	renderer->depthImage = VSR_ImageCreate(
+		renderer,
+		depthSur,
+		VK_FORMAT_D32_SFLOAT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+	);
+
+	renderer->depthView = VSR_ImageViewCreate(
+		renderer,
+		renderer->depthImage->image,
+		renderer->depthImage->format,
+		VK_IMAGE_ASPECT_DEPTH_BIT
+	);
+
+	SDL_FreeSurface(depthSur);
+}
+
+//==============================================================================
+// GraphicsPipelineAllocateDepthAttachment
+//------------------------------------------------------------------------------
+void
+Renderer_FreeDepthAttachment(
+	VSR_Renderer* renderer)
+{
+	VSR_ImageViewDestroy(renderer, renderer->depthView);
+	VSR_ImageDestroy(renderer, renderer->depthImage);
+
+	for(size_t i = 0; i < renderer->swapchainImageCount; i++)
+	{
+		VSR_DestroyFramebuffer(renderer, renderer->swapchainFrames[i]);
+	}
+}
+
+
+//==============================================================================
 // VSR_RendererGenerateCreateInfo
 //------------------------------------------------------------------------------
 VSR_RendererCreateInfo*
@@ -381,17 +432,32 @@ VSR_RendererCreate(
 	VSR_LogicalDeviceCreate(renderer, rendererCreateInfo);
 	VSR_SwapchainCreate(renderer, rendererCreateInfo);
 
-	// stage 2 mem alloc
-	Renderer_AllocateBuffers(renderer, rendererCreateInfo);
-	Renderer_CreateSyncObjects(renderer);
-
 	Renderer_DescriptorPoolPopulateCreateInfo(renderer, rendererCreateInfo);
 	Renderer_CommandPoolPopulateCreateInfo(renderer, rendererCreateInfo);
 
 	Renderer_DescriptorPoolCreate(renderer, rendererCreateInfo);
 	Renderer_CommandPoolCreate(renderer, rendererCreateInfo);
 
-	// stage 3 set more defaults
+	// stage 2 mem alloc
+	Renderer_AllocateBuffers(renderer, rendererCreateInfo);
+	Renderer_CreateSyncObjects(renderer);
+
+	// stage 3 memory allocations
+	Renderer_AllocateAttachments(renderer);
+	Renderer_RenderPassCreate(renderer, rendererCreateInfo);
+
+	renderer->swapchainFrames = SDL_malloc(
+		renderer->swapchainImageCount * sizeof(VSR_Framebuffer)
+	);
+
+	for(size_t i = 0; i < renderer->swapchainImageCount; i++)
+	{
+		renderer->swapchainFrames[i] = VSR_CreateFramebuffer(
+			renderer,
+			renderer->swapchain.pImageViews[i]);
+	}
+
+	// stage 4 set more defaults
 	renderer->pushConstantsVertex = (VSR_PushConstants){0};
 	/* TODO: replace with static matrix that pointer defaults to
 	renderer->pushConstantsVertex.Projection->m0 = -1.81066f;

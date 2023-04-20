@@ -64,17 +64,29 @@ struct VSR_Renderer
 	Renderer_DeviceQueues   deviceQueues;
 	Renderer_LogicalDevice  logicalDevice;
 	Renderer_Swapchain      swapchain;
+	Renderer_RenderPass     renderPass;
+
+	/// render images ///
+	VSR_Framebuffer** swapchainFrames;
+	size_t           swapchainImageCount;
+
+	VSR_Image*     depthImage;
+	VSR_ImageView* depthView;
+
+	uint32_t imageIndex;
+	size_t currentFrame;
+
+
+	/// render sync ///
+	VkSemaphore* imageCanBeWritten;
+	VkSemaphore* imageCanBeRead;
+	VkFence*     imageFinished;
 
 	Renderer_DescriptorPool descriptorPool;
 	Renderer_CommandPool    commandPool;
 
 	/// pipeline ( subject to change at runtime! ) ///
 	VSR_GraphicsPipeline* pipeline;
-
-	/// render sync ///
-	VkSemaphore* imageCanBeWritten;
-	VkSemaphore* imageCanBeRead;
-	VkFence*     imageFinished;
 
 	/// memory ///
 	VSR_PushConstants pushConstantsVertex;
@@ -102,9 +114,6 @@ struct VSR_Renderer
 	/// Uniform Storage Descriptor ///
 	Renderer_Memory* USDStagingBuffer;
 	Renderer_Memory* USDGPUBuffer;
-
-	uint32_t imageIndex;
-	size_t currentFrame;
 };
 
 // Temp allocate function

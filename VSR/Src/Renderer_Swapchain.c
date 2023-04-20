@@ -172,6 +172,8 @@ VSR_SwapchainCreate(
 
 	SUCCESS:
 	{
+		renderer->swapchainImageCount = swapchainImageCount;
+
 		return SDL_TRUE;
 	}
 

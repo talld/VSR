@@ -8,7 +8,7 @@
 #include "Renderer_DescriptorPool.h"
 #include "GraphicsPipeline_RenderPass.h"
 #include "GraphicsPipeline_GraphicsPipeline.h"
-#include "GraphicsPipeline_Framebuffer.h"
+#include "VSR_Framebuffer.h"
 #include "Renderer_CommandPool.h"
 
 
@@ -18,19 +18,14 @@ struct VSR_GraphicsPipelineCreateInfo
 	VSR_Shader*                             vertexShader;
 	VSR_Shader*                             fragmentShader;
 
-	GraphicsPipeline_RenderPassCreateInfo       renderPassCreateInfo;
-	GraphicsPipeline_FramebufferCreateInfo      framebufferCreateInfo;
 	GraphicsPipeline_GraphicsPipelineCreateInfo graphicsPipelineCreateInfo;
 };
 
 typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;
 struct VSR_GraphicsPipeline
 {
-	VSR_Image*                         depthImage;
-	VSR_ImageView*                     depthView;
 
-	GraphicsPipeline_RenderPass        renderPass;
-	GraphicsPipeline_Framebuffer       framebuffer;
+
 	GraphicsPipeline_GraphicsPipeline  graphicPipeline;
 };
 

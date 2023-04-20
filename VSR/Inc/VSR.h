@@ -128,6 +128,8 @@ void VSR_RendererSetPipeline(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipel
 
 void VSR_RendererBeginPass(VSR_Renderer* renderer);
 
+int Renderer_FlushQueuedModels(VSR_Renderer* renderer);
+
 void VSR_RendererEndPass(VSR_Renderer* renderer);
 
 void VSR_RendererSetVertexConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);

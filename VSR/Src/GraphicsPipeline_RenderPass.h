@@ -12,40 +12,21 @@
 typedef struct Renderer_CreateInfoSubStructs Renderer_CreateInfoSubStructs;
 struct Renderer_CreateInfoSubStructs;
 
-////////////////////////////////////////
-/// GraphicsPipeline pre-declaration ///
-////////////////////////////////////////
-typedef struct GraphicsPipeline_CreateInfoSubStructs GraphicsPipeline_CreateInfoSubStructs;
-struct GraphicsPipeline_CreateInfoSubStructs;
-
-
-typedef struct GraphicsPipeline_RenderPassCreateInfo GraphicsPipeline_RenderPassCreateInfo;
-struct GraphicsPipeline_RenderPassCreateInfo
-{
-	VkRenderPassCreateInfo createInfo;
-};
-
-typedef struct GraphicsPipeline_RenderPass GraphicsPipeline_RenderPass;
-struct GraphicsPipeline_RenderPass
+typedef struct Renderer_RenderPass Renderer_RenderPass;
+struct Renderer_RenderPass
 {
 	VkRenderPass renderPass;
 };
 
 SDL_bool
-GraphicsPipeline_RenderPassPopulateCreateInfo(
+Renderer_RenderPassCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo);
-
-
-SDL_bool
-GraphicsPipeline_RenderPassCreate(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VSR_GraphicsPipelineCreateInfo* createInfo);
+	VSR_RendererCreateInfo* createInfo
+);
 
 void
-GraphicsPipeline_RenderPassDestroy(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline);
+Renderer_RenderPassDestroy(
+	VSR_Renderer* renderer
+);
 
 #endif //VSR_RENDERPASS_H

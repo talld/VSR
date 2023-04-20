@@ -306,8 +306,8 @@ Renderer_CommandBufferRecordStart(
 	VkRenderPassBeginInfo passBeginInfo = (VkRenderPassBeginInfo){0};
 	passBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	passBeginInfo.pNext = NULL;
-	passBeginInfo.renderPass = pipeline->renderPass.renderPass;
-	passBeginInfo.framebuffer = pipeline->framebuffer.framebuffers[renderer->imageIndex];
+	passBeginInfo.renderPass = renderer->renderPass.renderPass;
+	passBeginInfo.framebuffer = renderer->swapchainFrames[renderer->imageIndex]->frame;
 	passBeginInfo.renderArea.offset.x = 0;
 	passBeginInfo.renderArea.offset.y = 0;
 	passBeginInfo.renderArea.extent.width = renderer->surface.surfaceWidth;

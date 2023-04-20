@@ -426,7 +426,7 @@ GraphicsPipeline_GraphicsPipelineCreate(
 	pipelineCreateInfo->pDynamicState = &dynamicInfo;
 	pipelineCreateInfo->basePipelineHandle = VK_NULL_HANDLE;
 	pipelineCreateInfo->basePipelineIndex = 0;
-	pipelineCreateInfo->renderPass = pipeline->renderPass.renderPass;
+	pipelineCreateInfo->renderPass = renderer->renderPass.renderPass;
 	pipelineCreateInfo->subpass = 0;
 	pipelineCreateInfo->layout = gp->pipelineLayout;
 

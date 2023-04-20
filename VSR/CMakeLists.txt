@@ -32,7 +32,7 @@ set(VSR_SRC
         Src/VSR_Shader.c
         Src/GraphicsPipeline_RenderPass.c
         Src/GraphicsPipeline_GraphicsPipeline.c
-        Src/GraphicsPipeline_Framebuffer.c
+        Src/VSR_Framebuffer.c
         Src/VSR_Image.c
         Src/VSR_Sampler.c
         Src/VSR_Mesh.c

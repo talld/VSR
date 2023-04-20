@@ -1,36 +1,16 @@
 #include "GraphicsPipeline_RenderPass.h"
 
 #include "VSR_Renderer.h"
+#include "VSR_Image.h"
 #include "VSR_error.h"
-
-
-
-
-
-//==============================================================================
-// VSR_RenderPassPopulateCreateInfo
-//------------------------------------------------------------------------------
-SDL_bool
-GraphicsPipeline_RenderPassPopulateCreateInfo(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipelineCreateInfo* createInfo)
-{
-	// TODO: move stuff here
-	return SDL_TRUE;
-}
-
-
-
-
 
 //==============================================================================
 // VSR_RenderPassCreate
 //------------------------------------------------------------------------------
 SDL_bool
-GraphicsPipeline_RenderPassCreate(
+Renderer_RenderPassCreate(
 	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline,
-	VSR_GraphicsPipelineCreateInfo* createInfo)
+	VSR_RendererCreateInfo* createInfo)
 {
 
 	//////////////////////////
@@ -61,7 +41,7 @@ GraphicsPipeline_RenderPassCreate(
 
 	VkAttachmentDescription depthAttachment = (VkAttachmentDescription){0};
 	depthAttachment.flags = 0L;
-	depthAttachment.format = pipeline->depthView->format;
+	depthAttachment.format = renderer->depthView->format;
 	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -132,7 +112,7 @@ GraphicsPipeline_RenderPassCreate(
 		renderer->logicalDevice.device,
 		&passInfo,
 		VSR_GetAllocator(),
-		&pipeline->renderPass.renderPass);
+		&renderer->renderPass.renderPass);
 
 	if(err != VK_SUCCESS)
 	{
@@ -160,12 +140,11 @@ FAIL:
 // VSR_RenderPassDestroy
 //------------------------------------------------------------------------------
 void
-GraphicsPipeline_RenderPassDestroy(
-	VSR_Renderer* renderer,
-	VSR_GraphicsPipeline* pipeline
+Renderer_RenderPassDestroy(
+	VSR_Renderer* renderer
 )
 {
 	vkDestroyRenderPass(renderer->logicalDevice.device,
-						pipeline->renderPass.renderPass,
+						renderer->renderPass.renderPass,
 						VSR_GetAllocator());
 }
