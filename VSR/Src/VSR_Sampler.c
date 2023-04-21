@@ -8,7 +8,8 @@ VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
 	size_t textureIndex,
-	SDL_Surface* sur)
+	SDL_Surface* sur,
+	VSR_SamplerFlags flags)
 {
 	static size_t uuid = 0;
 	if(uuid == 0) {uuid++;}
@@ -17,6 +18,7 @@ VSR_SamplerCreate(
 	sampler->uuid = uuid++;
 	sampler->arrayIndex = -1;
 	sampler->needsUpdate = SDL_TRUE;
+	sampler->framebuffer = NULL;
 
 	VSR_Image* img = VSR_ImageCreate(
 		renderer,
@@ -27,6 +29,11 @@ VSR_SamplerCreate(
 		| VK_IMAGE_USAGE_SAMPLED_BIT
 		| VK_BUFFER_USAGE_TRANSFER_DST_BIT
 	);
+
+	if(img == NULL)
+	{
+
+	}
 
 	VSR_ImageTransition(
 		renderer,

@@ -4,6 +4,10 @@
 #include "SDL2/SDL.h"
 
 #include "VSR_Image.h"
+#include "VSR_Framebuffer.h"
+
+typedef enum VSR_SamplerFlags VSR_SamplerFlags;
+enum VSR_SamplerFlags;
 
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler
@@ -16,13 +20,16 @@ struct VSR_Sampler
 	VSR_Image* image;
 	VSR_ImageView* view;
 	VkSampler sampler;
+
+	VSR_Framebuffer* framebuffer;
 };
 
 VSR_Sampler*
 VSR_SamplerCreate(
 	VSR_Renderer* renderer,
 	size_t textureIndex,
-	SDL_Surface* sur);
+	SDL_Surface* sur,
+	VSR_SamplerFlags flags);
 
 void
 VSR_SamplerFree(
