@@ -1,6 +1,7 @@
 #include "VSR_Sampler.h"
 
 #include "VSR_Renderer.h"
+#include "VSR_Framebuffer.h"
 #include "VSR_error.h"
 
 
@@ -14,16 +15,10 @@ VSR_SamplerCreate(
 	static size_t uuid = 0;
 	if(uuid == 0) {uuid++;}
 
-	VSR_Sampler* sampler = SDL_malloc(sizeof(VSR_Sampler));
-	sampler->uuid = uuid++;
-	sampler->arrayIndex = -1;
-	sampler->needsUpdate = SDL_TRUE;
-	sampler->framebuffer = NULL;
-
 	VSR_Image* img = VSR_ImageCreate(
 		renderer,
 		sur,
-		VK_FORMAT_R8G8B8A8_UNORM,
+		VK_FORMAT_B8G8R8A8_SRGB,
 		VK_IMAGE_TILING_OPTIMAL,
 		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
 		| VK_IMAGE_USAGE_SAMPLED_BIT
@@ -32,7 +27,43 @@ VSR_SamplerCreate(
 
 	if(img == NULL)
 	{
+		VSR_Error("Failed to create image: %s",
+				   VSR_GetErr());
 
+		goto FAIL;
+	}
+
+	VSR_ImageView* imgView = VSR_ImageViewCreate(
+		renderer,
+		img->image,
+		img->format,
+		VK_IMAGE_ASPECT_COLOR_BIT
+	);
+
+	if(imgView == NULL)
+	{
+		VSR_ImageDestroy(renderer, img);
+		VSR_Error("Failed to create imageView: %s",
+				   VSR_GetErr());
+		goto FAIL;
+	}
+
+	VSR_Framebuffer* framebuffer = NULL;
+	if((flags & SAMPLER_FLAG_RENDER_TARGET) != 0)
+	{
+		framebuffer = VSR_FramebufferCreate(
+			renderer,
+			imgView
+		);
+
+		if (framebuffer == NULL)
+		{
+			VSR_ImageDestroy(renderer, img);
+			VSR_ImageViewDestroy(renderer, imgView);
+			VSR_Error("Failed to create framebuffer: %s",
+					  VSR_GetErr());
+			goto FAIL;
+		}
 	}
 
 	VSR_ImageTransition(
@@ -42,24 +73,28 @@ VSR_SamplerCreate(
 		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	);
 
-	VSR_ImageView* imgView = VSR_ImageViewCreate(
-		renderer,
-		img->image,
-		img->format,
-		VK_IMAGE_ASPECT_COLOR_BIT
-	);
+	SUCCESS:
+	{
+		///////////////////////////////////
+		/// populate and return sampler ///
+		///////////////////////////////////
+		VSR_Sampler* sampler = SDL_malloc(sizeof(VSR_Sampler));
+		sampler->uuid = uuid++;
+		sampler->arrayIndex = -1;
+		sampler->needsUpdate = SDL_TRUE;
+		sampler->framebuffer = framebuffer;
 
-	///////////////////////////////////
-	/// populate and return sampler ///
-	///////////////////////////////////
-	sampler->textureIndex = textureIndex;
-	sampler->image = img;
-	sampler->view = imgView;
-	sampler->sampler = VSR_GetTextureSampler(renderer);
+		sampler->textureIndex = textureIndex;
+		sampler->image = img;
+		sampler->view = imgView;
+		sampler->sampler = VSR_GetTextureSampler(renderer);
 
-	VSR_SamplerWriteToDescriptor(renderer, textureIndex, sampler);
+		VSR_SamplerWriteToDescriptor(renderer, textureIndex, sampler);
 
-	return sampler;
+		return sampler;
+	}
+	FAIL:
+	return NULL;
 }
 
 void
@@ -76,6 +111,14 @@ VSR_SamplerFree(
 		VK_TRUE,
 		-1
 	);
+
+	if(sampler->framebuffer)
+	{
+		VSR_FramebufferDestroy(
+			renderer,
+			sampler->framebuffer
+		);
+	}
 
 	VSR_ImageViewDestroy(
 		renderer,
@@ -157,6 +200,15 @@ void VSR_SamplerWriteToDescriptor(
 	imageWrite.dstArrayElement = index;
 	imageWrite.descriptorCount = 1;
 	imageWrite.pImageInfo = &imageInfo;
+
+
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&renderer->imageFinished[renderer->currentFrame],
+		VK_FALSE,
+		-1
+	);
 
 	vkUpdateDescriptorSets(renderer->logicalDevice.device,
 	                       1, &imageWrite,

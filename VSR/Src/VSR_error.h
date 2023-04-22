@@ -6,6 +6,8 @@
 
 void VSR_Error(const char* fmt, ...);
 
+const char* VSR_GetErr();
+
 void VSR_SetErr(char* errMsg);
 
 const char* VSR_VkErrorToString(VkResult result);

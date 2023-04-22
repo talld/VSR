@@ -31,7 +31,7 @@ int SDL_main(int argc, char *argv[])
 	glm_mat4_identity(cubePos);
 	// set images
 	SDL_Surface* sur1 = SDL_LoadBMP("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\Assets\\castle_wall_albedo.bmp");
-	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1);
+	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1, 0);
 
 	// create and set pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
@@ -42,7 +42,7 @@ int SDL_main(int argc, char *argv[])
 	VSR_GraphicsPipeline* pipeline = VSR_GraphicsPipelineCreate(renderer, pipelineCreateInfo);
 	VSR_RendererSetPipeline(renderer, pipeline);
 
-	enum {kCubeRoot = 10};
+	enum {kCubeRoot = 100};
 
 	enum {kCubeCount = kCubeRoot * kCubeRoot * kCubeRoot};
 	VSR_Mat4** cubePositions = SDL_malloc(sizeof(mat4*) * kCubeCount);;
@@ -130,7 +130,6 @@ int SDL_main(int argc, char *argv[])
 		unsigned __int64 endTime;
 		QueryPerformanceCounter((LARGE_INTEGER*)&endTime);
 		double timeDifferenceInMilliseconds = ((endTime - startTime) * timerFrequency);
-		printf("%f\n", timeDifferenceInMilliseconds);
 
 		SDL_PollEvent(&event);
  		if(event.type == SDL_QUIT) {shouldQuit = 1;}

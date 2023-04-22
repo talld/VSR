@@ -319,7 +319,7 @@ Renderer_FreeDepthAttachment(
 
 	for(size_t i = 0; i < renderer->swapchainImageCount; i++)
 	{
-		VSR_DestroyFramebuffer(renderer, renderer->swapchainFrames[i]);
+		VSR_FramebufferDestroy(renderer, renderer->swapchainFrames[i]);
 	}
 }
 
@@ -418,6 +418,7 @@ VSR_RendererCreate(
 	/// pass info to new structure ///
 	//////////////////////////////////
 	renderer->SDLWindow = rendererCreateInfo->SDLWindow;
+	renderer->renderTarget = NULL;
 
 	// TODO: check
 	renderer->texturePoolSize = rendererCreateInfo->texturePoolSize;
@@ -452,7 +453,7 @@ VSR_RendererCreate(
 
 	for(size_t i = 0; i < renderer->swapchainImageCount; i++)
 	{
-		renderer->swapchainFrames[i] = VSR_CreateFramebuffer(
+		renderer->swapchainFrames[i] = VSR_FramebufferCreate(
 			renderer,
 			renderer->swapchain.pImageViews[i]);
 	}
@@ -476,7 +477,12 @@ VSR_RendererCreate(
 		kFallBackTextureFormat);
 	sur->pixels = kFallBackTexturePixels;
 
-	renderer->defaultSampler = VSR_SamplerCreate(renderer, 0, sur);
+	renderer->defaultSampler = VSR_SamplerCreate(
+		renderer,
+		0,
+		sur,
+		0
+	);
 
 	for(size_t i = 0; i < renderer->texturePoolSize; i++)
 	{
@@ -576,24 +582,27 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 		&renderer->imageFinished[*frameIndex]
 	);
 
-	///////////////////////////
-	/// get swapchain image ///
-	///////////////////////////
-	vkAcquireNextImageKHR(
-		renderer->logicalDevice.device,
-		renderer->swapchain.swapchain,
-		-1,
-		renderer->imageCanBeWritten[*frameIndex],
-		VK_NULL_HANDLE,
-		&renderer->imageIndex
-	);
+	////////////////////////
+	/// Setup next image ///
+	////////////////////////
+	if(renderer->renderTarget == NULL)
+	{ /// get swapchain image ///
+		vkAcquireNextImageKHR(
+			renderer->logicalDevice.device,
+			renderer->swapchain.swapchain,
+			-1,
+			renderer->imageCanBeWritten[*frameIndex],
+			VK_NULL_HANDLE,
+			&renderer->imageIndex
+		);
+	}
 
+	/// step 2 command record
 	renderer->modelInstanceCount = 0;
 	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
 		renderer
 	);
 
-	/// step 1 command record
 	Renderer_CommandBufferRecordStart(
 		renderer,
 		renderer->pipeline,
@@ -640,13 +649,26 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 
 	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &renderer->imageCanBeWritten[*frameIndex];
 	submitInfo.pWaitDstStageMask = waitStages;
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &renderer->imageCanBeRead[*frameIndex];
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &cBuff;
+
+	if(renderer->renderTarget != NULL)
+	{
+		submitInfo.pWaitSemaphores = NULL;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.pSignalSemaphores = NULL;
+		submitInfo.waitSemaphoreCount = 0;
+
+	}
+	else
+	{
+		submitInfo.pWaitSemaphores = &renderer->imageCanBeWritten[*frameIndex];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &renderer->imageCanBeRead[*frameIndex];
+		submitInfo.waitSemaphoreCount = 1;
+
+	}
 
 	vkQueueSubmit(
 		renderer->deviceQueues.QList[kGraphicsQueueIndex],
@@ -655,22 +677,25 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 		renderer->imageFinished[*frameIndex]
 	);
 
-	///////////////////////////////////////////
-	/// present queue information to screen ///
-	///////////////////////////////////////////
-	VkPresentInfoKHR presentInfo = (VkPresentInfoKHR){0};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.pNext = NULL;
-	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &renderer->imageCanBeRead[*frameIndex];
-	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &renderer->swapchain.swapchain;
-	presentInfo.pImageIndices = &renderer->imageIndex;
+	if(renderer->renderTarget == NULL)
+	{
+		///////////////////////////////////////////
+		/// present queue information to screen ///
+		///////////////////////////////////////////
+		VkPresentInfoKHR presentInfo = (VkPresentInfoKHR) {0};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = NULL;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &renderer->imageCanBeRead[*frameIndex];
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &renderer->swapchain.swapchain;
+		presentInfo.pImageIndices = &renderer->imageIndex;
 
-	vkQueuePresentKHR(
-		renderer->deviceQueues.QList[kGraphicsQueueIndex],
-		&presentInfo
-	);
+		vkQueuePresentKHR(
+			renderer->deviceQueues.QList[kGraphicsQueueIndex],
+			&presentInfo
+		);
+	}
 
 	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
 }
@@ -1102,6 +1127,66 @@ VSR_RendererSetFragmentConstants(
 	VSR_PushConstants const* pushConstants)
 {
 	renderer->pushConstantsFragment = *pushConstants;
+}
+
+
+
+
+
+//==============================================================================
+// VSR_RendererSetRenderTarget
+//------------------------------------------------------------------------------
+int
+VSR_RendererSetRenderTarget(
+	VSR_Renderer* renderer,
+	VSR_Sampler* sampler)
+{
+	if(sampler)
+	{
+		VSR_ImageTransition(
+			renderer,
+			sampler->image,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+		);
+
+		// take target out of texture index
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			sampler->textureIndex,
+			renderer->defaultSampler
+		);
+	}
+
+	if(renderer->renderTarget && renderer->renderTarget != sampler)
+	{
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			renderer->renderTarget->textureIndex,
+			renderer->renderTarget
+		);
+
+		VSR_ImageTransition(
+			renderer,
+			renderer->renderTarget->image,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+
+		// put sampler back in the texture array
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			renderer->renderTarget->textureIndex,
+			renderer->renderTarget
+		);
+	}
+
+	renderer->renderTarget = sampler;
+
+	SUCCESS:
+	return SDL_FALSE;
+	FAIL:
+	return SDL_TRUE;
 }
 
 

@@ -1,13 +1,10 @@
 #ifndef VSR_SAMPLER_H
 #define VSR_SAMPLER_H
 
-#include "SDL2/SDL.h"
+#include <SDL2/SDL.h>
 
 #include "VSR_Image.h"
 #include "VSR_Framebuffer.h"
-
-typedef enum VSR_SamplerFlags VSR_SamplerFlags;
-enum VSR_SamplerFlags;
 
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler

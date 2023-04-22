@@ -4,7 +4,7 @@
 #include "VSR_error.h"
 
 VSR_Framebuffer*
-VSR_CreateFramebuffer(
+VSR_FramebufferCreate(
 	VSR_Renderer* renderer,
 	VSR_ImageView* imageView)
 {
@@ -23,7 +23,7 @@ VSR_CreateFramebuffer(
 	framebufferCreateInfo.layers = 1;
 
 	VkImageView attachments[2] = {
-		renderer->swapchain.pImageViews[0]->imageView,
+		imageView->imageView,
 		renderer->depthView->imageView
 	};
 	framebufferCreateInfo.pAttachments = attachments;
@@ -56,7 +56,7 @@ VSR_CreateFramebuffer(
 }
 
 void
-VSR_DestroyFramebuffer(
+VSR_FramebufferDestroy(
 	VSR_Renderer* renderer,
 	VSR_Framebuffer* framebuffer)
 {

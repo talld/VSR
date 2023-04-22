@@ -92,6 +92,13 @@ VSR_PACKED(struct VSR_Mesh)
 typedef struct VSR_Model VSR_Model;
 struct VSR_Model;
 
+
+typedef enum VSR_SamplerFlags VSR_SamplerFlags;
+enum VSR_SamplerFlags
+{
+	SAMPLER_FLAG_RENDER_TARGET = 0x1
+};
+
 typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler;
 
@@ -136,6 +143,8 @@ void VSR_RendererSetVertexConstants(VSR_Renderer* renderer, VSR_PushConstants co
 
 void VSR_RendererSetFragmentConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
 
+int VSR_RendererSetRenderTarget(VSR_Renderer* renderer, VSR_Sampler* sampler);
+
 void VSR_RendererWriteDescriptor(VSR_Renderer* renderer, size_t index, size_t offset, void* data, size_t len);
 
 VSR_GraphicsPipelineCreateInfo* VSR_GraphicsPipelineGenerateCreateInfo(VSR_Renderer* renderer);
@@ -152,8 +161,6 @@ VSR_Shader* VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, const uin
 
 void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
 
-void VSR_RendererSetShader(VSR_Renderer* renderer, VSR_ShaderStage stage, VSR_Shader* shader);
-
 int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4** transforms, VSR_Sampler** samplers, size_t batchCount);
 
 VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices, VSR_Vertex const* normals, VSR_UV const* UVs, size_t indexCount, VSR_Index const* indices);
@@ -166,7 +173,7 @@ void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 
 void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
 
-VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface* sur);
+VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface* sur, VSR_SamplerFlags flags);
 
 void VSR_SamplerFree(VSR_Renderer* renderer, VSR_Sampler* sampler);
 

@@ -16,7 +16,7 @@ void VSR_Error(const char* fmt, ...)
 }
 
 static char* sErrorMessage;
-const char* VSR_getErr()
+const char* VSR_GetErr()
 {
 	return sErrorMessage;
 }

@@ -67,8 +67,9 @@ struct VSR_Renderer
 	Renderer_RenderPass     renderPass;
 
 	/// render images ///
+	VSR_Sampler*      renderTarget;
 	VSR_Framebuffer** swapchainFrames;
-	size_t           swapchainImageCount;
+	size_t            swapchainImageCount;
 
 	VSR_Image*     depthImage;
 	VSR_ImageView* depthView;

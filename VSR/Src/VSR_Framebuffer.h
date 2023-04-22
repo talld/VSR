@@ -21,13 +21,13 @@ struct VSR_Framebuffer
 };
 
 VSR_Framebuffer*
-VSR_CreateFramebuffer(
+VSR_FramebufferCreate(
 	VSR_Renderer* renderer,
 	VSR_ImageView* imageView
 );
 
 void
-VSR_DestroyFramebuffer(
+VSR_FramebufferDestroy(
 	VSR_Renderer* renderer,
 	VSR_Framebuffer* framebuffer
 );
