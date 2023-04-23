@@ -181,6 +181,8 @@ int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 
 VSR_Mat4* VSR_Mat4Create(VSR_Renderer* renderer, float* m);
 
+void VSR_Mat4Update(VSR_Renderer* renderer, VSR_Mat4* mat4, float* m);
+
 void VSR_Mat4Destroy(VSR_Renderer* renderer, VSR_Mat4* mat4);
 
 #endif // VSR_H

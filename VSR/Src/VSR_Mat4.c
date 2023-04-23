@@ -15,6 +15,13 @@ VSR_Mat4* VSR_Mat4Create(VSR_Renderer* renderer, float* m)
 	SDL_memcpy(&mat4->m0, m, sizeof(float[16]));
 }
 
+void VSR_Mat4Update(VSR_Renderer* renderer, VSR_Mat4* mat4, float* m)
+{
+	mat4->needsUpdate = SDL_TRUE;
+
+	SDL_memcpy(&mat4->m0, m, sizeof(float[16]));
+}
+
 void VSR_Mat4Destroy(VSR_Renderer* renderer, VSR_Mat4* mat4)
 {
 

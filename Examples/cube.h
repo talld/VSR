@@ -3,7 +3,7 @@
 
 enum {kCubeVertexCount=  12*3, kCubeIndexCount = 0};
 
-const VSR_Vertex kCubeVertices[kCubeVertexCount] = {
+static const VSR_Vertex kCubeVertices[kCubeVertexCount] = {
 	//Top
 	{  -1.0f, -1.0f, -1.0f} // triangle 1 : begin
 	, {-1.0f, -1.0f, 1.0f}
@@ -43,7 +43,7 @@ const VSR_Vertex kCubeVertices[kCubeVertexCount] = {
 	, {1.0f , -1.0f, 1.0f}
 };
 
-const VSR_UV kCubeUVs[kCubeVertexCount] = {
+static const VSR_UV kCubeUVs[kCubeVertexCount] = {
 	//Top
 	{  0.000059f, 1.0f - 0.000004f}
 	, {0.000103f, 1.0f - 0.336048f}
@@ -83,6 +83,6 @@ const VSR_UV kCubeUVs[kCubeVertexCount] = {
 	, {0.667979f, 1.0f - 0.335851f}
 };
 
-const VSR_Index* kCubeIndices = NULL;
+static const VSR_Index* kCubeIndices = NULL;
 
 #endif //VSR_SUITE_CUBE_H

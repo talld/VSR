@@ -8,7 +8,10 @@
 #define TINYOBJ_REALLOC SDL_realloc
 #define TINYOBJ_CALLOC SDL_calloc
 #define TINYOBJ_FREE SDL_free
+
+/*
 #include <tinyobj_loader_c.h>
+*/
 
 #include <stdio.h>
 #include <stdint.h>
@@ -81,8 +84,8 @@ loadShader(const char* fName, size_t* n)
 	return byteCode;
 }
 
-
-void loadFile(void *ctx, const char * filename, const int is_mtl, const char *obj_filename, char ** buffer, size_t * len)
+inline void
+loadFile(void *ctx, const char * filename, const int is_mtl, const char *obj_filename, char ** buffer, size_t * len)
 {
 	size_t string_size = 0;
 	size_t read_size = 0;
@@ -131,6 +134,7 @@ struct Mesh
 	uint32_t* indices;
 };
 
+/*
 static inline Mesh loadObj(const char * filename, const char * search_path)
 {
 	tinyobj_shape_t * shape = NULL;
@@ -195,5 +199,5 @@ static inline Mesh loadObj(const char * filename, const char * search_path)
 	tinyobj_attrib_free(&attrib);
 	return mesh;
 }
-
+*/
 #endif //VSR_SUITE_HELPERS_H
