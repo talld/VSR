@@ -22,7 +22,7 @@ VSR_ModelCreate(
 	model->UVs = NULL;
 	model->indices = NULL;
 
-	VSR_ModelUpdate(renderer, model);
+	VSR_ModelUpdate(renderer, model, mesh);
 
 	return model;
 }
@@ -55,16 +55,36 @@ VSR_ModelFree(
 void
 VSR_ModelUpdate(
 	VSR_Renderer* renderer,
-	VSR_Model* model)
+	VSR_Model* model,
+	VSR_Mesh* mesh)
 {
 	////////////////////////
 	/// update mesh info ///
 	////////////////////////
+	model->mesh = mesh;
 	model->vertexCount = model->mesh->vertexCount;
 	model->indexCount = model->mesh->indexCount;
 
 	if(!model->vertexCount) return;
 	if(!model->indexCount) return;
+
+	/////////////////////////
+	/// free existing mem ///
+	/////////////////////////
+	if(model->vertices)
+	{
+		Renderer_MemoryAllocFree(renderer, model->vertices);
+	}
+
+	if(model->UVs)
+	{
+		Renderer_MemoryAllocFree(renderer, model->UVs);
+	}
+
+	if(model->indices)
+	{
+		Renderer_MemoryAllocFree(renderer, model->indices);
+	}
 
 	///////////////
 	/// get mem ///

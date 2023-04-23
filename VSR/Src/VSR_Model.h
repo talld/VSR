@@ -8,7 +8,6 @@ typedef struct VSR_Model VSR_Model;
 struct VSR_Model
 {
 	VSR_Mesh* mesh; // callback for counts
-	VSR_Sampler* sampler;
 
 	size_t vertexCount;
 	Renderer_MemoryAlloc* vertices;
@@ -31,6 +30,7 @@ VSR_ModelFree(
 void
 VSR_ModelUpdate(
 	VSR_Renderer* renderer,
-	VSR_Model* model);
+	VSR_Model* model,
+	VSR_Mesh* mesh);
 
 #endif //VSR_MODEL_H

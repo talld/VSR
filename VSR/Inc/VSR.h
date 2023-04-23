@@ -171,7 +171,7 @@ VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, VSR_Mesh* mesh);
 
 void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
 
-void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
+void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model, VSR_Mesh* mesh);
 
 VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface* sur, VSR_SamplerFlags flags);
 
@@ -180,6 +180,8 @@ void VSR_SamplerFree(VSR_Renderer* renderer, VSR_Sampler* sampler);
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 
 VSR_Mat4* VSR_Mat4Create(VSR_Renderer* renderer, float* m);
+
+void VSR_Mat4Update(VSR_Renderer* renderer, VSR_Mat4* mat4, float* m);
 
 void VSR_Mat4Destroy(VSR_Renderer* renderer, VSR_Mat4* mat4);
 

@@ -1,81 +1,202 @@
-
-# Models
 ```c
-VSR_Mesh* VSR_MeshCreate(VSR_Renderer* renderer, float* vertices, size_t vertexCount, uint32_t* indices, size_t indexCount);
+enum VSR_SamplerFlags
+{
+  SAMPLER_FLAG_RENDER_TARGET = 0x1
+};
 ```
-models are created as a list of vertices and indices points
-vertices having a stride of 3, being: x y z points with verticesCount being a multiple of 3 and the number of these xyz groups.
-Ensure that your vertices are in the correct order as your triangle winding ( default is counterclockwise )
-```c
-void VSR_MeshFree(VSR_Renderer* renderer, VSR_Mesh* model);
-```
-remember to free models when your done with them
-```c
-int VSR_MeshBindUVs(VSR_Renderer* renderer, VSR_Mesh* model, float* UVs);
-```
-UVs are bound optionally and like vertices are in an u v group, 1 uv is 
-required per vertex so UVCount === vertexCount at all times, as a result this function does not take a UVCount instead vertexCount will be attempted to be read from the UVs pointer
-
-# Samplers
-```c
-VSR_Sampler* VSR_CreateSampler(SDL_Surface* image, VSR_ImageFormat format, VSR_SamplerFlags flags);
-```
-create an image sampler for the corresponding image to be used during a 
-model render when a model with appropriate UVs is drawn
-
-# Transforms
-```c
-VSR_Transform* VSR_CreateTransforms(size_t batchCount);
-```
-transforms are created in vertex memory, currently only transforms created in
-batches may be rendered in batches
-  (see VSR_RenderModels but TLDR is batchCount in rendering MUST == batchCount in creation)
 
 ```c
-void VSR_FreeTransforms(VSR_Transform* transforms, size_t count);
+const char* VSR_getErr();
 ```
-transforms are freed
 
 ```c
-VSR_Transform* VSR_SetTransformsPosition(VSR_Transform* transform, float x, 
-float y, float z);
+VSR_RendererCreateInfo* VSR_RendererGenerateCreateInfo(SDL_Window* window);
 ```
-```c
-VSR_Transform* VSR_SetTransformsRotation(VSR_Transform* transform, float xRot,
- float yRot, float zRot);
-```
-```c
-VSR_Transform* VSR_SetTransformsScale(VSR_Transform* transform, float xScale, 
-float yScale, float zScale);
-```
-used to set attributes of a transform
 
-# Renderer
 ```c
-VSR_RendererCreateInfo* VSR_RendererGenerateCreateInfo(VSR_CreateInfoFlags flags);
+VSR_RendererCreateInfo* VSR_RendererRequestTextureCount(VSR_RendererCreateInfo* createInfo, size_t count);
 ```
-VSR_RendererCreateInfo is an amalgam of all the possible alterable settings that VSR supports
-for example triangle winding can be set with
+
 ```c
-// settings groupings not final
-	VSR_RendererCreateInfo* cInfo = VSR_RendererGenerateCreateInfo(NULL);
-	cInfo->polygonInfo->winding = VSR_CREATE_INFO_CLOCKWISE_WINDING
+VSR_RendererCreateInfo* VSR_RendererRequestDescriptor(VSR_RendererCreateInfo* createInfo, size_t index, size_t size);
 ```
-once your createInfo has been configured you can create the renderer with:
- ```c
-VSR_Renderer* VSR_CreateRenderer(VSR_RendererCreateInfo* rendererCreateInfo);
-```
-Creates a VSR Render which holds all the state and vulkan settings
+
 ```c
 void VSR_RendererFreeCreateInfo(VSR_RendererCreateInfo* rendererCreateInfo);
 ```
-once you're done with it your crete info should be freed
+
+```c
+VSR_Renderer* VSR_RendererCreate(VSR_RendererCreateInfo* rendererCreateInfo);
+```
+
+```c
+void VSR_RendererFree(VSR_Renderer* renderer);
+```
+
+```c
+void VSR_RendererSetPipeline(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline);
+```
+
+```c
+void VSR_RendererBeginPass(VSR_Renderer* renderer);
+```
+
+```c
+int Renderer_FlushQueuedModels(VSR_Renderer* renderer);
+```
+
+```c
+void VSR_RendererEndPass(VSR_Renderer* renderer);
+```
+
+```c
+void VSR_RendererSetVertexConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
+```
+
+```c
+void VSR_RendererSetFragmentConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
+```
+
+```c
+struct VSR_PushConstants
+{
+  VSR_Mat4* Projection;
+  uint8_t* bytes;
+};
+```
+
+
+```c
+int VSR_RendererSetRenderTarget(VSR_Renderer* renderer, VSR_Sampler* sampler);
+```
+
+```c
+void VSR_RendererWriteDescriptor(VSR_Renderer* renderer, size_t index, size_t offset, void* data, size_t len);
+```
+
+```c
+int VSR_RenderModels(VSR_Renderer* renderer, VSR_Model* models, VSR_Mat4** transforms, VSR_Sampler** samplers, size_t batchCount);
+```
+
+```c
+VSR_GraphicsPipelineCreateInfo* VSR_GraphicsPipelineGenerateCreateInfo(VSR_Renderer* renderer);
+```
+
+```c
+void VSR_GraphicsPipelineCreateInfoFree(VSR_GraphicsPipelineCreateInfo* createInfo);
+```
+
+```c
+VSR_GraphicsPipeline* VSR_GraphicsPipelineCreate(VSR_Renderer* renderer, VSR_GraphicsPipelineCreateInfo* createInfo);
+```
+
+```c
+void VSR_GraphicsPipelineFree(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline);
+```
+
+```c
+void VSR_GraphicsPipelineSetShader(VSR_GraphicsPipelineCreateInfo* pipeline, VSR_ShaderStage stage, VSR_Shader* shader);
+```
+
+```c
+enum VSR_ShaderStage
+{
+  SHADER_STAGE_VERTEX = 0,
+  SHADER_STAGE_FRAGMENT = 1,
+};
+```
+
+```c
+VSR_Shader* VSR_ShaderCreate(VSR_Renderer* renderer, size_t byteCount, const uint8_t* bytes);
+```
+
+```c
+void VSR_ShaderDestroy(VSR_Renderer* renderer, VSR_Shader* shader);
+```
+
+# Meshes and models
+
+## Meshes
+```c
+VSR_Mesh* VSR_MeshCreate(size_t vertexCount, VSR_Vertex const* vertices, VSR_Vertex const* normals, VSR_UV const* UVs, size_t indexCount, VSR_Index const* indices);
+```
+meshes are created on in system memory and represent the resources required to make a model
+vertexCount must be equal to the size of the arrays passed to vertices and a multiple of 3
+vertex can have normal and UVs attached to them, any pointer of not NULL passed through will assume that every vertex has the associated attribute at the relevant index
+vertex can also be modified by indices, these again must be a multiple of 3.
+```c
+void VSR_MeshFree(VSR_Mesh* model);
+```
+just as meshes are created they must be destroyed, mesh can be destroyed directly after the associated model created if they are no longer required
+```c
+VSR_PACKED(struct VSR_Mesh)
+{
+  size_t      vertexCount;
+  VSR_Vertex* vertices;
+  VSR_Vertex* normals;
+  VSR_UV*     UVs;
+
+  size_t      indexCount;
+  VSR_Index*  indices;
+};
+```
+As a meshes content is only important at time of model creation, they may be freely edited, however the rules for mesh creation still apply
+```c
+VSR_PACKED(struct VSR_Vertex)
+{
+  float x;
+  float y;
+  float z;
+};
+```
+
+```c
+VSR_PACKED(struct VSR_Index)
+{
+  uint32_t i;
+};
+```
+
+```c
+VSR_PACKED(struct VSR_UV)
+{
+  float x;
+  float y;
+};
+```
+
+```c
+VSR_Model* VSR_ModelCreate(VSR_Renderer* renderer, VSR_Mesh* mesh);
+```
+
+```c
+void VSR_ModelFree(VSR_Renderer* renderer, VSR_Model* model);
+```
+
+```c
+void VSR_ModelUpdate(VSR_Renderer* renderer, VSR_Model* model);
+```
+
+```c
+VSR_Sampler* VSR_SamplerCreate(VSR_Renderer* renderer, size_t index, SDL_Surface* sur, VSR_SamplerFlags flags);
+```
+
+```c
+void VSR_SamplerFree(VSR_Renderer* renderer, VSR_Sampler* sampler);
+```
+
 ```c
 int VSR_SetSampler(VSR_Renderer* renderer, VSR_Sampler* sampler);
 ```
-Set the sample stage that appropriate model UVs will sample when rendered
+
 ```c
-int VSR_RenderModels(VSR_Renderer* renderer, VSR_Mesh* models, VSR_Transform* transforms, size_t batchCount);
+VSR_Mat4* VSR_Mat4Create(VSR_Renderer* renderer, float* m);
 ```
-sends a list of models and transforms to the renderer of count batchCount 
-allowing models to easily batched for efficient draw-calls in multi-model scenes
+
+```c
+VSR_Mat4* VSR_Mat4Update(VSR_Renderer* renderer, VSR_Mat4* mat4, float* m);
+```
+
+```c
+void VSR_Mat4Destroy(VSR_Renderer* renderer, VSR_Mat4* mat4);
+```
