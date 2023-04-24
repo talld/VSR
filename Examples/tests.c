@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "ubench.h"
 #include "cube.h"
 #include "helpers.h"
 
@@ -84,10 +83,12 @@ int SDL_main(int argc, char *argv[])
 	glm_mat4_mul(projection, view, view);
 	view[1][1] *= -1;
 
+
+	VSR_Mat4* viewMat = VSR_Mat4Create(renderer, view);
 	VSR_PushConstants pushConstants;
-	pushConstants.Projection = (VSR_Mat4*) &view;
-	VSR_RendererSetVertexConstants(renderer, &pushConstants);
-	VSR_RendererSetFragmentConstants(renderer, &pushConstants);
+	pushConstants.Projection =  &viewMat;
+	pushConstants.bytes = SDL_malloc(64);
+	VSR_GraphicsPipelineSetPushConstants(renderer, pipeline, &pushConstants);
 
 	// renderloop
 	int shouldQuit = 0;

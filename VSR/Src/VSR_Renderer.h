@@ -75,7 +75,6 @@ struct VSR_Renderer
 	uint32_t imageIndex;
 	size_t currentFrame;
 
-
 	/// render sync ///
 	VkSemaphore*           imageCanBeWritten;
 	VkSemaphore*           imageCanBeRead;
@@ -89,9 +88,6 @@ struct VSR_Renderer
 	VSR_GraphicsPipeline* pipeline;
 
 	/// memory ///
-	VSR_PushConstants pushConstantsVertex;
-	VSR_PushConstants pushConstantsFragment;
-
 	size_t texturePoolSize;
 
 	uint64_t* modelSamplerMatrixArray;
