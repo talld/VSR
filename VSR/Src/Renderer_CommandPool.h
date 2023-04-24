@@ -47,6 +47,13 @@ struct Renderer_CommandPool
 	size_t* transferCmdReadySignalsGeneration;
 };
 
+void
+Renderer_WaitOnGenerationalFence(
+	VSR_Renderer* renderer,
+	size_t genFenceCount,
+	VSR_GenerationalFence* genFence,
+	size_t generation
+);
 
 SDL_bool
 Renderer_CommandPoolPopulateCreateInfo(

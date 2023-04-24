@@ -168,13 +168,11 @@ VSR_ImageDestroy(
 	VSR_Renderer* renderer,
 	VSR_Image* image)
 {
-	// wait for the current frame to finish
-	vkWaitForFences(
-		renderer->logicalDevice.device,
-		1,
+	Renderer_WaitOnGenerationalFence(
+		renderer,
+		renderer->swapchainImageCount,
 		&renderer->imageFinished[renderer->currentFrame],
-		VK_TRUE,
-		-1
+		renderer->generationAcquired[renderer->currentFrame]
 	);
 
 	vkDestroyImage(
@@ -340,6 +338,13 @@ VSR_ImageViewDestroy(
 	VSR_Renderer* renderer,
 	VSR_ImageView* imageView)
 {
+	Renderer_WaitOnGenerationalFence(
+		renderer,
+		renderer->swapchainImageCount,
+		&renderer->imageFinished[renderer->currentFrame],
+		renderer->generationAcquired[renderer->currentFrame]
+	);
+
 	vkDestroyImageView(renderer->logicalDevice.device,
 					   imageView->imageView, VSR_GetAllocator());
 

@@ -2,6 +2,8 @@
 #include <cglm/cglm.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "ubench.h"
 #include "cube.h"
 #include "helpers.h"
 
@@ -29,10 +31,11 @@ int SDL_main(int argc, char *argv[])
 	VSR_Model* cubeModel = VSR_ModelCreate(renderer, cubeMesh);
 	mat4 cubePos;
 	glm_mat4_identity(cubePos);
+
 	// set images
+
 	SDL_Surface* sur1 = SDL_LoadBMP("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\Assets\\castle_wall_albedo.bmp");
 	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1, 0);
-	VSR_Sampler* sampler2 = VSR_SamplerCreate(renderer, 2, sur1, SAMPLER_FLAG_RENDER_TARGET);
 
 	// create and set pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
@@ -40,7 +43,14 @@ int SDL_main(int argc, char *argv[])
 	uint8_t* bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\vert.spv", &n);
 	VSR_Shader* vert = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vert);
+
+	bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\frag.spv", &n);
+	VSR_Shader* frag = VSR_ShaderCreate(renderer, n, bytes);
+	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_FRAGMENT, frag);
+
+
 	VSR_GraphicsPipeline* pipeline = VSR_GraphicsPipelineCreate(renderer, pipelineCreateInfo);
+
 	VSR_RendererSetPipeline(renderer, pipeline);
 
 	mat4 mat;
@@ -83,21 +93,8 @@ int SDL_main(int argc, char *argv[])
 	int shouldQuit = 0;
 	SDL_Event event;
 
-	int tick = 0;
 	while(!shouldQuit)
 	{
-		if(tick == 0)
-		{
-			VSR_RendererSetRenderTarget(renderer, sampler2);
-			tick++;
-		}
-		else if (tick == 1)
-		{
-			VSR_RendererSetRenderTarget(renderer, NULL);
-			sampler1 = sampler2;
-			tick++;
-		}
-
 		VSR_RendererBeginPass(renderer);
 		VSR_RenderModels(renderer, cubeModel, &cubePosition, &sampler1, 1);
 		VSR_RendererEndPass(renderer);

@@ -5,7 +5,29 @@
 
 
 
-
+void
+Renderer_WaitOnGenerationalFence(
+	VSR_Renderer* renderer,
+	size_t genFenceCount,
+	VSR_GenerationalFence* genFence,
+	size_t generation
+)
+{
+	for(size_t i = 0; i < genFenceCount; i++)
+	{
+		if (genFence->fence
+		    && generation == *genFence->generation)
+		{
+			vkWaitForFences(
+				renderer->logicalDevice.device,
+				1,
+				&renderer->imageFinished[renderer->currentFrame].fence,
+				VK_TRUE,
+				-1
+			);
+		}
+	}
+}
 
 //==============================================================================
 // VSR_SwapchainPopulateCreateInfo

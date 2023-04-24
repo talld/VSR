@@ -37,6 +37,10 @@ VkSampler
 VSR_GetTextureSampler(
 	VSR_Renderer* renderer);
 
+void
+VSR_CreateTextureSampler(
+	VSR_Renderer* renderer);
+
 void VSR_SamplerWriteToDescriptor(
 	VSR_Renderer* renderer,
 	size_t index,

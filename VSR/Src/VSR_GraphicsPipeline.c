@@ -136,13 +136,11 @@ VSR_GraphicsPipelineFree(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline)
 {
-	// wait for the current frame to finish
-	vkWaitForFences(
-		renderer->logicalDevice.device,
-		1,
-		&renderer->imageFinished[renderer->currentFrame].fence,
-		VK_TRUE,
-		-1
+	Renderer_WaitOnGenerationalFence(
+		renderer,
+		renderer->swapchainImageCount,
+		&renderer->imageFinished[renderer->currentFrame],
+		renderer->generationAcquired[renderer->currentFrame]
 	);
 
 	GraphicsPipeline_GraphicPipelineDestroy(renderer, pipeline);

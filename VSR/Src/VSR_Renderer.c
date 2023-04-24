@@ -310,26 +310,31 @@ Renderer_FreeDepthAttachment(
 
 }
 
+static VSR_Framebuffer** swapchainFrames;
+void
+Renderer_CreateSwapchainFrames(
+	VSR_Renderer* renderer)
+{
+
+	swapchainFrames = SDL_malloc(
+		renderer->swapchainImageCount * sizeof(VSR_Framebuffer)
+	);
+
+	for (size_t i = 0; i < renderer->swapchainImageCount; i++)
+	{
+		swapchainFrames[i] =
+			VSR_FramebufferCreate(
+				renderer,
+				renderer->swapchain.pImageViews[i]
+			);
+	}
+}
+
+
 VSR_Framebuffer**
 Renderer_GetSwapchainFrames(
 	VSR_Renderer* renderer)
 {
-	static VSR_Framebuffer** swapchainFrames;
-
-	if(!swapchainFrames)
-	{
-		swapchainFrames = SDL_malloc(
-			renderer->swapchainImageCount * sizeof(VSR_Framebuffer)
-		);
-
-		for(size_t i = 0; i < renderer->swapchainImageCount; i++)
-		{
-			swapchainFrames[i] = VSR_FramebufferCreate(
-				renderer,
-				renderer->swapchain.pImageViews[i]
-			);
-		}
-	}
 
 	return swapchainFrames;
 }
@@ -475,6 +480,8 @@ VSR_RendererCreate(
 		renderer->swapchainImageCount * sizeof(VSR_Framebuffer)
 	);
 
+	Renderer_CreateSwapchainFrames(renderer);
+
 	for(size_t i = 0; i < renderer->swapchainImageCount; i++)
 	{
 		renderer->swapchainFrames[i] = VSR_FramebufferCreate(
@@ -500,7 +507,7 @@ VSR_RendererCreate(
 		kFallBackTextureDepth,
 		kFallBackTextureFormat);
 	sur->pixels = kFallBackTexturePixels;
-
+	VSR_CreateTextureSampler(renderer);
 	renderer->defaultSampler = VSR_SamplerCreate(
 		renderer,
 		0,
@@ -888,7 +895,7 @@ VSR_RenderModels(
 
 	renderer->modelInstanceCount += queuedRender->instanceCount;
 
-	size_t lastInstanceIndex;
+	size_t lastInstanceIndex = 0;
 	if(sQueuedModelList)
 	{
 		QueuedRender* last = sQueuedModelList;
