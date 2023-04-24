@@ -141,13 +141,13 @@ VSR_SwapchainCreate(
 		NULL);
 
 	size_t imageListSize = swapchainImageCount * sizeof(VkImage);
-	VkImage* imageList = SDL_malloc(imageListSize);
+	renderer->swapchain.pSwapchainImages = SDL_malloc(imageListSize);
 
 	vkGetSwapchainImagesKHR(
 		renderer->logicalDevice.device,
 		renderer->swapchain.swapchain,
 		&swapchainImageCount,
-		imageList);
+		renderer->swapchain.pSwapchainImages);
 
 	renderer->swapchain.imageViewCount = swapchainImageCount;
 
@@ -156,7 +156,7 @@ VSR_SwapchainCreate(
 
 	for(size_t i = 0; i < swapchainImageCount; i++)
 	{
-		VkImage image = imageList[i];
+		VkImage image = renderer->swapchain.pSwapchainImages[i];
 
 		VSR_ImageView* imageView =
 		VSR_ImageViewCreate(
@@ -167,8 +167,6 @@ VSR_SwapchainCreate(
 
 		renderer->swapchain.pImageViews[i] = imageView;
 	}
-
-	SDL_free((void*) imageList);
 
 	SUCCESS:
 	{
@@ -211,5 +209,6 @@ VSR_SwapchainDestroy(
 		VSR_GetAllocator()
 		);
 
+	SDL_free((void*) renderer->swapchain.pSwapchainImages);
 	SDL_free(renderer->swapchain.pImageViews);
 }

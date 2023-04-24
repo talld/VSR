@@ -195,8 +195,11 @@ VSR_ImageTransition(
 	VkImageLayout from,
 	VkImageLayout to)
 {
+	VSR_GenerationalFence genFence;
+
 	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
-		renderer);
+		renderer,
+		&genFence);
 
 	VkImageMemoryBarrier imageBarrier = (VkImageMemoryBarrier){0};
 	imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -260,8 +263,15 @@ VSR_ImageTransition(
 
 	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		buff,
-		NULL);
+		buff);
+
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&genFence.fence,
+		VK_TRUE,
+		-1
+		);
 }
 
 

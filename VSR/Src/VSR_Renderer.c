@@ -3,6 +3,7 @@
 #include "VSR_Mat4.h"
 
 #include "fallbackTexture.h"
+#include "VSR_error.h"
 
 //==============================================================================
 // Renderer_CreateSyncObjects
@@ -18,9 +19,11 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 	renderer->imageCanBeRead = SDL_malloc(listSize);
 	renderer->imageCanBeWritten = SDL_malloc(listSize);
 
-	listSize = renderer->swapchain.imageViewCount * sizeof(VkFence);
+	listSize = renderer->swapchain.imageViewCount * sizeof(VSR_GenerationalFence);
 	renderer->imageFinished = SDL_malloc(listSize);
 
+	listSize = renderer->swapchain.imageViewCount * sizeof(size_t);
+	renderer->generationAcquired = SDL_malloc(listSize);
 	//////////////////////////////
 	/// Create semaphores info ///
 	//////////////////////////////
@@ -51,12 +54,6 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 						  VSR_GetAllocator(),
 						  &renderer->imageCanBeWritten[i]
 		);
-
-		vkCreateFence(renderer->logicalDevice.device,
-					  &fenceInfo,
-					  VSR_GetAllocator(),
-					  &renderer->imageFinished[i]
-		);
 	}
 
 }
@@ -81,12 +78,6 @@ void Renderer_DestroySyncObjects(VSR_Renderer* renderer)
 		vkDestroySemaphore(
 			renderer->logicalDevice.device,
 			renderer->imageCanBeRead[i],
-			VSR_GetAllocator()
-		);
-
-		vkDestroyFence(
-			renderer->logicalDevice.device,
-			renderer->imageFinished[i],
 			VSR_GetAllocator()
 		);
 	}
@@ -317,9 +308,43 @@ Renderer_FreeDepthAttachment(
 	VSR_ImageViewDestroy(renderer, renderer->depthView);
 	VSR_ImageDestroy(renderer, renderer->depthImage);
 
+}
+
+VSR_Framebuffer**
+Renderer_GetSwapchainFrames(
+	VSR_Renderer* renderer)
+{
+	static VSR_Framebuffer** swapchainFrames;
+
+	if(!swapchainFrames)
+	{
+		swapchainFrames = SDL_malloc(
+			renderer->swapchainImageCount * sizeof(VSR_Framebuffer)
+		);
+
+		for(size_t i = 0; i < renderer->swapchainImageCount; i++)
+		{
+			swapchainFrames[i] = VSR_FramebufferCreate(
+				renderer,
+				renderer->swapchain.pImageViews[i]
+			);
+		}
+	}
+
+	return swapchainFrames;
+}
+
+void
+renderer_DestroySwapchainFrames(
+	VSR_Renderer* renderer)
+{
+	VSR_Framebuffer** swapchainFrames = Renderer_GetSwapchainFrames(
+		renderer
+	);
+
 	for(size_t i = 0; i < renderer->swapchainImageCount; i++)
 	{
-		VSR_FramebufferDestroy(renderer, renderer->swapchainFrames[i]);
+		VSR_FramebufferDestroy(renderer, swapchainFrames[i]);
 	}
 }
 
@@ -352,7 +377,7 @@ VSR_RendererGenerateCreateInfo(
 	/// setup defaults ///
 	//////////////////////
 	createInfo->texturePoolSize = 256;
-	createInfo->cmdBuffersPerPool = 10;
+	createInfo->cmdBuffersPerPool = 15;
 
 	createInfo->geometryShaderRequested = SDL_FALSE;
 	createInfo->tessellationShaderRequested = SDL_FALSE;
@@ -418,7 +443,6 @@ VSR_RendererCreate(
 	/// pass info to new structure ///
 	//////////////////////////////////
 	renderer->SDLWindow = rendererCreateInfo->SDLWindow;
-	renderer->renderTarget = NULL;
 
 	// TODO: check
 	renderer->texturePoolSize = rendererCreateInfo->texturePoolSize;
@@ -560,48 +584,43 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	///////////////
 	/// aliases ///
 	///////////////
-	size_t* frameIndex = &renderer->currentFrame;
+	size_t frameIndex = renderer->currentFrame;
 
-	////////////////////////////////////////////////////////////////
-	/// wait for requested image to be done ( ready to use again ///
-	////////////////////////////////////////////////////////////////
-	vkWaitForFences(
-		renderer->logicalDevice.device,
-		1,
-		&renderer->imageFinished[*frameIndex],
-		VK_TRUE,
-		-1
-	);
-
-	//////////////////
-	/// reset sync ///
-	//////////////////
-	vkResetFences(
-		renderer->logicalDevice.device,
-		1,
-		&renderer->imageFinished[*frameIndex]
-	);
 
 	////////////////////////
 	/// Setup next image ///
 	////////////////////////
-	if(renderer->renderTarget == NULL)
+	if(renderer->pipeline->renderTarget == NULL)
 	{ /// get swapchain image ///
 		vkAcquireNextImageKHR(
 			renderer->logicalDevice.device,
 			renderer->swapchain.swapchain,
 			-1,
-			renderer->imageCanBeWritten[*frameIndex],
+			renderer->imageCanBeWritten[frameIndex],
 			VK_NULL_HANDLE,
 			&renderer->imageIndex
+		);
+	}
+
+	if(renderer->imageFinished[frameIndex].fence != NULL
+	   && renderer->generationAcquired[frameIndex] != *renderer->imageFinished[frameIndex].generation)
+	{
+		vkWaitForFences(
+			renderer->logicalDevice.device,
+			1,
+			&renderer->imageFinished[frameIndex].fence,
+			VK_TRUE,
+			-1
 		);
 	}
 
 	/// step 2 command record
 	renderer->modelInstanceCount = 0;
 	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
-		renderer
+		renderer,
+		&renderer->imageFinished[frameIndex]
 	);
+	renderer->generationAcquired[frameIndex] = *renderer->imageFinished[frameIndex].generation;
 
 	Renderer_CommandBufferRecordStart(
 		renderer,
@@ -628,7 +647,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	///////////////
 	/// aliases ///
 	///////////////
-	size_t* frameIndex = &renderer->currentFrame;
+	size_t frameIndex = renderer->currentFrame;
 
 
 	/// step2 command record
@@ -653,7 +672,14 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &cBuff;
 
-	if(renderer->renderTarget != NULL)
+	if(renderer->pipeline->renderTarget == NULL)
+	{
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &renderer->imageCanBeWritten[frameIndex];
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &renderer->imageCanBeRead[frameIndex];
+	}
+	else
 	{
 		submitInfo.pWaitSemaphores = NULL;
 		submitInfo.signalSemaphoreCount = 0;
@@ -661,23 +687,15 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 		submitInfo.waitSemaphoreCount = 0;
 
 	}
-	else
-	{
-		submitInfo.pWaitSemaphores = &renderer->imageCanBeWritten[*frameIndex];
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &renderer->imageCanBeRead[*frameIndex];
-		submitInfo.waitSemaphoreCount = 1;
-
-	}
 
 	vkQueueSubmit(
 		renderer->deviceQueues.QList[kGraphicsQueueIndex],
 		1,
 		&submitInfo,
-		renderer->imageFinished[*frameIndex]
+		renderer->imageFinished[frameIndex].fence
 	);
 
-	if(renderer->renderTarget == NULL)
+	if(renderer->pipeline->renderTarget == NULL)
 	{
 		///////////////////////////////////////////
 		/// present queue information to screen ///
@@ -686,10 +704,11 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.pNext = NULL;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &renderer->imageCanBeRead[*frameIndex];
+		presentInfo.pWaitSemaphores = &renderer->imageCanBeRead[frameIndex];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &renderer->swapchain.swapchain;
 		presentInfo.pImageIndices = &renderer->imageIndex;
+		presentInfo.pResults = NULL;
 
 		vkQueuePresentKHR(
 			renderer->deviceQueues.QList[kGraphicsQueueIndex],
@@ -697,7 +716,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 		);
 	}
 
-	*frameIndex = (*frameIndex + 1) % renderer->swapchain.imageViewCount;
+	renderer->currentFrame = (frameIndex + 1) % renderer->swapchain.imageViewCount;
 }
 
 typedef struct QueuedRender QueuedRender;
@@ -1127,66 +1146,6 @@ VSR_RendererSetFragmentConstants(
 	VSR_PushConstants const* pushConstants)
 {
 	renderer->pushConstantsFragment = *pushConstants;
-}
-
-
-
-
-
-//==============================================================================
-// VSR_RendererSetRenderTarget
-//------------------------------------------------------------------------------
-int
-VSR_RendererSetRenderTarget(
-	VSR_Renderer* renderer,
-	VSR_Sampler* sampler)
-{
-	if(sampler)
-	{
-		VSR_ImageTransition(
-			renderer,
-			sampler->image,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-		);
-
-		// take target out of texture index
-		VSR_SamplerWriteToDescriptor(
-			renderer,
-			sampler->textureIndex,
-			renderer->defaultSampler
-		);
-	}
-
-	if(renderer->renderTarget && renderer->renderTarget != sampler)
-	{
-		VSR_SamplerWriteToDescriptor(
-			renderer,
-			renderer->renderTarget->textureIndex,
-			renderer->renderTarget
-		);
-
-		VSR_ImageTransition(
-			renderer,
-			renderer->renderTarget->image,
-			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		);
-
-		// put sampler back in the texture array
-		VSR_SamplerWriteToDescriptor(
-			renderer,
-			renderer->renderTarget->textureIndex,
-			renderer->renderTarget
-		);
-	}
-
-	renderer->renderTarget = sampler;
-
-	SUCCESS:
-	return SDL_FALSE;
-	FAIL:
-	return SDL_TRUE;
 }
 
 

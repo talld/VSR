@@ -201,14 +201,17 @@ void VSR_SamplerWriteToDescriptor(
 	imageWrite.descriptorCount = 1;
 	imageWrite.pImageInfo = &imageInfo;
 
-
-	vkWaitForFences(
-		renderer->logicalDevice.device,
-		1,
-		&renderer->imageFinished[renderer->currentFrame],
-		VK_FALSE,
-		-1
-	);
+	if(renderer->imageFinished[renderer->currentFrame].fence
+	&& renderer->generationAcquired[renderer->currentFrame] == *renderer->imageFinished[renderer->currentFrame].generation)
+	{
+		vkWaitForFences(
+			renderer->logicalDevice.device,
+			1,
+			&renderer->imageFinished[renderer->currentFrame].fence,
+			VK_TRUE,
+			-1
+		);
+	}
 
 	vkUpdateDescriptorSets(renderer->logicalDevice.device,
 	                       1, &imageWrite,

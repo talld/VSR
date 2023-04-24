@@ -2,9 +2,9 @@
 
 #include <vulkan/vulkan.h>
 #include "VSR_Renderer.h"
-
 #include "VSR_Image.h"
 #include "VSR_Sampler.h"
+
 #include "Renderer_Memory.h"
 
 
@@ -61,6 +61,7 @@ VSR_GraphicsPipelineCreate(
 )
 {
 	VSR_GraphicsPipeline* pipeline = SDL_calloc(1, sizeof(VSR_GraphicsPipeline));
+	pipeline->renderTarget = NULL;
 
 	GraphicsPipeline_GraphicsPipelineCreate(renderer, pipeline, createInfo);
 
@@ -70,6 +71,62 @@ VSR_GraphicsPipelineCreate(
 
 
 
+//==============================================================================
+// VSR_PipelineSetRenderTarget
+//------------------------------------------------------------------------------
+int
+VSR_PipelineSetRenderTarget(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
+	VSR_Sampler* sampler)
+{
+	if(sampler)
+	{
+		VSR_ImageTransition(
+			renderer,
+			sampler->image,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+		);
+
+		// take target out of texture index
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			sampler->textureIndex,
+			renderer->defaultSampler
+		);
+	}
+
+	if(pipeline->renderTarget && pipeline->renderTarget != sampler)
+	{
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			pipeline->renderTarget->textureIndex,
+			pipeline->renderTarget
+		);
+
+		VSR_ImageTransition(
+			renderer,
+			pipeline->renderTarget->image,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+
+		// put sampler back in the texture array
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			pipeline->renderTarget->textureIndex,
+			pipeline->renderTarget
+		);
+	}
+
+	pipeline->renderTarget = sampler;
+
+	SUCCESS:
+	return SDL_FALSE;
+	FAIL:
+	return SDL_TRUE;
+}
 
 //==============================================================================
 // VSR_GraphicsPipelineFree
@@ -83,7 +140,7 @@ VSR_GraphicsPipelineFree(
 	vkWaitForFences(
 		renderer->logicalDevice.device,
 		1,
-		&renderer->imageFinished[renderer->currentFrame],
+		&renderer->imageFinished[renderer->currentFrame].fence,
 		VK_TRUE,
 		-1
 	);

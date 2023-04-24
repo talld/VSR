@@ -235,9 +235,11 @@ Renderer_MemoryTransfer(
 	VkFence fence)
 {
 
+	VSR_GenerationalFence genFence;
+
 	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
-		renderer
-	);
+		renderer,
+		&genFence);
 
 	VkBufferCopy copyRegion = (VkBufferCopy){0};
 	copyRegion.dstOffset = dstOffset;
@@ -253,10 +255,16 @@ Renderer_MemoryTransfer(
 
 	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		buff,
-		fence
+		buff
 	);
 
+	vkWaitForFences(
+		renderer->logicalDevice.device,
+		1,
+		&genFence.fence,
+		VK_TRUE,
+		-1
+	);
 
 	return 0;
 }
@@ -303,7 +311,8 @@ Renderer_MemoryTransferToImage(
 )
 {
 	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
-		renderer
+		renderer,
+		NULL
 	);
 
 	VkBufferImageCopy imageCopy;
@@ -330,8 +339,7 @@ Renderer_MemoryTransferToImage(
 
 	Renderer_CommandPoolSubmitTransferBuffer(
 		renderer,
-		buff,
-		NULL
+		buff
 	);
 
 	return SDL_TRUE;

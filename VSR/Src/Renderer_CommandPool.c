@@ -80,6 +80,10 @@ Renderer_CommandPoolCreate(
 	renderer->commandPool.graphicsCmdReadySignals = SDL_malloc(fenceListSize);
 	renderer->commandPool.transferCmdReadySignals = SDL_malloc(fenceListSize);
 
+	size_t generationListSize = renderer->commandPool.cmdBuffersPerPool * sizeof(size_t);
+	renderer->commandPool.graphicsCmdReadySignalsGeneration = SDL_malloc(generationListSize);
+	renderer->commandPool.transferCmdReadySignalsGeneration = SDL_malloc(generationListSize);
+
 	for(size_t i = 0; i < renderer->commandPool.cmdBuffersPerPool; i++)
 	{
 		vkCreateFence(
@@ -130,7 +134,7 @@ Renderer_CommandPoolCreate(
 	/// transfer pool ///
 	commandBuffAllocateInfo.commandPool = renderer->commandPool.transferPool;
 
-	renderer->commandPool.transferCmdBuffers= SDL_malloc(
+	renderer->commandPool.transferCmdBuffers = SDL_malloc(
 		renderer->commandPool.cmdBuffersPerPool * sizeof(VkCommandBuffer));
 
 	err = vkAllocateCommandBuffers(
@@ -161,25 +165,59 @@ Renderer_CommandPoolCreate(
 
 VkCommandBuffer
 Renderer_CommandPoolAllocateGraphicsBuffer(
-	VSR_Renderer* renderer)
+	VSR_Renderer* renderer,
+	VSR_GenerationalFence * fence)
 {
-	static size_t lastGiven = 0;
-	size_t newIndex = lastGiven + 1;
 
-	if(newIndex >= renderer->commandPool.cmdBuffersPerPool)
+	size_t readyIndex = -1;
+	do
 	{
-		newIndex = 0;
-	}
 
-	vkWaitForFences(
+		for (size_t i = 0; i < renderer->commandPool.cmdBuffersPerPool; i++)
+		{
+			VkResult res = vkGetFenceStatus(
+				renderer->logicalDevice.device,
+				renderer->commandPool.graphicsCmdReadySignals[i]
+			);
+
+			if (res == VK_SUCCESS)
+			{
+				readyIndex = i;
+				break;
+			}
+		}
+
+		if(readyIndex == -1)
+		{
+			vkWaitForFences(
+				renderer->logicalDevice.device,
+				renderer->commandPool.cmdBuffersPerPool,
+				renderer->commandPool.graphicsCmdReadySignals,
+				VK_FALSE,
+				-1
+			);
+		}
+
+	} while (readyIndex == -1);
+
+	VkCommandBuffer buff = renderer->commandPool.graphicsCmdBuffers[readyIndex];
+	VkFence buffFence = renderer->commandPool.graphicsCmdReadySignals[readyIndex];
+
+	VkCommandBufferResetFlags resetFlags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
+	vkResetCommandBuffer(buff, resetFlags);
+
+	vkResetFences(
 		renderer->logicalDevice.device,
 		1,
-		&renderer->commandPool.graphicsCmdReadySignals[newIndex],
-		VK_TRUE,
-		-1
+		&buffFence
 	);
 
-	VkCommandBuffer buff = renderer->commandPool.graphicsCmdBuffers[newIndex];
+	size_t* generation = &renderer->commandPool.graphicsCmdReadySignalsGeneration[readyIndex];
+	*generation++;
+	if(fence)
+	{
+		*fence = (VSR_GenerationalFence){.fence = buffFence, .generation = generation};
+	}
 
 	VkCommandBufferBeginInfo beginInfo;
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -188,32 +226,63 @@ Renderer_CommandPoolAllocateGraphicsBuffer(
 	beginInfo.pInheritanceInfo = NULL;
 
 	vkBeginCommandBuffer(buff, &beginInfo);
-
-	lastGiven = newIndex;
 	return buff;
 }
 
 VkCommandBuffer
 Renderer_CommandPoolAllocateTransferBuffer(
-	VSR_Renderer* renderer)
+	VSR_Renderer* renderer,
+	VSR_GenerationalFence* fence)
 {
-	static size_t lastGiven = 0;
-	size_t newIndex = lastGiven + 1;
-
-	if(newIndex >= renderer->commandPool.cmdBuffersPerPool)
+	size_t readyIndex = -1;
+	do
 	{
-		newIndex = 0;
-	}
 
-	vkWaitForFences(
+		for (size_t i = 0; i < renderer->commandPool.cmdBuffersPerPool; i++)
+		{
+			VkResult res = vkGetFenceStatus(
+				renderer->logicalDevice.device,
+				renderer->commandPool.transferCmdReadySignals[i]
+			);
+
+			if (res == VK_SUCCESS)
+			{
+				readyIndex = i;
+				break;
+			}
+		}
+
+		if(readyIndex == -1)
+		{
+			vkWaitForFences(
+				renderer->logicalDevice.device,
+				renderer->commandPool.cmdBuffersPerPool,
+				renderer->commandPool.transferCmdReadySignals,
+				VK_FALSE,
+				-1
+			);
+		}
+
+	} while (readyIndex == -1);
+
+	VkCommandBuffer buff = renderer->commandPool.transferCmdBuffers[readyIndex];
+	VkFence buffFence = renderer->commandPool.transferCmdReadySignals[readyIndex];
+
+	VkCommandBufferResetFlags resetFlags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
+	vkResetCommandBuffer(buff, resetFlags);
+
+	vkResetFences(
 		renderer->logicalDevice.device,
 		1,
-		&renderer->commandPool.transferCmdReadySignals[newIndex],
-		VK_TRUE,
-		-1
+		&buffFence
 	);
 
-	VkCommandBuffer buff = renderer->commandPool.transferCmdBuffers[newIndex];
+	size_t* generation = &renderer->commandPool.transferCmdReadySignalsGeneration[readyIndex];
+	*generation++;
+	if(fence)
+	{
+		*fence = (VSR_GenerationalFence){.fence = buffFence, .generation = generation};
+	}
 
 	VkCommandBufferBeginInfo beginInfo;
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -222,45 +291,25 @@ Renderer_CommandPoolAllocateTransferBuffer(
 	beginInfo.pInheritanceInfo = NULL;
 
 	vkBeginCommandBuffer(buff, &beginInfo);
-
-	lastGiven = newIndex;
 	return buff;
 }
 
 void
 Renderer_CommandPoolSubmitTransferBuffer(
 	VSR_Renderer* renderer,
-	VkCommandBuffer buff,
-	VkFence fence)
+	VkCommandBuffer buff)
 {
+	VkFence cmdFence;
+
+	for (size_t i = 0; i < renderer->commandPool.cmdBuffersPerPool; i++)
+	{
+		if (buff == renderer->commandPool.transferCmdBuffers[i])
+		{
+			cmdFence = renderer->commandPool.transferCmdReadySignals[i];
+		}
+	}
+
 	vkEndCommandBuffer(buff);
-
-	SDL_bool bInternalSync = SDL_FALSE;
-
-	if(fence)
-	{
-		vkResetFences(
-			renderer->logicalDevice.device,
-			1,
-			&fence
-		);
-	}
-	else
-	{
-		bInternalSync = SDL_TRUE;
-
-		VkFenceCreateInfo fenceCreateInfo = (VkFenceCreateInfo){0};
-		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceCreateInfo.pNext = NULL;
-		fenceCreateInfo.flags = 0L;
-
-		vkCreateFence(
-			renderer->logicalDevice.device,
-			&fenceCreateInfo,
-			VSR_GetAllocator(),
-			&fence
-		);
-	}
 
 	VkSubmitInfo submitInfo = (VkSubmitInfo){0};
 	submitInfo.pNext = NULL;
@@ -272,29 +321,8 @@ Renderer_CommandPoolSubmitTransferBuffer(
 		renderer->deviceQueues.QList[kTransferQueueIndex],
 		1,
 		&submitInfo,
-		fence
+		cmdFence
 	);
-
-	if(bInternalSync)
-	{
-		vkWaitForFences(
-			renderer->logicalDevice.device,
-			1,
-			&fence,
-			VK_TRUE,
-			-1
-		);
-
-		vkDestroyFence(
-			renderer->logicalDevice.device,
-			fence,
-			VSR_GetAllocator()
-		);
-	}
-
-	VkCommandBufferResetFlags resetFlags = VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
-	vkResetCommandBuffer(buff, resetFlags);
-
 }
 
 int
@@ -318,14 +346,14 @@ Renderer_CommandBufferRecordStart(
 	};
 	passBeginInfo.pClearValues = clearValues;
 
-	if(renderer->renderTarget != NULL)
+	if(renderer->pipeline->renderTarget == NULL)
 	{
-		passBeginInfo.framebuffer = renderer->renderTarget->framebuffer->frame;
+		passBeginInfo.framebuffer =
+			Renderer_GetSwapchainFrames(renderer)[renderer->imageIndex]->frame;
 	}
 	else
 	{
-		passBeginInfo.framebuffer =
-			renderer->swapchainFrames[renderer->imageIndex]->frame;
+		passBeginInfo.framebuffer = renderer->pipeline->renderTarget->framebuffer->frame;
 	}
 	/////////////////////////
 	/// record buffers    ///

@@ -73,7 +73,7 @@ VSR_InstancePopulateCreateInfo(
 		enum{kEnabledLayerCount = 1};
 		static const char* layerNames[kEnabledLayerCount] ={
 			"VK_LAYER_KHRONOS_validation",
-		//	"VK_LAYER_LUNARG_api_dump",
+			//"VK_LAYER_LUNARG_api_dump",
 		};
 		instanceCreateInfo->ppEnabledLayerNames = layerNames;
 		instanceCreateInfo->enabledLayerCount = kEnabledLayerCount;

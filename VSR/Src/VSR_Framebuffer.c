@@ -60,13 +60,11 @@ VSR_FramebufferDestroy(
 	VSR_Renderer* renderer,
 	VSR_Framebuffer* framebuffer)
 {
-	size_t images = renderer->swapchain.imageViewCount;
-	for(size_t i = 0; i < images; i++)
-	{
-		vkDestroyFramebuffer(renderer->logicalDevice.device,
-							 renderer->swapchainFrames[i]->frame,
-							 VSR_GetAllocator());
-	}
+	vkDestroyFramebuffer(
+		renderer->logicalDevice.device,
+		framebuffer->frame,
+		VSR_GetAllocator()
+	);
 
-	SDL_free(renderer->swapchainFrames);
+	SDL_free(framebuffer);
 }

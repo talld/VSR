@@ -24,9 +24,17 @@ struct VSR_GraphicsPipelineCreateInfo
 typedef struct VSR_GraphicsPipeline VSR_GraphicsPipeline;
 struct VSR_GraphicsPipeline
 {
-
-
 	GraphicsPipeline_GraphicsPipeline  graphicPipeline;
+
+	VSR_Sampler* renderTarget;
+	VkFence    renderTargetFinished;
 };
+
+int
+VSR_PipelineSetRenderTarget(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
+	VSR_Sampler* sampler);
+
 
 #endif //VSR_SUITE_VSR_GRAPHICSPIPELINE_H

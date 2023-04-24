@@ -66,8 +66,6 @@ struct VSR_Renderer
 	Renderer_Swapchain      swapchain;
 	Renderer_RenderPass     renderPass;
 
-	/// render images ///
-	VSR_Sampler*      renderTarget;
 	VSR_Framebuffer** swapchainFrames;
 	size_t            swapchainImageCount;
 
@@ -79,9 +77,10 @@ struct VSR_Renderer
 
 
 	/// render sync ///
-	VkSemaphore* imageCanBeWritten;
-	VkSemaphore* imageCanBeRead;
-	VkFence*     imageFinished;
+	VkSemaphore*           imageCanBeWritten;
+	VkSemaphore*           imageCanBeRead;
+	VSR_GenerationalFence* imageFinished;
+	size_t*                generationAcquired;
 
 	Renderer_DescriptorPool descriptorPool;
 	Renderer_CommandPool    commandPool;
@@ -124,5 +123,9 @@ VSR_GetAllocator()
 {
 	return NULL;
 }
+
+VSR_Framebuffer**
+Renderer_GetSwapchainFrames(
+	VSR_Renderer* renderer);
 
 #endif // VSR_RENDERER_H

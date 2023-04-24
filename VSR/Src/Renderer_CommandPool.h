@@ -18,6 +18,12 @@ struct Renderer_CreateInfoSubStructs;
 typedef struct GraphicsPipeline_CreateInfoSubStructs GraphicsPipeline_CreateInfoSubStructs;
 struct GraphicsPipeline_CreateInfoSubStructs;
 
+typedef struct VSR_GenerationalFence VSR_GenerationalFence;
+struct VSR_GenerationalFence
+{
+	VkFence fence;
+	size_t* generation;
+};
 
 typedef struct Renderer_CommandPoolCreateInfo Renderer_CommandPoolCreateInfo;
 struct Renderer_CommandPoolCreateInfo
@@ -33,11 +39,12 @@ struct Renderer_CommandPool
 	VkCommandPool graphicsPool;
 	VkCommandBuffer* graphicsCmdBuffers;
 	VkFence* graphicsCmdReadySignals;
+	size_t* graphicsCmdReadySignalsGeneration;
 
 	VkCommandPool transferPool;
 	VkCommandBuffer* transferCmdBuffers;
 	VkFence* transferCmdReadySignals;
-
+	size_t* transferCmdReadySignalsGeneration;
 };
 
 
@@ -58,17 +65,18 @@ Renderer_CommandPoolDestroy(
 
 VkCommandBuffer
 Renderer_CommandPoolAllocateGraphicsBuffer(
-	VSR_Renderer* renderer);
+	VSR_Renderer* renderer,
+	VSR_GenerationalFence* fence);
 
 VkCommandBuffer
 Renderer_CommandPoolAllocateTransferBuffer(
-	VSR_Renderer* renderer);
+	VSR_Renderer* renderer,
+	VSR_GenerationalFence* fence);
 
 void
 Renderer_CommandPoolSubmitTransferBuffer(
 	VSR_Renderer* renderer,
-	VkCommandBuffer buff,
-	VkFence fence);
+	VkCommandBuffer buff);
 
 int
 Renderer_CommandBufferRecordStart(
