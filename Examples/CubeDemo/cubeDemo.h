@@ -13,7 +13,7 @@ cubeDemo(int argc, char *argv[])
 {
 	// setup sdl
 	SDL_Init(SDL_INIT_EVERYTHING);
-	SDL_Window* window = SDL_CreateWindow("TestWindow", 0,0,512,512, SDL_WINDOW_VULKAN);
+	SDL_Window* window = SDL_CreateWindow("TestWindow", 0,0,640,480, SDL_WINDOW_VULKAN);
 
 	// setup renderer
 	VSR_RendererCreateInfo* createInfo = VSR_RendererGenerateCreateInfo(window);
