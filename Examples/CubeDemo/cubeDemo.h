@@ -3,12 +3,13 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "cube.h"
-#include "helpers.h"
+#include "../cube.h"
+#include "../helpers.h"
 
 #include<Windows.h>
 
-int SDL_main(int argc, char *argv[])
+static inline int
+cubeDemo(int argc, char *argv[])
 {
 	// setup sdl
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -33,17 +34,17 @@ int SDL_main(int argc, char *argv[])
 
 	// set images
 
-	SDL_Surface* sur1 = SDL_LoadBMP("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\Assets\\castle_wall_albedo.bmp");
+	SDL_Surface* sur1 = SDL_LoadBMP("Assets\\castle_wall_albedo.bmp");
 	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1, 0);
 
 	// create and set pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
 	size_t n;
-	uint8_t* bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\vert.spv", &n);
+	uint8_t* bytes = loadShader("CubeDemo\\vert.spv", &n);
 	VSR_Shader* vert = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vert);
 
-	bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\frag.spv", &n);
+	bytes = loadShader("CubeDemo\\frag.spv", &n);
 	VSR_Shader* frag = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_FRAGMENT, frag);
 
@@ -116,10 +117,3 @@ int SDL_main(int argc, char *argv[])
 	printf("exit successful");
 	return 0;
 }
-
-#ifndef main
-int main(void) 
-{
-	return SDL_main(0, NULL);
-}
-#endif

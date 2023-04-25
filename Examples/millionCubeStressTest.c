@@ -5,7 +5,7 @@
 #include "helpers.h"
 #include "teapot.h"
 #include "cube.h"
-#include "ubench.h"
+#include "External/ubench.h"
 
 struct render {
 	char* data;
