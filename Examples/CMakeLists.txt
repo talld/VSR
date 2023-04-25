@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(${PROJECT_NAME}
-        MillionCubeStressTest.c)
+       demos.c)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer
@@ -11,13 +11,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
         )
 
 target_link_options(${PROJECT_NAME} PRIVATE
-        #-ldl
-        -lm
         -fno-omit-frame-pointer
-
-        #-fsanitize=address   -static-libasan
-        #-fsanitize=undefined -static-libubsan
-        #-fsanitize=leak      -static-liblsan
         )
 
 add_subdirectory(External/cglm)
