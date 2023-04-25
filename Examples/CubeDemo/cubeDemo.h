@@ -1,13 +1,14 @@
 #include <VSR.h>
 #include <cglm/cglm.h>
 #include <stdio.h>
+#include <math.h>
 
-#include "../cube.h"
-#include "../helpers.h"
+#include "cube.h"
+#include "helpers.h"
 
+#include<Windows.h>
 
-static inline int
-cubeDemo(int argc, char *argv[])
+int SDL_main(int argc, char *argv[])
 {
 	// setup sdl
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -30,21 +31,19 @@ cubeDemo(int argc, char *argv[])
 	mat4 cubePos;
 	glm_mat4_identity(cubePos);
 
-	/// set images ///
+	// set images
 
-	SDL_Surface* sur1 = SDL_LoadBMP("Assets\\castle_wall_albedo.bmp");
-	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1, (VSR_SamplerFlags)0);
+	SDL_Surface* sur1 = SDL_LoadBMP("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\Assets\\castle_wall_albedo.bmp");
+	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1, 0);
 
-	/// create and set pipeline ///
+	// create and set pipeline
 	VSR_GraphicsPipelineCreateInfo* pipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
 	size_t n;
-
-	/// custom shaders
-	uint8_t* bytes = loadShader("vert.spv", &n);
+	uint8_t* bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\vert.spv", &n);
 	VSR_Shader* vert = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_VERTEX, vert);
 
-	bytes = loadShader("frag.spv", &n);
+	bytes = loadShader("C:\\Users\\Ewain\\Dev\\22-23_CE301_williams_ewain\\Examples\\frag.spv", &n);
 	VSR_Shader* frag = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(pipelineCreateInfo, SHADER_STAGE_FRAGMENT, frag);
 
@@ -84,10 +83,12 @@ cubeDemo(int argc, char *argv[])
 	glm_mat4_mul(projection, view, view);
 	view[1][1] *= -1;
 
+
+	VSR_Mat4* viewMat = VSR_Mat4Create(renderer, view);
 	VSR_PushConstants pushConstants;
-	pushConstants.Projection = (VSR_Mat4*) &view;
-	VSR_RendererSetVertexConstants(renderer, &pushConstants);
-	VSR_RendererSetFragmentConstants(renderer, &pushConstants);
+	pushConstants.Projection =  &viewMat;
+	pushConstants.bytes = SDL_malloc(64);
+	VSR_GraphicsPipelineSetPushConstants(renderer, pipeline, &pushConstants);
 
 	// renderloop
 	int shouldQuit = 0;
@@ -115,3 +116,10 @@ cubeDemo(int argc, char *argv[])
 	printf("exit successful");
 	return 0;
 }
+
+#ifndef main
+int main(void) 
+{
+	return SDL_main(0, NULL);
+}
+#endif

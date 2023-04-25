@@ -489,17 +489,6 @@ VSR_RendererCreate(
 			renderer->swapchain.pImageViews[i]);
 	}
 
-	// stage 4 set more defaults
-	renderer->pushConstantsVertex = (VSR_PushConstants){0};
-	/* TODO: replace with static matrix that pointer defaults to
-	renderer->pushConstantsVertex.Projection->m0 = -1.81066f;
-	renderer->pushConstantsVertex.Projection->m5 = 2.41421342f;
-	renderer->pushConstantsVertex.Projection->m10 = -1.002002f;
-	renderer->pushConstantsVertex.Projection->m11 = -1.f;
-	renderer->pushConstantsVertex.Projection->m14 = 4.f;
-	renderer->pushConstantsVertex.Projection->m15 = 4.f;
-	*/
-
 	SDL_Surface* sur = SDL_CreateRGBSurfaceWithFormat(
 		0,
 		kFallBackTextureWidth,
@@ -745,9 +734,25 @@ int Renderer_FlushQueuedModels(VSR_Renderer* renderer)
 	//////////////////////
 	/// push constants ///
 	//////////////////////
-	uint8_t pPushVals[256];
-	SDL_memcpy(pPushVals, renderer->pushConstantsVertex.Projection, sizeof(float[16]));
+	uint8_t pPushVals[128];
 
+	if(renderer->pipeline->pushConstants.Projection)
+	{
+		SDL_memcpy(pPushVals, &renderer->pipeline->pushConstants.Projection[0]->m0, sizeof(float[16]));
+
+		if(renderer->pipeline->pushConstants.bytes)
+		{
+			SDL_memcpy(&pPushVals[64], renderer->pipeline->pushConstants.bytes, 64);
+		}
+		else
+		{
+			SDL_memcpy(&pPushVals[64], &renderer->pipeline->pushConstants.Projection[1]->m0, sizeof(float[16]));
+		}
+	}
+	else if(renderer->pipeline->pushConstants.bytes)
+	{
+		SDL_memcpy(pPushVals, renderer->pipeline->pushConstants.bytes, 128);
+	}
 
 	vkCmdPushConstants(
 		cBuff,
@@ -1123,36 +1128,6 @@ VSR_RenderModels(
 	}
 
 	return 0;
-}
-
-
-
-
-
-//==============================================================================
-// VSR_RendererSetVertexConstants
-//------------------------------------------------------------------------------
-void
-VSR_RendererSetVertexConstants(
-	VSR_Renderer* renderer,
-	VSR_PushConstants const* pushConstants)
-{
-	renderer->pushConstantsVertex = *pushConstants;
-}
-
-
-
-
-
-//==============================================================================
-// VSR_RendererSetFragmentConstants
-//------------------------------------------------------------------------------
-void
-VSR_RendererSetFragmentConstants(
-	VSR_Renderer* renderer,
-	VSR_PushConstants const* pushConstants)
-{
-	renderer->pushConstantsFragment = *pushConstants;
 }
 
 

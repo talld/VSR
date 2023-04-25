@@ -52,7 +52,7 @@ struct VSR_Mat4;
 typedef struct VSR_PushConstants VSR_PushConstants;
 VSR_PACKED(struct VSR_PushConstants)
 {
-	VSR_Mat4* Projection;
+	VSR_Mat4** Projection;
 	uint8_t* bytes;
 };
 
@@ -139,11 +139,9 @@ int Renderer_FlushQueuedModels(VSR_Renderer* renderer);
 
 void VSR_RendererEndPass(VSR_Renderer* renderer);
 
-void VSR_RendererSetVertexConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
+void VSR_GraphicsPipelineSetPushConstants(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, VSR_PushConstants const* pushConstants);
 
-void VSR_RendererSetFragmentConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
-
-int VSR_RendererSetRenderTarget(VSR_Renderer* renderer, VSR_Sampler* sampler);
+int VSR_GraphicsSetRenderTarget(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, VSR_Sampler* sampler);
 
 void VSR_RendererWriteDescriptor(VSR_Renderer* renderer, size_t index, size_t offset, void* data, size_t len);
 

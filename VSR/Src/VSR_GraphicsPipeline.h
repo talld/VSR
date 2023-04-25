@@ -28,6 +28,8 @@ struct VSR_GraphicsPipeline
 
 	VSR_Sampler* renderTarget;
 	VkFence    renderTargetFinished;
+
+	VSR_PushConstants pushConstants;
 };
 
 int

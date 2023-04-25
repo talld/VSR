@@ -75,7 +75,7 @@ VSR_GraphicsPipelineCreate(
 // VSR_PipelineSetRenderTarget
 //------------------------------------------------------------------------------
 int
-VSR_PipelineSetRenderTarget(
+VSR_GraphicsPipelineSetRenderTarget(
 	VSR_Renderer* renderer,
 	VSR_GraphicsPipeline* pipeline,
 	VSR_Sampler* sampler)
@@ -127,6 +127,19 @@ VSR_PipelineSetRenderTarget(
 	FAIL:
 	return SDL_TRUE;
 }
+
+//==============================================================================
+// VSR_RendererSetVertexConstants
+//------------------------------------------------------------------------------
+void
+VSR_GraphicsPipelineSetPushConstants(
+	VSR_Renderer* renderer,
+	VSR_GraphicsPipeline* pipeline,
+	VSR_PushConstants const* pushConstants)
+{
+	pipeline->pushConstants = *pushConstants;
+}
+
 
 //==============================================================================
 // VSR_GraphicsPipelineFree

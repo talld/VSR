@@ -50,23 +50,6 @@ void VSR_RendererEndPass(VSR_Renderer* renderer);
 ```
 
 ```c
-void VSR_RendererSetVertexConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
-```
-
-```c
-void VSR_RendererSetFragmentConstants(VSR_Renderer* renderer, VSR_PushConstants const* pushConstants);
-```
-
-```c
-struct VSR_PushConstants
-{
-  VSR_Mat4* Projection;
-  uint8_t* bytes;
-};
-```
-
-
-```c
 int VSR_RendererSetRenderTarget(VSR_Renderer* renderer, VSR_Sampler* sampler);
 ```
 
@@ -103,6 +86,19 @@ enum VSR_ShaderStage
 {
   SHADER_STAGE_VERTEX = 0,
   SHADER_STAGE_FRAGMENT = 1,
+};
+```
+
+
+```c
+void VSR_PipelineSetPushConstants(VSR_GraphicsPipeline* pipeline, VSR_PushConstants const* pushConstants);
+```
+
+```c
+struct VSR_PushConstants
+{
+  VSR_Mat4* Projection;
+  uint8_t* bytes;
 };
 ```
 
