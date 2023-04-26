@@ -141,7 +141,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer);
 
 void VSR_GraphicsPipelineSetPushConstants(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, VSR_PushConstants const* pushConstants);
 
-int VSR_GraphicsSetRenderTarget(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, VSR_Sampler* sampler);
+int VSR_GraphicsPipelineSetRenderTarget(VSR_Renderer* renderer, VSR_GraphicsPipeline* pipeline, VSR_Sampler* sampler);
 
 void VSR_RendererWriteDescriptor(VSR_Renderer* renderer, size_t index, size_t offset, void* data, size_t len);
 
