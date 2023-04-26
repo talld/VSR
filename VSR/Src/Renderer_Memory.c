@@ -310,10 +310,14 @@ Renderer_MemoryTransferToImage(
 	VSR_Image* dist
 )
 {
+	VSR_GenerationalFence fence;
+
 	VkCommandBuffer buff = Renderer_CommandPoolAllocateTransferBuffer(
 		renderer,
-		NULL
+		&fence
 	);
+
+	size_t generationAcquired = *fence.generation;
 
 	VkBufferImageCopy imageCopy;
 	imageCopy.bufferOffset = src->offset;
@@ -341,6 +345,8 @@ Renderer_MemoryTransferToImage(
 		renderer,
 		buff
 	);
+
+	Renderer_WaitOnGenerationalFence(renderer, 1, &fence, generationAcquired);
 
 	return SDL_TRUE;
 }

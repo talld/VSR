@@ -21,7 +21,7 @@ Renderer_WaitOnGenerationalFence(
 			vkWaitForFences(
 				renderer->logicalDevice.device,
 				1,
-				&renderer->imageFinished[renderer->currentFrame].fence,
+				genFence,
 				VK_TRUE,
 				-1
 			);
@@ -300,7 +300,7 @@ Renderer_CommandPoolAllocateTransferBuffer(
 	);
 
 	size_t* generation = &renderer->commandPool.transferCmdReadySignalsGeneration[readyIndex];
-	*generation++;
+	(*generation)++;
 	if(fence)
 	{
 		*fence = (VSR_GenerationalFence){.fence = buffFence, .generation = generation};

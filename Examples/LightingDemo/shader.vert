@@ -28,5 +28,5 @@ void main()
     outIndex = inIndex;
     outModelMatrix = inModelMatrix;
 
-    gl_Position = inModelMatrix * PushConstants.vp * vec4(inPos, 1.0f);
+    gl_Position = PushConstants.vp * inModelMatrix * vec4(inPos, 1.0f);
 }

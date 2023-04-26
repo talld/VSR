@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "helpers.h"
-#include "teapot.h"
-#include "cube.h"
+#include "Assets/teapot.h"
+#include "Assets/cube.h"
 #include "External/ubench.h"
 
 struct render {

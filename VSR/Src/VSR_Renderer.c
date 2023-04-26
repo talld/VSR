@@ -540,13 +540,13 @@ VSR_RendererFree(
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
 	////////////////////////////////////////
-	Renderer_CommandPoolDestroy(renderer);
-	Renderer_DescriptorPoolDestroy(renderer);
 
 	Renderer_DestroySyncObjects(renderer);
 	Renderer_FreeBuffers(renderer);
 
 	VSR_SwapchainDestroy(renderer);
+	Renderer_CommandPoolDestroy(renderer);
+	Renderer_DescriptorPoolDestroy(renderer);
 	VSR_LogicalDeviceDestroy(renderer);
 	VSR_SurfaceDestroy(renderer);
 	VSR_InstanceDestroy(renderer);

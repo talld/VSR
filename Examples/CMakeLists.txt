@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_C_STANDARD 99)
 
 add_executable(${PROJECT_NAME}
-       demos.c)
+        helpers.c
+        demos.c
+        )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
         -fno-omit-frame-pointer

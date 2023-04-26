@@ -22,7 +22,6 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-
     vec4 col = texture(textures[inIndex], inUV);
     outColor = vec4(
         col.x,

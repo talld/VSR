@@ -1,9 +1,11 @@
+#include "LightingDemo/lightingDemo.h"
 #include "CubeDemo/cubedemo.h"
 
 int
 SDL_main(int argc, char** argv)
 {
-	cubeDemo(argc, argv);
+	lightingDemo(argc, argv);
+	//cubeDemo(argc, argv);
 	return 0;
 }
 

@@ -61,7 +61,7 @@ VSR_ImageCreate(
 	{
 		surface = SDL_ConvertSurfaceFormat(
 			surface,
-			SDL_PIXELFORMAT_ABGR8888,
+			SDL_PIXELFORMAT_BGRA32,
 			0);
 	}
 
@@ -123,13 +123,25 @@ VSR_ImageCreate(
 			image->alloc->align
 		);
 
-		void* p = Renderer_MemoryAllocMap(
+		int32_t* p = Renderer_MemoryAllocMap(
 			renderer,
 			alloc
 		);
 
 		SDL_LockSurface(surface);
-		memcpy(p, surface->pixels, alloc->size);
+
+		// for some reason SDL images seem to 90deg off...
+		// so this wont work
+		//memcpy(p, surface->pixels, alloc->size);
+
+		// so copy while rotating?
+		for(size_t y = 0; y < surface->h; y++)
+			for(size_t x = 0; x < surface->w; x++)
+		{
+			p[(x) + ((surface->h-y) * surface->w)]
+				= ((int32_t*)surface->pixels)[x + y * surface->w];
+		}
+
 		SDL_UnlockSurface(surface);
 
 		Renderer_MemoryAllocUnmap(
