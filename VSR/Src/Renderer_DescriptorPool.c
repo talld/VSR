@@ -45,7 +45,7 @@ Renderer_DescriptorPoolPopulateCreateInfo(
 	size_t userDescriptorCount = renderer->extraDescriptorCount;
 	for(size_t i = 0; i < userDescriptorCount; i++)
 	{
-		userBindings[i].binding = 0;
+		userBindings[i].binding = i;
 		userBindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		userBindings[i].descriptorCount = 1;
 		userBindings[i].pImmutableSamplers = NULL;
