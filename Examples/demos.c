@@ -1,5 +1,5 @@
 #include "LightingDemo/lightingDemo.h"
-#include "CubeDemo/cubedemo.h"
+#include "CubeDemo/cubeDemo.h"
 
 int
 SDL_main(int argc, char** argv)
