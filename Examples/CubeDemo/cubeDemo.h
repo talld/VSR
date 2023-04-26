@@ -6,8 +6,6 @@
 #include "../Assets/cube.h"
 #include "../helpers.h"
 
-#include<Windows.h>
-
 static inline int
 cubeDemo(int argc, char *argv[])
 {
