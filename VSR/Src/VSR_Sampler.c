@@ -141,9 +141,9 @@ VSR_CreateTextureSampler(
 	textureSamplerInfo.flags = 0L;
 	textureSamplerInfo.magFilter = VK_FILTER_LINEAR;
 	textureSamplerInfo.minFilter = VK_FILTER_LINEAR;
-	textureSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	textureSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	textureSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	textureSamplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	textureSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	textureSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	textureSamplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
 
 	textureSamplerInfo.unnormalizedCoordinates = VK_FALSE;

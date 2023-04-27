@@ -72,7 +72,7 @@ VSR_GraphicsPipelineCreate(
 
 
 //==============================================================================
-// VSR_PipelineSetRenderTarget
+// VSR_GraphicsPipelineSetRenderTarget
 //------------------------------------------------------------------------------
 int
 VSR_GraphicsPipelineSetRenderTarget(
@@ -82,42 +82,15 @@ VSR_GraphicsPipelineSetRenderTarget(
 {
 	if(sampler)
 	{
-		VSR_ImageTransition(
-			renderer,
-			sampler->image,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-		);
 
-		// take target out of texture index
-		VSR_SamplerWriteToDescriptor(
-			renderer,
-			sampler->textureIndex,
-			renderer->defaultSampler
-		);
+
 	}
 
 	if(pipeline->renderTarget && pipeline->renderTarget != sampler)
 	{
-		VSR_SamplerWriteToDescriptor(
-			renderer,
-			pipeline->renderTarget->textureIndex,
-			pipeline->renderTarget
-		);
 
-		VSR_ImageTransition(
-			renderer,
-			pipeline->renderTarget->image,
-			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		);
 
-		// put sampler back in the texture array
-		VSR_SamplerWriteToDescriptor(
-			renderer,
-			pipeline->renderTarget->textureIndex,
-			pipeline->renderTarget
-		);
+
 	}
 
 	pipeline->renderTarget = sampler;

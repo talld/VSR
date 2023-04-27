@@ -1,6 +1,7 @@
 #include "VSR_Renderer.h"
 
 #include "VSR_Mat4.h"
+#include "VSR_Sampler.h"
 
 #include "fallbackTexture.h"
 #include "VSR_error.h"
@@ -597,6 +598,23 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 			&renderer->imageIndex
 		);
 	}
+	else
+	{
+		// take target out of texture index
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			renderer->pipeline->renderTarget->textureIndex,
+			renderer->defaultSampler
+		);
+
+		// prep it for being a render images
+		VSR_ImageTransition(
+			renderer,
+			renderer->pipeline->renderTarget->image,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+		);
+	}
 
 	if(renderer->imageFinished[frameIndex].fence != NULL
 	   && renderer->generationAcquired[frameIndex] != *renderer->imageFinished[frameIndex].generation)
@@ -691,6 +709,9 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 		renderer->imageFinished[frameIndex].fence
 	);
 
+	/////////////////////
+	/// submit images ///
+	/////////////////////
 	if(renderer->pipeline->renderTarget == NULL)
 	{
 		///////////////////////////////////////////
@@ -709,6 +730,22 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 		vkQueuePresentKHR(
 			renderer->deviceQueues.QList[kGraphicsQueueIndex],
 			&presentInfo
+		);
+	}
+	else
+	{
+		VSR_ImageTransition(
+			renderer,
+			renderer->pipeline->renderTarget->image,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		);
+
+		// put sampler back in the texture array
+		VSR_SamplerWriteToDescriptor(
+			renderer,
+			renderer->pipeline->renderTarget->textureIndex,
+			renderer->pipeline->renderTarget
 		);
 	}
 
