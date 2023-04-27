@@ -8,6 +8,11 @@ layout(push_constant) uniform constants
 }
 PushConstants;
 
+layout(set = 1, binding = 1) buffer LIGHT_VP
+{
+    mat4 vp;
+} light;
+
 layout(location = 0) in vec3 inPos;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec2 inUV;
@@ -19,6 +24,7 @@ layout(location = 1) out vec3 outNormal;
 layout(location = 2) out vec2 outUV;
 layout(location = 3) out flat uint outIndex;
 layout(location = 4) out mat4 outModelMatrix;
+layout(location = 8) out vec4 shadowCoord;
 
 void main()
 {
@@ -28,5 +34,6 @@ void main()
     outIndex = inIndex;
     outModelMatrix = inModelMatrix;
 
+    shadowCoord = light.vp * inModelMatrix * vec4(inPos, 1.0f);
     gl_Position = PushConstants.vp * inModelMatrix * vec4(inPos, 1.0f);
 }

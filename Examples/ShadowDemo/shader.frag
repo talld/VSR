@@ -1,4 +1,5 @@
 #version 450
+#extension GL_EXT_debug_printf : enable
 layout(set = 0, binding = 0) uniform sampler2D textures[256];
 
 struct Light
@@ -18,12 +19,23 @@ layout(location = 2) in vec2 inUV;
 layout(location = 3) in flat uint inIndex;
 layout(location = 4) in mat4 inModelMatrix;
 
+layout(location = 8) in vec4 shadowCoord;
+
 layout(location = 0) out vec4 outColor;
 
 void main()
 {
+    vec3 shadowMapCoords  = (shadowCoord.xyz / shadowCoord.w);
+    shadowMapCoords = (shadowMapCoords * 0.5) + 0.5;
+    debugPrintfEXT("shadowMapCoords: %v3f shadowCoord: %v4f",
+                   shadowMapCoords, shadowCoord);
 
-    vec3 toLight = normalize( vec3(vec4(Lights.list[0].pos,1) * inModelMatrix) - inPos );
+    float closestDepth = texture(textures[0], shadowMapCoords.xy).z;
+    float currentDepth = shadowMapCoords.z;
+    debugPrintfEXT("closestDepth: %f currentDepth: %f", closestDepth, currentDepth);
+    float fragmentVisibility = currentDepth > closestDepth ? 0.0 : 1.0;
+
+    vec3 toLight = normalize( vec3(vec4(Lights.list[0].pos,1) * inModelMatrix) - inPos);
     vec4 col = texture(textures[inIndex], inUV);
     vec4 normal = normalize(texture(textures[inIndex+1], inUV) );
 
@@ -31,9 +43,9 @@ void main()
     diff = max(diff, 0.0);
 
     outColor = vec4(
-        col.x * diff * (Lights.list[0].r / 255),
-        col.y * diff * (Lights.list[0].g / 255),
-        col.z * diff * (Lights.list[0].b / 255),
+        col.x * fragmentVisibility,
+        col.y * fragmentVisibility,
+        col.z * fragmentVisibility,
         col.w
-    ) ;
+    );
 }
