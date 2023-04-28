@@ -80,19 +80,6 @@ VSR_GraphicsPipelineSetRenderTarget(
 	VSR_GraphicsPipeline* pipeline,
 	VSR_Sampler* sampler)
 {
-	if(sampler)
-	{
-
-
-	}
-
-	if(pipeline->renderTarget && pipeline->renderTarget != sampler)
-	{
-
-
-
-	}
-
 	pipeline->renderTarget = sampler;
 
 	SUCCESS:
