@@ -21,7 +21,7 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 	renderer->imageCanBeWritten = SDL_malloc(listSize);
 
 	listSize = renderer->swapchain.imageViewCount * sizeof(VSR_GenerationalFence);
-	renderer->imageFinished = SDL_malloc(listSize);
+	renderer->imageFinished = SDL_calloc(1, listSize);
 
 	listSize = renderer->swapchain.imageViewCount * sizeof(size_t);
 	renderer->generationAcquired = SDL_malloc(listSize);
