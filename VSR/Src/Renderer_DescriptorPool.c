@@ -149,7 +149,7 @@ Renderer_DescriptorPoolCreate(
 	allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocateInfo.pNext = NULL;
 	allocateInfo.descriptorPool = renderer->descriptorPool.globalPool;
-	allocateInfo.descriptorSetCount = 2; //(renderer->extraDescriptorCount > 0);
+	allocateInfo.descriptorSetCount = 1 + (renderer->extraDescriptorCount > 0);
 	allocateInfo.pSetLayouts = layouts;
 
 	VkDescriptorSet sets[2];
