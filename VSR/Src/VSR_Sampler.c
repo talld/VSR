@@ -190,22 +190,21 @@ void VSR_SamplerWriteToDescriptor(
 		&renderer->imageFinished[renderer->currentFrame],
 		renderer->generationAcquired[renderer->currentFrame]
 	);
+	VkWriteDescriptorSet imageWrite = (VkWriteDescriptorSet){0};
+	imageWrite.pNext = NULL;
 
 	VkDescriptorImageInfo imageInfo;
 	imageInfo.sampler = sampler->sampler;
 	imageInfo.imageView = sampler->view->imageView;
 	imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-	VkWriteDescriptorSet imageWrite = (VkWriteDescriptorSet){0};
-	imageWrite.pNext = NULL;
-
 	imageWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	imageWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	imageWrite.pImageInfo = &imageInfo;
 	imageWrite.dstSet = renderer->descriptorPool.globalSet;
 	imageWrite.dstBinding = 0;
 	imageWrite.dstArrayElement = index;
 	imageWrite.descriptorCount = 1;
-	imageWrite.pImageInfo = &imageInfo;
 
 	vkUpdateDescriptorSets(renderer->logicalDevice.device,
 	                       1, &imageWrite,
