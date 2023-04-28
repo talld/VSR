@@ -33,5 +33,5 @@ void main()
     outIndex = inIndex;
     outModelMatrix = inModelMatrix;
 
-    gl_Position = PushConstants.vp * inModelMatrix * vec4(inPos, 1.0f);
+    gl_Position = light.vp * inModelMatrix * vec4(inPos, 1.0f);
 }

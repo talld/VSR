@@ -26,9 +26,9 @@ shadowDemo(int argc, char *argv[])
 	VSR_RendererRequestDescriptor(createInfo, 1, sizeof(float[16]));
 
 	ShadowLight lights[4];
-	lights[0].x = 10.f;
-	lights[0].y = 0;
-	lights[0].z = -1.f;
+	lights[0].x = -7.f;
+	lights[0].y = 0.f;
+	lights[0].z = 0.0f;
 	lights[0].r = 255;
 	lights[0].g = 255;
 	lights[0].b = 255;
@@ -53,7 +53,7 @@ shadowDemo(int argc, char *argv[])
 	SDL_Surface* sur1 = SDL_LoadBMP("Assets\\JerryTheOgre\\diffuse.bmp");
 	SDL_Surface* sur2 = SDL_LoadBMP("Assets\\JerryTheOgre\\normalmap.bmp");
 	VSR_Sampler* sampler1 = VSR_SamplerCreate(renderer, 1, sur1, 0);
-	VSR_SamplerCreate(renderer, 2, sur2, 0);
+	VSR_Sampler* sampler2 = VSR_SamplerCreate(renderer, 2, sur2, 0);
 
 	SDL_Surface* shadowSurface = SDL_CreateRGBSurfaceWithFormat(
 		0,
@@ -62,7 +62,7 @@ shadowDemo(int argc, char *argv[])
 		24,
 		SDL_PIXELFORMAT_BGR888
 	);
-	VSR_Sampler* shadowSampler = VSR_SamplerCreate(renderer, 0, shadowSurface, SAMPLER_FLAG_RENDER_TARGET);
+	VSR_Sampler* shadowSampler = VSR_SamplerCreate(renderer, 255, shadowSurface, SAMPLER_FLAG_RENDER_TARGET);
 
 	// create and set shadow pipeline
 	VSR_GraphicsPipelineCreateInfo* shadowPipelineCreateInfo = VSR_GraphicsPipelineGenerateCreateInfo(renderer);
@@ -75,6 +75,7 @@ shadowDemo(int argc, char *argv[])
 	bytes = loadShader("ShadowDemo\\shadowFrag.spv", &n);
 	VSR_Shader* shadowFrag = VSR_ShaderCreate(renderer, n, bytes);
 	VSR_GraphicsPipelineSetShader(shadowPipelineCreateInfo, SHADER_STAGE_FRAGMENT, shadowFrag);
+
 	VSR_GraphicsPipeline* shadowPipeline = VSR_GraphicsPipelineCreate(renderer, shadowPipelineCreateInfo);
 	VSR_GraphicsPipelineSetRenderTarget(renderer, shadowPipeline, shadowSampler);
 
@@ -112,9 +113,9 @@ shadowDemo(int argc, char *argv[])
 
 	/// setup shadow projection ///
 	mat4 shadowView;
-	vec3  shadowCenter= {lights[0].x, lights[0].y, lights[0].z};
-	vec3  shadowEye= {-1.f, 0.f, 0.f};
-	vec3 shadowUp = {0.f, 1.f, 0.f};
+	vec3  shadowEye = {lights[0].x, lights[0].y, lights[0].z};
+	vec3  shadowCenter = {0.f, 0.f, 0.f};
+	vec3 shadowUp = {0.f, -1.f, 0.f};
 
 	glm_lookat(
 		shadowEye,
@@ -122,32 +123,21 @@ shadowDemo(int argc, char *argv[])
 		shadowUp,
 		shadowView
 	);
-
-	float shaowDeg = 45.f;
-	glm_make_rad(&shaowDeg);
-
 	mat4 shadowProjection;
-	glm_perspective(
-		shaowDeg,
-		640.f / 480.f,
-		0.1f,
-		400.f,
-		shadowProjection);
-
-	glm_mat4_mul(shadowProjection, shadowView, shadowView);
-	shadowView[1][1] *= -1;
-	VSR_RendererWriteDescriptor(renderer, 1, 0, shadowView, sizeof(float[16]));
+	glm_ortho(-5, 5, -5, 5, 1, 10, shadowProjection);
+	glm_mul(shadowProjection, shadowView, shadowView);
 
 	VSR_Mat4* shadowViewMat = VSR_Mat4Create(renderer, shadowView);
 	VSR_PushConstants shadowPushConstants;
 	shadowPushConstants.Projection =  &shadowViewMat;
 	shadowPushConstants.bytes = SDL_malloc(64);
 	VSR_GraphicsPipelineSetPushConstants(renderer, shadowPipeline, &shadowPushConstants);
+	VSR_RendererWriteDescriptor(renderer, 1, 0, shadowView, sizeof(float[16]));
 
 	/// setup projection ///
 	mat4 view;
-	vec3 eye = {0.f, 0.f, 1.f};
-	vec3 center = {0.f, 0.f, -5.f};
+	vec3 eye = {0.f, 0.f, 5.f};
+	vec3 center = {0.f, 0.f, 0.f};
 	vec3 up = {0.f, 1.f, 0.f};
 
 	glm_lookat(
@@ -163,13 +153,13 @@ shadowDemo(int argc, char *argv[])
 	mat4 projection;
 	glm_perspective(
 		deg,
-		640.f / 480.f,
+		(float)windowW / (float)windowH,
 		0.1f,
 		400.f,
 		projection);
+	projection[1][1] *= -1;
 
 	glm_mat4_mul(projection, view, view);
-	view[1][1] *= -1;
 
 	VSR_Mat4* viewMat = VSR_Mat4Create(renderer, view);
 	VSR_PushConstants pushConstants;
@@ -196,7 +186,7 @@ shadowDemo(int argc, char *argv[])
 		VSR_RendererSetPipeline(renderer, pipeline);
 		VSR_RendererBeginPass(renderer);
 		VSR_RenderModels(renderer, terryModel, terryPositions, terrySamplers, 2);
-		VSR_RendererEndPass(renderer);
+		VSR_RendererEndPass(renderer);/**/
 
 		SDL_PollEvent(&event);
 		if(event.type == SDL_QUIT) {shouldQuit = 1;}
@@ -206,10 +196,14 @@ shadowDemo(int argc, char *argv[])
 	// cleanup
 	SDL_free(pushConstants.bytes);
 	VSR_SamplerFree(renderer, sampler1);
+	VSR_SamplerFree(renderer, sampler2);
+	VSR_SamplerFree(renderer, shadowSampler);
 	VSR_MeshFree(terryMesh);
 	VSR_ModelFree(renderer, terryModel);
 	VSR_GraphicsPipelineCreateInfoFree(pipelineCreateInfo);
+	VSR_GraphicsPipelineCreateInfoFree(shadowPipelineCreateInfo);
 	VSR_GraphicsPipelineFree(renderer, pipeline);
+	VSR_GraphicsPipelineFree(renderer, shadowPipeline);
 	VSR_RendererFreeCreateInfo(createInfo);
 	VSR_RendererFree(renderer);
 	printf("exit successful");

@@ -25,15 +25,18 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    vec3 shadowMapCoords  = (shadowCoord.xyz / shadowCoord.w);
-    shadowMapCoords = (shadowMapCoords * 0.5) + 0.5;
-    debugPrintfEXT("shadowMapCoords: %v3f shadowCoord: %v4f",
-                   shadowMapCoords, shadowCoord);
+    vec3 projCoords   = (shadowCoord.xyz / shadowCoord.w);
+    projCoords  = (projCoords  * 0.5) + 0.5;
+    float closestDepth = texture(textures[255], projCoords.xy).z;
+    float currentDepth = projCoords.z;
+    float fragmentVisibility = 1;
 
-    float closestDepth = texture(textures[0], shadowMapCoords.xy).z;
-    float currentDepth = shadowMapCoords.z;
-    debugPrintfEXT("closestDepth: %f currentDepth: %f", closestDepth, currentDepth);
-    float fragmentVisibility = currentDepth > closestDepth ? 0.0 : 1.0;
+    if(currentDepth < closestDepth)
+    {
+        fragmentVisibility = 0.2;
+    }
+
+
 
     vec3 toLight = normalize( vec3(vec4(Lights.list[0].pos,1) * inModelMatrix) - inPos);
     vec4 col = texture(textures[inIndex], inUV);
