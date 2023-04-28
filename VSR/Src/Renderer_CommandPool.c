@@ -74,6 +74,12 @@ Renderer_CommandPoolCreate(
 						VSR_GetAllocator(),
 						&renderer->commandPool.graphicsPool);
 
+	if(err != VK_SUCCESS)
+	{
+		VSR_Error("Failed to create command pool: %s",
+		          VSR_VkErrorToString(err));
+		goto FAIL;
+	}
 
 	poolCreateInfo->queueFamilyIndex = renderer->deviceQueues.QFamilyIndexes[kTransferQueueIndex];
 	err = vkCreateCommandPool(renderer->logicalDevice.device,
