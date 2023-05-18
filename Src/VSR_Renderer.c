@@ -45,15 +45,15 @@ void Renderer_CreateSyncObjects(VSR_Renderer* renderer)
 	for(size_t i = 0; i < renderer->swapchain.imageViewCount; i++)
 	{
 		vkCreateSemaphore(renderer->logicalDevice.device,
-						  &semaphoreInfo,
-						  VSR_GetAllocator(),
-						  &renderer->imageCanBeRead[i]
+		                  &semaphoreInfo,
+		                  VSR_GetAllocator(),
+		                  &renderer->imageCanBeRead[i]
 		);
 
 		vkCreateSemaphore(renderer->logicalDevice.device,
-						  &semaphoreInfo,
-						  VSR_GetAllocator(),
-						  &renderer->imageCanBeWritten[i]
+		                  &semaphoreInfo,
+		                  VSR_GetAllocator(),
+		                  &renderer->imageCanBeWritten[i]
 		);
 	}
 
@@ -283,7 +283,7 @@ VSR_RendererGenerateCreateInfo(
 	//
 	// this is to ensure that SDL and VSR are using the same version of
 	// vulkan and they're function calls will always do the same thing
-	
+
 	////////////////////////
 	/// allocate structs ///
 	////////////////////////
@@ -313,14 +313,14 @@ VSR_RendererGenerateCreateInfo(
 	////////////////////////////////////////////////////////////////////////////
 	VSR_InstancePopulateCreateInfo(createInfo);
 	VSR_DeviceQueuesPopulateCreateInfo(createInfo);
-    VSR_LogicalDevicePopulateCreateInfo(createInfo);
+	VSR_LogicalDevicePopulateCreateInfo(createInfo);
 	VSR_SwapchainPopulateCreateInfo(createInfo);
 
-SUCCESS:
+	SUCCESS:
 	{
 		return createInfo;
 	}
-	
+
 	FAIL:
 	{
 		return NULL;
@@ -357,7 +357,7 @@ VSR_RendererCreate(
 	VSR_RendererCreateInfo* rendererCreateInfo)
 {
 	VSR_Renderer* renderer = SDL_calloc(1, sizeof(VSR_Renderer));
-	
+
 	//////////////////////////////////
 	/// pass info to new structure ///
 	//////////////////////////////////
@@ -434,7 +434,7 @@ VSR_RendererFree(
 		renderer->logicalDevice.device,
 		VSR_GetTextureSampler(renderer),
 		VSR_GetAllocator()
-		);
+	);
 
 	////////////////////////////////////////
 	/// Destroy VkStructs Vulkan objects ///
@@ -528,7 +528,6 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 	}
 
 	/// step 2 command record
-	renderer->modelInstanceCount = 0;
 	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
 		renderer,
 		&renderer->imageFinished[frameIndex]
@@ -564,7 +563,7 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 
 
 	/// step2 command record
-	Renderer_FlushQueuedModels(renderer);
+	VSR_RendererFlushQueuedModels(renderer);
 
 	Renderer_CommandBufferRecordEnd(
 		renderer,
@@ -663,31 +662,34 @@ struct QueuedRender
 
 static QueuedRender* sQueuedModelList = NULL;
 
-int Renderer_FlushQueuedModels(VSR_Renderer* renderer)
+int VSR_RendererFlushQueuedModels(VSR_Renderer* renderer)
 {
 	if(!sQueuedModelList) {goto SUCCESS;}
+	if(sQueuedModelList->instanceCount == 0) {goto SUCCESS;}
 
 	//////////////////////
 	/// push constants ///
 	//////////////////////
-	uint8_t pPushVals[128];
+	uint8_t aPushVals[128];
+	size_t mat4Size = sizeof(float[16]);
 
 	if(renderer->pipeline->pushConstants.Projection)
 	{
-		SDL_memcpy(pPushVals, &renderer->pipeline->pushConstants.Projection[0]->m0, sizeof(float[16]));
+		SDL_memcpy(&aPushVals[0], &renderer->pipeline->pushConstants.Projection[0]->m0, mat4Size);
+
 
 		if(renderer->pipeline->pushConstants.bytes)
 		{
-			SDL_memcpy(&pPushVals[64], renderer->pipeline->pushConstants.bytes, 64);
+			SDL_memcpy(&aPushVals[64], renderer->pipeline->pushConstants.bytes, 64);
 		}
 		else
 		{
-			SDL_memcpy(&pPushVals[64], &renderer->pipeline->pushConstants.Projection[1]->m0, sizeof(float[16]));
+			SDL_memcpy(&aPushVals[64], &renderer->pipeline->pushConstants.Projection[1]->m0, sizeof(float[16]));
 		}
 	}
 	else if(renderer->pipeline->pushConstants.bytes)
 	{
-		SDL_memcpy(pPushVals, renderer->pipeline->pushConstants.bytes, 128);
+		SDL_memcpy(aPushVals, renderer->pipeline->pushConstants.bytes, 128);
 	}
 
 	vkCmdPushConstants(
@@ -696,7 +698,7 @@ int Renderer_FlushQueuedModels(VSR_Renderer* renderer)
 		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		0,
 		128,
-		pPushVals
+		aPushVals
 	);
 
 	///////////////////////
@@ -708,8 +710,8 @@ int Renderer_FlushQueuedModels(VSR_Renderer* renderer)
 	};
 
 	VkDescriptorSet descriptorSets[kDescriptorSetCount] = {
-			renderer->descriptorPool.globalSet,
-			renderer->descriptorPool.userSet
+		renderer->descriptorPool.globalSet,
+		renderer->descriptorPool.userSet
 	};
 
 	vkCmdBindDescriptorSets(
@@ -802,57 +804,13 @@ int Renderer_FlushQueuedModels(VSR_Renderer* renderer)
 	return SDL_TRUE;
 }
 
-//==============================================================================
-// VSR_RenderModels
-//------------------------------------------------------------------------------
+
 int
-VSR_RenderModels(
+uploadMat4Data(
 	VSR_Renderer* renderer,
-	VSR_Model* model,
 	VSR_Mat4** transforms,
-	VSR_Sampler** samplers,
-	size_t batchCount)
+	QueuedRender* queuedRender)
 {
-	////////////////////////////////////
-	/// split into batches if needed ///
-	////////////////////////////////////
-	while(batchCount >= renderer->samplerMatrixArrayLength)
-	{
-		batchCount -= renderer->samplerMatrixArrayLength;
-		VSR_RenderModels(
-			renderer,
-			model,
-			transforms,
-			samplers,
-			renderer->samplerMatrixArrayLength
-		);
-	}
-
-	QueuedRender* queuedRender = SDL_malloc(sizeof(QueuedRender));
-	queuedRender->instanceOffset = renderer->modelInstanceCount;
-	queuedRender->instanceCount = batchCount;
-	queuedRender->model = model;
-	queuedRender->next = NULL;
-
-	renderer->modelInstanceCount += queuedRender->instanceCount;
-
-	size_t lastInstanceIndex = 0;
-	if(sQueuedModelList)
-	{
-		QueuedRender* last = sQueuedModelList;
-		while (last->next != NULL)
-		{
-			last = last->next;
-		}
-
-		last->next = queuedRender;
-		lastInstanceIndex = last->instanceOffset + lastInstanceIndex;
-	}
-	else
-	{
-		sQueuedModelList = queuedRender;
-		lastInstanceIndex = 0;
-	}
 
 	////////////////
 	/// Matrices ///
@@ -868,12 +826,12 @@ VSR_RenderModels(
 		matrixTransferListSize * sizeof(size_t)
 	);
 
-	for(size_t i = 0; i < batchCount; i++)
+	for(size_t i = 0; i < queuedRender->instanceCount; i++)
 	{
-		size_t mat4Index = lastInstanceIndex + renderer->matrixStartIndex + i;
+		size_t mat4Index = queuedRender->instanceOffset + renderer->matrixStartIndex + i;
 
 		if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid
-		|| transforms[i]->needsUpdate == SDL_TRUE)
+		   || transforms[i]->needsUpdate == SDL_TRUE)
 		{
 			// track were the data is (compiler optimised?
 			if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid)
@@ -883,8 +841,8 @@ VSR_RenderModels(
 			if(matrixTransferListUsed != 0)
 			{
 				size_t nextFromLast =
-				matrixTransferStartIndexList[matrixTransferListUsed-1]
-				+ matrixTransferCountsList[matrixTransferListUsed-1];
+					matrixTransferStartIndexList[matrixTransferListUsed-1]
+					+ matrixTransferCountsList[matrixTransferListUsed-1];
 
 				if(nextFromLast == i)
 				{
@@ -906,7 +864,7 @@ VSR_RenderModels(
 				matrixTransferStartIndexList = SDL_realloc(
 					matrixTransferStartIndexList,
 					matrixTransferListSize * sizeof(size_t)
-					);
+				);
 
 				matrixTransferCountsList = SDL_realloc(
 					matrixTransferCountsList,
@@ -919,6 +877,55 @@ VSR_RenderModels(
 		}
 	}
 
+	size_t mat4Size =  sizeof(float[16]);
+	size_t samplerSize = sizeof(uint32_t);
+
+
+	for(size_t i = 0; i < matrixTransferListUsed; i++)
+	{
+		size_t copySize = matrixTransferCountsList[i] * mat4Size;
+		size_t mat4Offset = renderer->matrixStartIndex * samplerSize;
+		size_t dstOffset = mat4Offset + (queuedRender->instanceOffset * mat4Size);
+
+		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+			renderer,
+			renderer->vertexStagingBuffer,
+			copySize,
+			0
+		);
+
+		uint8_t* p = Renderer_MemoryAllocMap(renderer, alloc);
+		for(size_t j = 0; j < matrixTransferCountsList[i]; j++)
+		{
+			size_t index = matrixTransferStartIndexList[i] + j;
+			VSR_Mat4* mat4 = transforms[index];
+			SDL_memcpy(p, &mat4->m0, mat4Size);
+			p += mat4Size;
+		}
+		Renderer_MemoryAllocUnmap(renderer, alloc);
+
+		Renderer_MemoryTransfer(
+			renderer,
+			renderer->perInstanceVertexGPUBuffer,
+			dstOffset,
+			alloc->src,
+			alloc->offset,
+			alloc->size,
+			NULL
+		);
+
+		Renderer_MemoryAllocFree(renderer, alloc);
+	}
+
+	return 0;
+}
+
+int
+uploadTextureData(
+	VSR_Renderer* renderer,
+	VSR_Sampler** samplers,
+	QueuedRender* queuedRender)
+{
 	////////////////
 	/// Samplers ///
 	////////////////
@@ -926,19 +933,19 @@ VSR_RenderModels(
 	size_t  samplerTransferListUsed = 0;
 
 	size_t* samplerTransferStartIndexList = SDL_malloc(
-		matrixTransferListSize * sizeof(size_t)
+		samplerTransferListSize * sizeof(size_t)
 	);
 
 	size_t* samplerTransferCountsList = SDL_malloc(
-		matrixTransferListSize * sizeof(size_t)
+		samplerTransferListSize * sizeof(size_t)
 	);
 
-	for(size_t i = 0; i < batchCount; i++)
+	for(size_t i = 0; i < queuedRender->instanceCount; i++)
 	{
-		size_t samplerIndex = lastInstanceIndex + i;
+		size_t samplerIndex = queuedRender->instanceOffset + i;
 
 		if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid
-		    || transforms[i]->needsUpdate == SDL_TRUE)
+		    || samplers[i]->needsUpdate == SDL_TRUE)
 		{
 			// track were the data is (compiler optimised?
 			if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid)
@@ -984,19 +991,11 @@ VSR_RenderModels(
 		}
 	}
 
-
-	size_t transfersNeeded = samplerTransferListUsed + matrixTransferListUsed;
-
-	VkBufferCopy* bufferCopy = SDL_malloc(
-		transfersNeeded * sizeof(VkBufferCopy)
-	);
-	size_t mat4Size =  sizeof(float[16]);
 	size_t samplerSize = sizeof(uint32_t);
-
 	for(size_t i = 0; i < samplerTransferListUsed; i++)
 	{
 		size_t copySize = samplerTransferCountsList[i] * samplerSize;
-		size_t dstOffset = lastInstanceIndex * samplerSize;
+		size_t dstOffset = queuedRender->instanceOffset * samplerSize;
 
 		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
 			renderer,
@@ -1027,41 +1026,67 @@ VSR_RenderModels(
 		Renderer_MemoryAllocFree(renderer, alloc);
 	}
 
-	for(size_t i = 0; i < matrixTransferListUsed; i++)
+}
+
+//==============================================================================
+// VSR_RenderModels
+//------------------------------------------------------------------------------
+int
+VSR_RenderModels(
+	VSR_Renderer* renderer,
+	VSR_Model* model,
+	VSR_Mat4** transforms,
+	VSR_Sampler** samplers,
+	size_t batchCount)
+{
+	////////////////////////////////////
+	/// split into batches if needed ///
+	////////////////////////////////////
+	while(batchCount >= renderer->samplerMatrixArrayLength)
 	{
-		size_t copySize = matrixTransferCountsList[i] * mat4Size;
-		size_t samplerOffset = renderer->matrixStartIndex * samplerSize;
-		size_t dstOffset = samplerOffset+(lastInstanceIndex * mat4Size);
-
-		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
+		batchCount -= renderer->samplerMatrixArrayLength;
+		VSR_RenderModels(
 			renderer,
-			renderer->vertexStagingBuffer,
-			copySize,
-			0
+			model,
+			transforms,
+			samplers,
+			renderer->samplerMatrixArrayLength
 		);
-
-		uint8_t* p = Renderer_MemoryAllocMap(renderer, alloc);
-		for(size_t j = 0; j < matrixTransferCountsList[i]; j++)
-		{
-			size_t index = matrixTransferStartIndexList[i] + j;
-			VSR_Mat4* mat4 = transforms[index];
-			SDL_memcpy(p, &mat4->m0, mat4Size);
-			p += mat4Size;
-		}
-		Renderer_MemoryAllocUnmap(renderer, alloc);
-
-		Renderer_MemoryTransfer(
-			renderer,
-			renderer->perInstanceVertexGPUBuffer,
-			dstOffset,
-			alloc->src,
-			alloc->offset,
-			alloc->size,
-			NULL
-			);
-
-		Renderer_MemoryAllocFree(renderer, alloc);
 	}
+
+	QueuedRender* queuedRender = SDL_malloc(sizeof(QueuedRender));
+	size_t lastInstanceIndex = 0;
+	if(sQueuedModelList)
+	{
+		QueuedRender* last = sQueuedModelList;
+		while (last->next != NULL)
+		{
+			last = last->next;
+		}
+
+		last->next = queuedRender;
+		lastInstanceIndex = last->instanceOffset + lastInstanceIndex;
+	}
+	else
+	{
+		sQueuedModelList = queuedRender;
+		lastInstanceIndex = 0;
+	}
+
+	queuedRender->instanceOffset = lastInstanceIndex;
+	queuedRender->instanceCount = batchCount;
+	queuedRender->model = model;
+	queuedRender->next = NULL;
+
+	uploadTextureData(
+		renderer,
+		samplers,
+		queuedRender);
+
+	uploadMat4Data(
+		renderer,
+		transforms,
+		queuedRender);
 
 	return 0;
 }

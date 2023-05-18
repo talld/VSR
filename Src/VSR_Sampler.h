@@ -10,7 +10,6 @@ typedef struct VSR_Sampler VSR_Sampler;
 struct VSR_Sampler
 {
 	uint64_t uuid;
-	size_t arrayIndex;
 	SDL_bool needsUpdate;
 
 	uint32_t textureIndex;
