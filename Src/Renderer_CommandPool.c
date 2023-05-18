@@ -402,16 +402,6 @@ Renderer_CommandBufferRecordStart(
 		vkCmdBindPipeline(cBuff,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,
 						  pipeline->graphicPipeline.pipeline);
-
-		vkCmdBindDescriptorSets(
-			cBuff,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			pipeline->graphicPipeline
-			.pipelineLayout,0,
-			1, &renderer->descriptorPool.globalSet,
-			0 ,NULL
-		);
-
 	}
 
 	SUCCESS:
