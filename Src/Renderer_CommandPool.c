@@ -215,7 +215,7 @@ Renderer_CommandPoolAllocateGraphicsBuffer(
 			}
 		}
 
-		if(readyIndex == -1)
+		if(readyIndex == (size_t)-1)
 		{
 			vkWaitForFences(
 				renderer->logicalDevice.device,
@@ -226,7 +226,7 @@ Renderer_CommandPoolAllocateGraphicsBuffer(
 			);
 		}
 
-	} while (readyIndex == -1);
+	} while (readyIndex == (size_t)-1);
 
 	VkCommandBuffer buff = renderer->commandPool.graphicsCmdBuffers[readyIndex];
 	VkFence buffFence = renderer->commandPool.graphicsCmdReadySignals[readyIndex];
@@ -280,7 +280,7 @@ Renderer_CommandPoolAllocateTransferBuffer(
 			}
 		}
 
-		if(readyIndex == -1)
+		if(readyIndex == (size_t)-1)
 		{
 			vkWaitForFences(
 				renderer->logicalDevice.device,
@@ -291,7 +291,7 @@ Renderer_CommandPoolAllocateTransferBuffer(
 			);
 		}
 
-	} while (readyIndex == -1);
+	} while (readyIndex == (size_t)-1);
 
 	VkCommandBuffer buff = renderer->commandPool.transferCmdBuffers[readyIndex];
 	VkFence buffFence = renderer->commandPool.transferCmdReadySignals[readyIndex];
