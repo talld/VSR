@@ -57,7 +57,9 @@ Renderer_CommandPoolCreate(
 	/////////////////////
 	VkResult err;
 
+	//////////////////////////
 	/// pass settings over ///
+	//////////////////////////
 	renderer->commandPool.cmdBuffersPerPool = createInfo->cmdBuffersPerPool;
 
 	/// ///
@@ -132,15 +134,15 @@ Renderer_CommandPoolCreate(
 	////////////////////////////////
 	/// allocate command buffers ///
 	////////////////////////////////
-
 	VkCommandBufferAllocateInfo commandBuffAllocateInfo = (VkCommandBufferAllocateInfo){0};
 	commandBuffAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	commandBuffAllocateInfo.pNext = NULL;
 	commandBuffAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	commandBuffAllocateInfo.commandBufferCount = renderer->commandPool.cmdBuffersPerPool;
 
-
+	/////////////////////
 	/// graphics pool ///
+	/////////////////////
 	commandBuffAllocateInfo.commandPool = renderer->commandPool.graphicsPool;
 
 	renderer->commandPool.graphicsCmdBuffers = SDL_malloc(
@@ -158,8 +160,9 @@ Renderer_CommandPoolCreate(
 		goto FAIL;
 	}
 
-
+	/////////////////////
 	/// transfer pool ///
+	/////////////////////
 	commandBuffAllocateInfo.commandPool = renderer->commandPool.transferPool;
 
 	renderer->commandPool.transferCmdBuffers = SDL_malloc(
@@ -177,8 +180,6 @@ Renderer_CommandPoolCreate(
 		          VSR_VkErrorToString(err));
 		goto FAIL;
 	}
-
-
 
 	SUCCESS:
 	{
@@ -247,13 +248,6 @@ Renderer_CommandPoolAllocateGraphicsBuffer(
 		*fence = (VSR_GenerationalFence){.fence = buffFence, .generation = generation};
 	}
 
-	VkCommandBufferBeginInfo beginInfo;
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.pNext = NULL;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	beginInfo.pInheritanceInfo = NULL;
-
-	vkBeginCommandBuffer(buff, &beginInfo);
 	return buff;
 }
 
@@ -359,6 +353,14 @@ Renderer_CommandBufferRecordStart(
 	VSR_GraphicsPipeline* pipeline,
 	VkCommandBuffer cBuff)
 {
+	VkCommandBufferBeginInfo beginInfo;
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.pNext = NULL;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = NULL;
+
+	vkBeginCommandBuffer(cBuff, &beginInfo);
+
 	uint32_t renderWidth, renderHeight;
 	VSR_GraphicsPipelineGetRenderSize(
 		renderer,
@@ -384,20 +386,18 @@ Renderer_CommandBufferRecordStart(
 	passBeginInfo.renderArea.extent.width = renderWidth;
 	passBeginInfo.renderArea.extent.height = renderHeight;
 
-	if(renderer->pipeline->renderTarget)
+	size_t index = 0;
+	if(!renderer->pipeline->renderTarget)
 	{
-		passBeginInfo.framebuffer = renderer->pipeline->framebuffers[0]->frame;
+		index = renderer->imageIndex;
+	}
+	passBeginInfo.framebuffer = renderer->pipeline->framebuffers[index]->frame;
 
-	}
-	else
-	{
-		passBeginInfo.framebuffer =	renderer->pipeline->framebuffers[renderer->imageIndex]->frame;
-	}
 	/////////////////////////
 	/// record buffers    ///
 	/////////////////////////
 	{
-		vkCmdBeginRenderPass(cBuff, &passBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(cBuff, &passBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS );
 
 		vkCmdBindPipeline(cBuff,
 						  VK_PIPELINE_BIND_POINT_GRAPHICS,

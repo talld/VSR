@@ -241,6 +241,8 @@ Renderer_MemoryTransfer(
 		renderer,
 		&genFence);
 
+	size_t genAcquired = *genFence.generation;
+
 	VkBufferCopy copyRegion = (VkBufferCopy){0};
 	copyRegion.dstOffset = dstOffset;
 	copyRegion.srcOffset = srcOffset;
@@ -258,12 +260,11 @@ Renderer_MemoryTransfer(
 		buff
 	);
 
-	vkWaitForFences(
-		renderer->logicalDevice.device,
+	Renderer_WaitOnGenerationalFence(
+		renderer,
 		1,
-		&genFence.fence,
-		VK_TRUE,
-		-1
+		&genFence,
+		genAcquired
 	);
 
 	return 0;
