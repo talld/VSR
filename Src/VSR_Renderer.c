@@ -143,23 +143,6 @@ Renderer_AllocateBuffers(
 		VIGPUProps
 	);
 
-	renderer->perInstanceVertexGPUBuffer = Renderer_MemoryCreate(
-		renderer,
-		createInfo->perInstanceVertexGPUBufferSize,
-		VIGPUBufferBits,
-		VIGPUProps
-	);
-
-	size_t Mat4Size = sizeof(float[16]);
-	size_t samplerSize = sizeof(uint32_t);
-
-	size_t combinedSize = samplerSize + Mat4Size;
-	size_t combinedCount = createInfo->perInstanceVertexGPUBufferSize / combinedSize;
-	renderer->samplerMatrixArrayLength = combinedCount * 2;
-	renderer->matrixStartIndex = combinedCount;
-
-	size_t arraySizeBytes = renderer->samplerMatrixArrayLength * sizeof(uint64_t);
-	renderer->modelSamplerMatrixArray = SDL_malloc(arraySizeBytes);
 	//////////////////////////////////////////////
 	/// Uniform + sampler + descriptor storage ///
 	//////////////////////////////////////////////
@@ -231,7 +214,6 @@ Renderer_FreeBuffers(
 	VSR_Renderer* renderer)
 {
 	Renderer_MemoryDestroy(renderer, renderer->perModelVertexGPUBuffer);
-	Renderer_MemoryDestroy(renderer, renderer->perInstanceVertexGPUBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->vertexStagingBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->USDGPUBuffer);
 	Renderer_MemoryDestroy(renderer, renderer->USDStagingBuffer);
@@ -302,9 +284,7 @@ VSR_RendererGenerateCreateInfo(
 	createInfo->tessellationShaderRequested = SDL_FALSE;
 
 	createInfo->vertexStagingBufferSize = 128 * 1024 * 1024;
-	createInfo->perModelVertexGPUBufferSize = 128 * 1024 * 1024;
-	createInfo->perInstanceVertexGPUBufferSize = 128 * 1024 * 1024;
-
+	createInfo->perModelVertexGPUBufferSize = 256 * 1024 * 1024;
 	createInfo->DescriptorSamplerStagingBufferSize = 128 * 1024 * 1024;
 	createInfo->DescriptorSamplerGPUBufferSize = 256 * 1024 * 1024;
 
@@ -408,7 +388,6 @@ VSR_RendererCreate(
 		VSR_SamplerWriteToDescriptor(renderer, i, renderer->defaultSampler );
 	}
 
-
 	return renderer;
 }
 
@@ -464,8 +443,63 @@ void VSR_RendererSetPipeline(
 	renderer->pipeline = pipeline;
 }
 
+//==============================================================================
+// VSR_RendererBeginPass
+//------------------------------------------------------------------------------
+QueuedRenderCommand*
+VSR_RendererNewQueuedRenderCommand(
+	VSR_Renderer* renderer)
+{
+	VkCommandBuffer cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
+		renderer,
+		NULL
+		);
 
-static VkCommandBuffer cBuff = NULL;
+	VkCommandBufferInheritanceInfo inheritanceInfo = (VkCommandBufferInheritanceInfo){0};
+
+	size_t index = 0;
+	if(!renderer->pipeline->renderTarget)
+	{
+		index = renderer->imageIndex;
+	}
+
+	inheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+	inheritanceInfo.framebuffer = renderer->pipeline->framebuffers[index]->frame;
+	inheritanceInfo.renderPass = renderer->pipeline->renderPass->renderPass;
+	inheritanceInfo.subpass = 0;
+	inheritanceInfo.occlusionQueryEnable = VK_FALSE;
+	inheritanceInfo.queryFlags = 0;
+	inheritanceInfo.pipelineStatistics = 0;
+
+	VkCommandBufferBeginInfo beginInfo;
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.pNext = NULL;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = &inheritanceInfo;
+
+	vkBeginCommandBuffer(cBuff, &beginInfo);
+
+	VkSemaphore semaphore;
+	VkSemaphoreCreateInfo semaphoreInfo = (VkSemaphoreCreateInfo){0};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	semaphoreInfo.pNext = NULL;
+	semaphoreInfo.flags = 0L;
+
+	vkCreateSemaphore(renderer->logicalDevice.device,
+	                  &semaphoreInfo,
+	                  VSR_GetAllocator(),
+	                  semaphore
+	);
+
+	QueuedRenderCommand* renderCommand = SDL_malloc(sizeof(*renderCommand));
+
+	renderCommand->cBuff = cBuff;
+	renderCommand->signalSemaphore = semaphore;
+
+	return renderCommand;
+}
+
+
 
 //==============================================================================
 // VSR_RendererBeginPass
@@ -515,6 +549,7 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 		);
 	}
 
+	// wait for the image to be ready to write
 	if(renderer->imageFinished[frameIndex].fence != NULL
 	   && renderer->generationAcquired[frameIndex] != *renderer->imageFinished[frameIndex].generation)
 	{
@@ -526,19 +561,6 @@ void VSR_RendererBeginPass(VSR_Renderer* renderer)
 			-1
 		);
 	}
-
-	/// step 2 command record
-	cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
-		renderer,
-		&renderer->imageFinished[frameIndex]
-	);
-	renderer->generationAcquired[frameIndex] = *renderer->imageFinished[frameIndex].generation;
-
-	Renderer_CommandBufferRecordStart(
-		renderer,
-		renderer->pipeline,
-		cBuff
-	);
 }
 
 
@@ -564,6 +586,21 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 
 	/// step2 command record
 	VSR_RendererFlushQueuedModels(renderer);
+
+	/// step 2 command record
+	VkCommandBuffer cBuff = Renderer_CommandPoolAllocateGraphicsBuffer(
+		renderer,
+		&renderer->imageFinished[frameIndex]
+	);
+	renderer->generationAcquired[frameIndex] = *renderer->imageFinished[frameIndex].generation;
+
+	Renderer_CommandBufferRecordStart(
+		renderer,
+		renderer->pipeline,
+		cBuff
+	);
+
+
 
 	Renderer_CommandBufferRecordEnd(
 		renderer,
@@ -650,22 +687,16 @@ void VSR_RendererEndPass(VSR_Renderer* renderer)
 	renderer->currentFrame = (frameIndex + 1) % renderer->swapchain.imageViewCount;
 }
 
-typedef struct QueuedRender QueuedRender;
-struct QueuedRender
+
+
+
+
+
+void VSR_RendererPrepCommand(
+	VSR_Renderer* renderer,
+	QueuedRenderCommand* renderCommand)
 {
-	QueuedRender* next;
-
-	size_t instanceOffset;
-	size_t instanceCount;
-	VSR_Model* model;
-};
-
-static QueuedRender* sQueuedModelList = NULL;
-
-int VSR_RendererFlushQueuedModels(VSR_Renderer* renderer)
-{
-	if(!sQueuedModelList) {goto SUCCESS;}
-	if(sQueuedModelList->instanceCount == 0) {goto SUCCESS;}
+	VkCommandBuffer cBuff = VSR_RendererNewQueuedRenderCommand(renderer)->cBuff;
 
 	//////////////////////
 	/// push constants ///
@@ -725,307 +756,73 @@ int VSR_RendererFlushQueuedModels(VSR_Renderer* renderer)
 		NULL
 	);
 
-	while (sQueuedModelList != NULL)
+	/*
+	if(renderer->queuedRenderCommandsRoot == NULL)
 	{
-
-		////////////////////////
-		/// per vertex stuff ///
-		////////////////////////
-		enum {kPerVertexBufferCount = 3};
-		VkBuffer perVertexBuffers[kPerVertexBufferCount] = {
-			renderer->perModelVertexGPUBuffer->buffer,
-			renderer->perModelVertexGPUBuffer->buffer,
-			renderer->perModelVertexGPUBuffer->buffer,
-		};
-
-		VkDeviceSize perVertexBufferOffsets[kPerVertexBufferCount] = {
-			sQueuedModelList->model->vertices->offset,
-			sQueuedModelList->model->normals->offset,
-			sQueuedModelList->model->UVs->offset
-		};
-
-		vkCmdBindVertexBuffers(
-			cBuff,
-			0,
-			kPerVertexBufferCount,
-			perVertexBuffers,
-			perVertexBufferOffsets
-		);
-
-		//////////////////////////
-		/// per instance stuff ///
-		//////////////////////////
-		enum {kPerInstanceBufferCount = 2};
-		VkBuffer perInstanceBuffers[kPerInstanceBufferCount] = {
-			renderer->perInstanceVertexGPUBuffer->buffer,
-			renderer->perInstanceVertexGPUBuffer->buffer,
-		};
-
-		size_t samplerOffset = 0;
-		size_t matrixOffset = renderer->matrixStartIndex * sizeof(uint32_t);
-
-		// these will be modified by the queuedRender's instance offset
-		VkDeviceSize perInstanceBufferOffsets[kPerInstanceBufferCount] = {
-			samplerOffset,
-			matrixOffset,
-		};
-
-		vkCmdBindVertexBuffers(
-			cBuff,
-			kPerVertexBufferCount, // start where per vertex data ended
-			kPerInstanceBufferCount,
-			perInstanceBuffers,
-			perInstanceBufferOffsets
-		);
-
-		vkCmdBindIndexBuffer(
-			cBuff,
-			sQueuedModelList->model->indices->src->buffer,
-			sQueuedModelList->model->indices->offset,
-			VK_INDEX_TYPE_UINT32
-		);
-
-		vkCmdDrawIndexed(
-			cBuff,
-			sQueuedModelList->model->indexCount,
-			sQueuedModelList->instanceCount,
-			0, // firstIndex
-			0, // vertexOffset
-			sQueuedModelList->instanceOffset // firstInstance
-		);
-
-		QueuedRender* old = sQueuedModelList;
-		sQueuedModelList = sQueuedModelList->next;
-
-		SDL_free(old);
+		renderer->queuedRenderCommandsRoot = renderCommand;
 	}
+	else
+	{
+		renderer->queuedRenderCommandsFront->next = renderCommand;
+	}
+	renderer->queuedRenderCommandsFront = renderCommand;
+	*/
+}
+
+int VSR_RendererFlushQueuedModels(VSR_Renderer* renderer)
+{
+	if (!renderer->activeRenderCommands) { goto SUCCESS; }
+
+	VSR_Model *model;
+	VkCommandBuffer cBuff;
+	Renderer_MemoryAlloc *instanceData;
+	size_t instanceCount;
+
+	////////////////////////
+	/// per vertex stuff ///
+	////////////////////////
+	enum { kVertexBufferCount = 4 };
+	VkBuffer perVertexBuffers[kVertexBufferCount] = {
+		model->vertices->src->buffer,
+		model->normals->src->buffer,
+		model->normals->src->buffer,
+		instanceData->src->buffer,
+	};
+
+	VkDeviceSize perVertexBufferOffsets[kVertexBufferCount] = {
+		model->vertices->offset,
+		model->normals->offset,
+		model->UVs->offset,
+		instanceData->offset
+	};
+
+	vkCmdBindVertexBuffers(
+		cBuff,
+		0,
+		kVertexBufferCount,
+		perVertexBuffers,
+		perVertexBufferOffsets
+	);
+
+
+	vkCmdBindIndexBuffer(
+		cBuff,
+		model->indices->src->buffer,
+		model->indices->offset,
+		VK_INDEX_TYPE_UINT32
+	);
+
+	vkCmdDrawIndexed(
+		cBuff,
+		model->indexCount,
+		instanceCount,
+		0, // firstIndex
+		0, // vertexOffset
+		0 // firstInstance
+	);
 
 	SUCCESS:
 	return SDL_TRUE;
-}
-
-
-int
-uploadMat4Data(
-	VSR_Renderer* renderer,
-	VSR_Mat4** transforms,
-	QueuedRender* queuedRender)
-{
-
-	////////////////
-	/// Matrices ///
-	////////////////
-	size_t  matrixTransferListSize = 4;
-	size_t  matrixTransferListUsed = 0;
-
-	size_t* matrixTransferStartIndexList = SDL_malloc(
-		matrixTransferListSize * sizeof(size_t)
-	);
-
-	size_t* matrixTransferCountsList = SDL_malloc(
-		matrixTransferListSize * sizeof(size_t)
-	);
-
-	for(size_t i = 0; i < queuedRender->instanceCount; i++)
-	{
-		size_t mat4Index = queuedRender->instanceOffset + renderer->matrixStartIndex + i;
-
-		if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid
-		   || transforms[i]->needsUpdate == SDL_TRUE)
-		{
-			// track were the data is (compiler optimised?
-			if(renderer->modelSamplerMatrixArray[mat4Index] != transforms[i]->uuid)
-			{
-				renderer->modelSamplerMatrixArray[mat4Index] = transforms[i]->uuid;
-			}
-			if(matrixTransferListUsed != 0)
-			{
-				size_t nextFromLast =
-					matrixTransferStartIndexList[matrixTransferListUsed-1]
-					+ matrixTransferCountsList[matrixTransferListUsed-1];
-
-				if(nextFromLast == i)
-				{
-					matrixTransferCountsList[matrixTransferListUsed-1]++;
-				}
-			}
-			else
-			{
-				matrixTransferStartIndexList[matrixTransferListUsed] = i;
-				matrixTransferCountsList[matrixTransferListUsed++] = 1;
-			}
-
-
-
-			if(matrixTransferListUsed == matrixTransferListSize)
-			{
-				matrixTransferListSize = matrixTransferListSize * 2;
-
-				matrixTransferStartIndexList = SDL_realloc(
-					matrixTransferStartIndexList,
-					matrixTransferListSize * sizeof(size_t)
-				);
-
-				matrixTransferCountsList = SDL_realloc(
-					matrixTransferCountsList,
-					matrixTransferListSize * sizeof(size_t)
-				);
-			}
-
-			// this is going to be uploaded so its being 'updated'
-			transforms[i]->needsUpdate = SDL_FALSE;
-		}
-	}
-
-	size_t mat4Size =  sizeof(float[16]);
-	size_t samplerSize = sizeof(uint32_t);
-
-
-	for(size_t i = 0; i < matrixTransferListUsed; i++)
-	{
-		size_t copySize = matrixTransferCountsList[i] * mat4Size;
-		size_t mat4Offset = renderer->matrixStartIndex * samplerSize;
-		size_t dstOffset = mat4Offset + (queuedRender->instanceOffset * mat4Size);
-
-		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
-			renderer,
-			renderer->vertexStagingBuffer,
-			copySize,
-			0
-		);
-
-		uint8_t* p = Renderer_MemoryAllocMap(renderer, alloc);
-		for(size_t j = 0; j < matrixTransferCountsList[i]; j++)
-		{
-			size_t index = matrixTransferStartIndexList[i] + j;
-			VSR_Mat4* mat4 = transforms[index];
-			SDL_memcpy(p, &mat4->m0, mat4Size);
-			p += mat4Size;
-		}
-		Renderer_MemoryAllocUnmap(renderer, alloc);
-
-		Renderer_MemoryTransfer(
-			renderer,
-			renderer->perInstanceVertexGPUBuffer,
-			dstOffset,
-			alloc->src,
-			alloc->offset,
-			alloc->size,
-			NULL
-		);
-
-		Renderer_MemoryAllocFree(renderer, alloc);
-	}
-
-	return 0;
-}
-
-int
-uploadTextureData(
-	VSR_Renderer* renderer,
-	VSR_Sampler** samplers,
-	QueuedRender* queuedRender)
-{
-	////////////////
-	/// Samplers ///
-	////////////////
-	size_t  samplerTransferListSize = 4;
-	size_t  samplerTransferListUsed = 0;
-
-	size_t* samplerTransferStartIndexList = SDL_malloc(
-		samplerTransferListSize * sizeof(size_t)
-	);
-
-	size_t* samplerTransferCountsList = SDL_malloc(
-		samplerTransferListSize * sizeof(size_t)
-	);
-
-	for(size_t i = 0; i < queuedRender->instanceCount; i++)
-	{
-		size_t samplerIndex = queuedRender->instanceOffset + i;
-
-		if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid
-		    || samplers[i]->needsUpdate == SDL_TRUE)
-		{
-			// track were the data is (compiler optimised?
-			if (renderer->modelSamplerMatrixArray[samplerIndex] != samplers[i]->uuid)
-			{
-				renderer->modelSamplerMatrixArray[samplerIndex] = samplers[i]->uuid;
-			}
-
-			if (samplerTransferListUsed != 0)
-			{
-				size_t nextFromLast =
-					samplerTransferStartIndexList[samplerTransferListUsed - 1]
-					+ samplerTransferCountsList[samplerTransferListUsed - 1];
-
-				if (nextFromLast == i)
-				{
-					samplerTransferCountsList[samplerTransferListUsed - 1]++;
-				}
-			}
-			else
-			{
-				samplerTransferStartIndexList[samplerTransferListUsed] = i;
-				samplerTransferCountsList[samplerTransferListUsed++] = 1;
-			}
-
-
-			if (samplerTransferListUsed == samplerTransferListSize)
-			{
-				samplerTransferListSize = samplerTransferListSize * 2;
-
-				samplerTransferStartIndexList = SDL_realloc(
-					samplerTransferStartIndexList,
-					samplerTransferListSize * sizeof(size_t)
-				);
-
-				samplerTransferCountsList = SDL_realloc(
-					samplerTransferCountsList,
-					samplerTransferListSize * sizeof(size_t)
-				);
-			}
-
-			// this is going to be uploaded so its being 'updated'
-			samplers[i]->needsUpdate = SDL_FALSE;
-		}
-	}
-
-	size_t samplerSize = sizeof(uint32_t);
-	for(size_t i = 0; i < samplerTransferListUsed; i++)
-	{
-		size_t copySize = samplerTransferCountsList[i] * samplerSize;
-		size_t dstOffset = queuedRender->instanceOffset * samplerSize;
-
-		Renderer_MemoryAlloc* alloc = Renderer_MemoryAllocate(
-			renderer,
-			renderer->vertexStagingBuffer,
-			copySize,
-			0
-		);
-
-		uint8_t* p = Renderer_MemoryAllocMap(renderer, alloc);
-		for(size_t j = 0; j < samplerTransferCountsList[i]; j++)
-		{
-			size_t index = samplerTransferStartIndexList[i] + j;
-			SDL_memcpy(p, &samplers[index]->textureIndex, samplerSize);
-			p += samplerSize;
-		}
-		Renderer_MemoryAllocUnmap(renderer, alloc);
-
-		Renderer_MemoryTransfer(
-			renderer,
-			renderer->perInstanceVertexGPUBuffer,
-			dstOffset,
-			alloc->src,
-			alloc->offset,
-			alloc->size,
-			NULL
-		);
-
-		Renderer_MemoryAllocFree(renderer, alloc);
-	}
-
 }
 
 //==============================================================================
@@ -1039,54 +836,7 @@ VSR_RenderModels(
 	VSR_Sampler** samplers,
 	size_t batchCount)
 {
-	////////////////////////////////////
-	/// split into batches if needed ///
-	////////////////////////////////////
-	while(batchCount >= renderer->samplerMatrixArrayLength)
-	{
-		batchCount -= renderer->samplerMatrixArrayLength;
-		VSR_RenderModels(
-			renderer,
-			model,
-			transforms,
-			samplers,
-			renderer->samplerMatrixArrayLength
-		);
-	}
 
-	QueuedRender* queuedRender = SDL_malloc(sizeof(QueuedRender));
-	size_t lastInstanceIndex = 0;
-	if(sQueuedModelList)
-	{
-		QueuedRender* last = sQueuedModelList;
-		while (last->next != NULL)
-		{
-			last = last->next;
-		}
-
-		last->next = queuedRender;
-		lastInstanceIndex = last->instanceOffset + lastInstanceIndex;
-	}
-	else
-	{
-		sQueuedModelList = queuedRender;
-		lastInstanceIndex = 0;
-	}
-
-	queuedRender->instanceOffset = lastInstanceIndex;
-	queuedRender->instanceCount = batchCount;
-	queuedRender->model = model;
-	queuedRender->next = NULL;
-
-	uploadTextureData(
-		renderer,
-		samplers,
-		queuedRender);
-
-	uploadMat4Data(
-		renderer,
-		transforms,
-		queuedRender);
 
 	return 0;
 }

@@ -19,6 +19,21 @@
 #include "VSR_Mesh.h"
 #include "VSR_Sampler.h"
 
+
+typedef struct QueuedRenderCommand QueuedRenderCommand;
+struct QueuedRenderCommand
+{
+	VSR_Model* model;
+
+	Renderer_MemoryAlloc* instanceDataAlloc;
+	size_t instanceDataCount;
+
+	VkCommandBuffer cBuff;
+	VkSemaphore signalSemaphore;
+
+	QueuedRenderCommand* next;
+};
+
 enum {kMaxSupportedStorageBuffers = 4};
 typedef struct VSR_RendererCreateInfo VSR_RendererCreateInfo;
 struct VSR_RendererCreateInfo
@@ -30,8 +45,6 @@ struct VSR_RendererCreateInfo
 
 	size_t vertexStagingBufferSize;
 	size_t perModelVertexGPUBufferSize;
-	size_t perInstanceVertexGPUBufferSize;
-
 	size_t DescriptorSamplerStagingBufferSize;
 	size_t DescriptorSamplerGPUBufferSize;
 
@@ -56,7 +69,6 @@ typedef struct VSR_Renderer VSR_Renderer;
 struct VSR_Renderer
 {
 	SDL_Window* SDLWindow;
-
 
 	Renderer_Instance       instance;
 	Renderer_Surface        surface;
@@ -84,11 +96,6 @@ struct VSR_Renderer
 	/// memory ///
 	size_t texturePoolSize;
 
-	uint64_t* modelSamplerMatrixArray;
-	size_t    samplerMatrixArrayLength;
-	size_t    matrixStartIndex;
-	size_t    modelInstanceCount;
-
 	size_t*               extraDescriptorSizes;
 	Renderer_MemoryAlloc* extraDescriptorAllocs[kMaxSupportedStorageBuffers];
 	size_t                extraDescriptorCount;
@@ -97,13 +104,14 @@ struct VSR_Renderer
 
 	/// Vertex UV Index ///
 	Renderer_Memory* vertexStagingBuffer;
-
 	Renderer_Memory* perModelVertexGPUBuffer;
-	Renderer_Memory* perInstanceVertexGPUBuffer;
 
 	/// Uniform Storage Descriptor ///
 	Renderer_Memory* USDStagingBuffer;
 	Renderer_Memory* USDGPUBuffer;
+
+	QueuedRenderCommand* activeRenderCommands;
+	QueuedRenderCommand* savedRenderCommands;
 };
 
 // Temp allocate function
